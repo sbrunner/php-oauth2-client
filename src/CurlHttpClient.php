@@ -62,6 +62,9 @@ class CurlHttpClient implements HttpClientInterface
         if (is_null($decodedResponseData) && JSON_ERROR_NONE !== json_last_error()) {
             throw new RuntimeException('unable to decode JSON');
         }
+        if (!is_array($decodedResponseData)) {
+            throw new RuntimeException('unexpected JSON data');
+        }
 
         return $decodedResponseData;
     }
