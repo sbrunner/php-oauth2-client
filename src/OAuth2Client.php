@@ -73,7 +73,7 @@ class OAuth2Client
                 'client_id' => $this->provider->getId(),
                 'redirect_uri' => $redirectUri,
                 'scope' => $scope,
-                'state' => $this->random->get(),
+                'state' => $this->random->get(16),
                 'response_type' => 'code',
             ],
             '&'
