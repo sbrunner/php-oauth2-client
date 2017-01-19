@@ -1,5 +1,10 @@
 # Changes
 
+## 4.0.1 (2017-01-19)
+- update `RandomInterface` a bit to allow specifying the length of the secret
+- update (C) year
+- fix a HTTP client bug where a potential non array could be returned
+
 ## 4.0.0 (2017-01-04)
 - remove Guzzle dependency
 
