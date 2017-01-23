@@ -38,7 +38,7 @@ provider.
         'https://example.org/token'      # the token endpoint
     );
 
-# OAuth2Client
+## OAuth2Client
 
 To instantiate the OAuth class you need the `Provider` object, see above and
 choose a HTTP client implementation that will be used to exchange an 

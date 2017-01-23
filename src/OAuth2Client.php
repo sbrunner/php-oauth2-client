@@ -19,6 +19,7 @@
 namespace fkooman\OAuth\Client;
 
 use fkooman\OAuth\Client\Exception\OAuthException;
+use fkooman\OAuth\Client\Exception\OAuthServerException;
 use InvalidArgumentException;
 
 /**
@@ -177,6 +178,15 @@ class OAuth2Client
 
     private static function validateTokenResponse(array $tokenResponse, $requestScope)
     {
+        // check if an error occurred
+        if (array_key_exists('error', $tokenResponse)) {
+            if (array_key_exists('error_description', $tokenResponse)) {
+                throw new OAuthServerException(sprintf('%s: %s', $tokenResponse['error'], $tokenResponse['error_description']));
+            }
+
+            throw new OAuthServerException($tokenResponse['error']);
+        }
+
         $requiredParameters = [
             'access_token',
             'token_type',
