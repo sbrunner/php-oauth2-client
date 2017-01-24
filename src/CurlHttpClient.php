@@ -25,6 +25,9 @@ class CurlHttpClient implements HttpClientInterface
     /** @var resource */
     private $curlChannel;
 
+    /** @var bool */
+    private $httpsOnly = true;
+
     public function __construct()
     {
         if (false === $this->curlChannel = curl_init()) {
@@ -37,6 +40,11 @@ class CurlHttpClient implements HttpClientInterface
         curl_close($this->curlChannel);
     }
 
+    public function setHttpsOnly($httpsOnly)
+    {
+        $this->httpsOnly = (bool) $httpsOnly;
+    }
+
     public function post(Provider $provider, array $postData)
     {
         $curlOptions = [
@@ -46,7 +54,7 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_HEADER => 0,
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_FOLLOWLOCATION => 0,
-            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+            CURLOPT_PROTOCOLS => $this->httpsOnly ? CURLPROTO_HTTPS : CURLPROTO_HTTPS | CURLPROTO_HTTP,
         ];
 
         if (false === curl_setopt_array($this->curlChannel, $curlOptions)) {
