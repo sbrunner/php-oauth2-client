@@ -18,6 +18,8 @@
 
 namespace fkooman\OAuth\Client;
 
+use DateInterval;
+use DateTime;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
 use InvalidArgumentException;
@@ -37,6 +39,9 @@ class OAuth2Client
     /** @var RandomInterface */
     private $random;
 
+    /** @var \DateTime */
+    private $dateTime;
+
     /**
      * Instantiate an OAuth 2.0 Client.
      *
@@ -44,7 +49,7 @@ class OAuth2Client
      * @param HttpClientInterface $httpClient the HTTP client implementation
      * @param RandomInterface     $random     the random implementation
      */
-    public function __construct(Provider $provider, HttpClientInterface $httpClient, RandomInterface $random = null)
+    public function __construct(Provider $provider, HttpClientInterface $httpClient, RandomInterface $random = null, DateTime $dateTime = null)
     {
         $this->provider = $provider;
         $this->httpClient = $httpClient;
@@ -52,6 +57,10 @@ class OAuth2Client
             $random = new Random();
         }
         $this->random = $random;
+        if (is_null($dateTime)) {
+            $dateTime = new DateTime();
+        }
+        $this->dateTime = $dateTime;
     }
 
     /**
@@ -124,7 +133,7 @@ class OAuth2Client
             'redirect_uri' => $requestParameters['redirect_uri'],
         ];
 
-        $responseData = self::validateTokenResponse(
+        $responseData = $this->validateTokenResponse(
             $this->httpClient->post(
                 $this->provider,
                 $tokenRequestData
@@ -136,7 +145,7 @@ class OAuth2Client
             $responseData['access_token'],
             $responseData['token_type'],
             $responseData['scope'],
-            $responseData['expires_in']
+            $responseData['expires_at']
         );
     }
 
@@ -176,7 +185,7 @@ class OAuth2Client
         return $requestParameters;
     }
 
-    private static function validateTokenResponse(array $tokenResponse, $requestScope)
+    private function validateTokenResponse(array $tokenResponse, $requestScope)
     {
         // check if an error occurred
         if (array_key_exists('error', $tokenResponse)) {
@@ -209,13 +218,19 @@ class OAuth2Client
             $tokenResponse['scope'] = $requestScope;
         }
 
-        if (!array_key_exists('expires_in', $tokenResponse)) {
-            // if the 'expires_in' field is not available, we make it null
-            // here, the client will just have to try to see if the token is
-            // still valid...
-            $tokenResponse['expires_in'] = null;
-        }
+        $tokenResponse['expires_at'] = $this->calculateExpiresAt($tokenResponse);
 
         return $tokenResponse;
+    }
+
+    private function calculateExpiresAt(array $tokenResponse)
+    {
+        $dateTime = clone $this->dateTime;
+        if (array_key_exists('expires_in', $tokenResponse)) {
+            return date_add($dateTime, new DateInterval(sprintf('PT%dS', $tokenResponse['expires_in'])));
+        }
+
+        // if the 'expires_in' field is not available, we default to 1 year
+        return date_add($dateTime, new DateInterval('P1Y'));
     }
 }

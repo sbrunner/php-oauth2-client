@@ -20,6 +20,7 @@ namespace fkooman\OAuth\Client;
 
 require_once __DIR__.'/Test/TestHttpClient.php';
 
+use DateTime;
 use fkooman\OAuth\Client\Test\TestHttpClient;
 use PHPUnit_Framework_TestCase;
 
@@ -52,7 +53,8 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $o = new OAuth2Client(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             new TestHttpClient(),
-            $this->random
+            $this->random,
+            new DateTime('2016-01-01')
         );
 
         $authorizationRequestUri = 'http://localhost/authorize?client_id=foo&redirect_uri=http%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code';
@@ -60,7 +62,7 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $accessToken = $o->getAccessToken($authorizationRequestUri, 'code12345', 'state12345abcde');
         $this->assertSame('foo:bar:http://localhost/authorize:http://localhost/token', $accessToken->getToken());
         $this->assertSame('bearer', $accessToken->getTokenType());
-        $this->assertNull($accessToken->getExpiresIn());
+        $this->assertSame('2017-01-01 00:00:00', $accessToken->getExpiresAt()->format('Y-m-d H:i:s'));
         $this->assertSame('my_scope', $accessToken->getScope());
     }
 
@@ -69,7 +71,8 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $o = new OAuth2Client(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             new TestHttpClient(),
-            $this->random
+            $this->random,
+            new DateTime('2016-01-01')
         );
 
         $authorizationRequestUri = 'http://localhost/authorize?client_id=foo&redirect_uri=http%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code';
@@ -77,7 +80,7 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $accessToken = $o->getAccessToken($authorizationRequestUri, 'code12345expires', 'state12345abcde');
         $this->assertSame('foo:bar:http://localhost/authorize:http://localhost/token', $accessToken->getToken());
         $this->assertSame('bearer', $accessToken->getTokenType());
-        $this->assertSame(1234567, $accessToken->getExpiresIn());
+        $this->assertSame('2016-01-01 01:00:00', $accessToken->getExpiresAt()->format('Y-m-d H:i:s'));
         $this->assertSame('my_scope', $accessToken->getScope());
     }
 

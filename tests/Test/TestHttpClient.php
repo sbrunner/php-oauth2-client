@@ -49,7 +49,7 @@ class TestHttpClient implements HttpClientInterface
                     $provider->getTokenEndpoint()
                 ),
                 'token_type' => 'bearer',
-                'expires_in' => 1234567,
+                'expires_in' => 3600,
             ];
         }
 

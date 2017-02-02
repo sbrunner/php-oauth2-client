@@ -18,6 +18,8 @@
 
 namespace fkooman\OAuth\Client;
 
+use DateTime;
+
 /**
  * AccessToken object containing the response from the OAuth 2.0 provider's
  * token response.
@@ -33,15 +35,15 @@ class AccessToken
     /** @var string */
     private $scope;
 
-    /** @var int */
-    private $expiresIn;
+    /** @var \DateTime */
+    private $expiresAt;
 
-    public function __construct($token, $tokenType, $scope, $expiresIn)
+    public function __construct($token, $tokenType, $scope, DateTime $expiresAt)
     {
         $this->token = $token;
         $this->tokenType = $tokenType;
         $this->scope = $scope;
-        $this->expiresIn = $expiresIn;
+        $this->expiresAt = $expiresAt;
     }
 
     /**
@@ -52,11 +54,11 @@ class AccessToken
     public function __toString()
     {
         return sprintf(
-            'token: "%s", token_type: "%s", scope: "%s", expires_in: "%d"',
+            'token_type: %s, scope: %s, expires_at: %s, token: %s',
             $this->getToken(),
             $this->getTokenType(),
             $this->getScope(),
-            $this->getExpiresIn()
+            $this->getExpiresAt()->format('Y-m-d H:i:s')
         );
     }
 
@@ -97,14 +99,10 @@ class AccessToken
     }
 
     /**
-     * Get the expires in time.
-     *
-     * @return int the time in seconds in which the access token will expire
-     *
-     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     * @return DateTime
      */
-    public function getExpiresIn()
+    public function getExpiresAt()
     {
-        return $this->expiresIn;
+        return $this->expiresAt;
     }
 }

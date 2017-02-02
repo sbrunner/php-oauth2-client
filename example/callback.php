@@ -45,7 +45,7 @@ try {
     // get the token type, usually "bearer"
     echo $accessToken->getTokenType().'<br>';
     // get the time in which the token will expire, null if not provided
-    echo $accessToken->getExpiresIn().'<br>';
+    echo $accessToken->getExpiresAt()->format('Y-m-d H:i:s').'<br>';
     // get the obtained scope, null if not provided
     echo $accessToken->getScope().'<br>';
 } catch (\fkooman\OAuth\Client\Exception\OAuthException $e) {
