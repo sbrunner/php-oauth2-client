@@ -95,8 +95,9 @@ Now those two values need to be provided to the `getAccessToken` method:
     echo $accessToken->getToken();
     // get the token type, usually "bearer"
     echo $accessToken->getTokenType();
-    // get the time in which the token will expire, null if not provided
-    echo $accessToken->getExpiresIn();
+    // get the time at which the token will expire, will be one year in the
+    // future if the server did not indicate
+    echo $accessToken->getExpiresAt()->format('Y-m-d H:i:s');
     // get the obtained scope, null if not provided
     echo $accessToken->getScope();
 
