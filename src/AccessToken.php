@@ -51,7 +51,13 @@ class AccessToken
      */
     public function __toString()
     {
-        return $this->getToken();
+        return sprintf(
+            'token: "%s", token_type: "%s", scope: "%s", expires_in: "%d"',
+            $this->getToken(),
+            $this->getTokenType(),
+            $this->getScope(),
+            $this->getExpiresIn()
+        );
     }
 
     /**
