@@ -22,7 +22,7 @@ class Random implements RandomInterface
 {
     public function get($len)
     {
-        return bin2hex(
+        return \Sodium\bin2hex(
             \Sodium\randombytes_buf($len)
         );
     }
