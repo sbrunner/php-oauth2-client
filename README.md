@@ -17,10 +17,9 @@ the League of Extraordinary Packages! It can be found
 - Does not enforce a framework on you;
 - Only "authorization code" profile support, will not implement anything else;
 - Only conforming OAuth 2.0 servers will work, this library will not get out of 
-  its way to deal with services that blatantly violate the OAuth 2.0 RFC, the 
-  exception may be if a fix does not break conforming servers;
+  its way to deal with services that blatantly violate the OAuth 2.0 RFC;
 - There will be no toggles to shoot yourself in the foot;
-- Uses `random_bytes` polyfill on PHP < 7.0 for generating the `state` value
+- Uses [pecl-libsodium](https://paragonie.com/book/pecl-libsodium) for CSPRNG;
 
 # API
 
@@ -112,7 +111,7 @@ sessions for storing the "state", make sure you follow
 [these](https://paragonie.com/blog/2015/04/fast-track-safe-and-secure-php-sessions) 
 best practices!
 
-OAuth 2.0 is very complicated to get right, even if you don't make the obvious 
+OAuth 2.0 is complicated to get right, even if you don't make the obvious 
 mistakes, so please make sure you read the RFC and related security documents,
 i.e. [RFC 6749](https://tools.ietf.org/html/rfc6749), 
 [RFC 6750](https://tools.ietf.org/html/rfc6750) and 
