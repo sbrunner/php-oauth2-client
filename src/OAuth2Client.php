@@ -112,6 +112,8 @@ class OAuth2Client
      */
     public function getAccessToken($requestUri, $responseCode, $responseState)
     {
+        // the requestUri parameter is provided by the caller of this call, and
+        // does NOT contain external input so does not need to be validated
         $requestParameters = self::parseRequestUri($requestUri);
         if ($responseState !== $requestParameters['state']) {
             // the OAuth state from the initial request MUST be the same as the
@@ -149,6 +151,10 @@ class OAuth2Client
         );
     }
 
+    /**
+     * Validate the provided URI to see if it has the right format, it is
+     * provided by the API consumer.
+     */
     private static function parseRequestUri($requestUri)
     {
         if (!is_string($requestUri)) {
