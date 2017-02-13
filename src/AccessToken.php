@@ -55,10 +55,10 @@ class AccessToken
     {
         return sprintf(
             'token_type: %s, scope: %s, expires_at: %s, token: %s',
-            $this->getToken(),
             $this->getTokenType(),
             $this->getScope(),
-            $this->getExpiresAt()->format('Y-m-d H:i:s')
+            $this->getExpiresAt()->format('Y-m-d H:i:s'),
+            $this->getToken()
         );
     }
 
