@@ -53,6 +53,13 @@ class TestHttpClient implements HttpClientInterface
             ];
         }
 
+        if ('invalid_code' === $postData['code']) {
+            return [
+                'error' => 'invalid_grant',
+                'error_description' => 'invalid authorization code',
+            ];
+        }
+
         throw new RuntimeException('invalid code in unit test');
     }
 }

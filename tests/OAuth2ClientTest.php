@@ -99,4 +99,19 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $authorizationRequestUri = 'http://localhost/authorize?client_id=foo&redirect_uri=http%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=brokenstate&response_type=code';
         $o->getAccessToken($authorizationRequestUri, 'code12345', 'state12345abcde');
     }
+
+    /**
+     * @expectedException \fkooman\OAuth\Client\Exception\OAuthServerException
+     * @expectedExceptionMessage [SERVER] invalid_grant: invalid authorization code
+     */
+    public function testErrorResponseFromTokenEndpoint()
+    {
+        $o = new OAuth2Client(
+            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
+            new TestHttpClient(),
+            $this->random
+        );
+        $authorizationRequestUri = 'http://localhost/authorize?client_id=foo&redirect_uri=http%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code';
+        $o->getAccessToken($authorizationRequestUri, 'invalid_code', 'state12345abcde');
+    }
 }
