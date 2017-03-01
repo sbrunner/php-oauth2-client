@@ -40,14 +40,23 @@ try {
         $_GET['state']               // the state value (e.g. abcde)
     );
 
-    // get the access token value
-    echo $accessToken->getToken().'<br>';
-    // get the token type, usually "bearer"
-    echo $accessToken->getTokenType().'<br>';
-    // get the time in which the token will expire, null if not provided
-    echo $accessToken->getExpiresAt()->format('Y-m-d H:i:s').'<br>';
-    // get the obtained scope, null if not provided
-    echo $accessToken->getScope().'<br>';
+    $curlChannel = curl_init();
+    $curlOptions = [
+        CURLOPT_URL => 'http://localhost:8080/resource.php',
+        CURLOPT_HEADER => 0,
+        CURLOPT_HTTPHEADER => [
+            sprintf('Authorization: Bearer %s', $accessToken->getToken()),
+        ],
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_FOLLOWLOCATION => 0,
+        CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
+    ];
+    curl_setopt_array($curlChannel, $curlOptions);
+    if (false === $responseData = curl_exec($curlChannel)) {
+        $curlError = curl_error($curlChannel);
+        throw new RuntimeException(sprintf('failure performing the HTTP request: "%s"', $curlError));
+    }
+    echo $responseData;
 } catch (\fkooman\OAuth\Client\Exception\OAuthException $e) {
     echo $e->getMessage();
 }
