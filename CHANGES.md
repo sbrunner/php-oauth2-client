@@ -1,6 +1,6 @@
 # Changes
 
-## 4.1.0 (...)
+## 5.0.0 (...)
 - handle errors coming from the OAuth 2 server token endpoint
 
 ## 4.0.1 (2017-01-19)

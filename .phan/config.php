@@ -3,7 +3,8 @@
 return [
     'directory_list' => [
         'src',
-	'example',
+        'vendor/paragonie/constant_time_encoding',
+        'example',
     ],
     'exclude_analysis_directory_list' => [
         'vendor/',

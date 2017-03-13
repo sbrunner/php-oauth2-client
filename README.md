@@ -19,7 +19,8 @@ the League of Extraordinary Packages! It can be found
 - Only conforming OAuth 2.0 servers will work, this library will not get out of 
   its way to deal with services that blatantly violate the OAuth 2.0 RFC;
 - There will be no toggles to shoot yourself in the foot;
-- Uses [pecl-libsodium](https://paragonie.com/book/pecl-libsodium) for CSPRNG;
+- Uses `paragonie/constant_time_encoding` for constant time encoding;
+- Uses `paragonie/random_compat` polyfill for CSPRNG;
 
 # API
 
