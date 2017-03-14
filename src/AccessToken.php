@@ -35,14 +35,18 @@ class AccessToken
     /** @var string */
     private $scope;
 
+    /** @var string|null */
+    private $refreshToken;
+
     /** @var \DateTime */
     private $expiresAt;
 
-    public function __construct($token, $tokenType, $scope, DateTime $expiresAt)
+    public function __construct($token, $tokenType, $scope, $refreshToken, DateTime $expiresAt)
     {
         $this->token = $token;
         $this->tokenType = $tokenType;
         $this->scope = $scope;
+        $this->refreshToken = $refreshToken;
         $this->expiresAt = $expiresAt;
     }
 
@@ -96,6 +100,18 @@ class AccessToken
     public function getScope()
     {
         return $this->scope;
+    }
+
+    /**
+     * Get the refresh token.
+     *
+     * @return string|null the refresh token
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-1.5
+     */
+    public function getRefreshToken()
+    {
+        return $this->refreshToken;
     }
 
     /**

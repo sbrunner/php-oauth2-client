@@ -147,6 +147,42 @@ class OAuth2Client
             $responseData['access_token'],
             $responseData['token_type'],
             $responseData['scope'],
+            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : null,
+            $responseData['expires_at']
+        );
+    }
+
+    /**
+     * Refresh the access token from the OAuth.
+     *
+     * @param string $refreshToken the refresh token
+     * @param string $requestScope the scope associated with the previously
+     *                             obtained access token
+     *
+     * @return AccessToken
+     */
+    public function refreshAccessToken($refreshToken, $requestScope)
+    {
+        // prepare access_token request
+        $tokenRequestData = [
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $refreshToken,
+            'scope' => $requestScope,
+        ];
+
+        $responseData = $this->validateTokenResponse(
+            $this->httpClient->post(
+                $this->provider,
+                $tokenRequestData
+            ),
+            $requestScope
+        );
+
+        return new AccessToken(
+            $responseData['access_token'],
+            $responseData['token_type'],
+            $responseData['scope'],
+            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : null,
             $responseData['expires_at']
         );
     }
