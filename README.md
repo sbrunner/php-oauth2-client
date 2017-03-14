@@ -21,6 +21,7 @@ the League of Extraordinary Packages! It can be found
 - There will be no toggles to shoot yourself in the foot;
 - Uses `paragonie/constant_time_encoding` for constant time encoding;
 - Uses `paragonie/random_compat` polyfill for CSPRNG;
+- Supports refresh tokens.
 
 # API
 
