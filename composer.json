@@ -15,6 +15,7 @@
     "name": "fkooman/oauth2-client",
     "require": {
         "ext-curl": "*",
+        "ext-date": "*",
         "ext-json": "*",
         "ext-spl": "*",
         "paragonie/constant_time_encoding": "^1|^2",
