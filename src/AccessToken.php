@@ -121,4 +121,18 @@ class AccessToken
     {
         return $this->expiresAt;
     }
+
+    /**
+     * @param DateTime|null $dateTime
+     *
+     * @return bool
+     */
+    public function isExpired(DateTime $dateTime = null)
+    {
+        if (is_null($dateTime)) {
+            $dateTime = new DateTime();
+        }
+
+        return $dateTime >= $this->expiresAt;
+    }
 }

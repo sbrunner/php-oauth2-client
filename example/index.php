@@ -68,7 +68,7 @@ try {
     $accessToken = $_SESSION['access_token'];
 
     // did it expire?
-    if (new DateTime() >= $accessToken->getExpiresAt()) {
+    if ($accessToken->isExpired()) {
         // expired, try to refresh it
         if (is_null($_SESSION['refresh_token'])) {
             // we do not have a refresh_token, delete access_token and try again
