@@ -45,13 +45,17 @@ class OAuth2Client
     /**
      * Instantiate an OAuth 2.0 Client.
      *
-     * @param Provider            $provider   the OAuth 2.0 provider configuration
-     * @param HttpClientInterface $httpClient the HTTP client implementation
-     * @param RandomInterface     $random     the random implementation
+     * @param Provider                 $provider   the OAuth 2.0 provider configuration
+     * @param HttpClientInterface|null $httpClient the HTTP client implementation
+     * @param RandomInterface|null     $random     the random implementation
+     * @param DateTime|null            $dateTime   the DateTime object for the current time
      */
-    public function __construct(Provider $provider, HttpClientInterface $httpClient, RandomInterface $random = null, DateTime $dateTime = null)
+    public function __construct(Provider $provider, HttpClientInterface $httpClient = null, RandomInterface $random = null, DateTime $dateTime = null)
     {
         $this->provider = $provider;
+        if (is_null($httpClient)) {
+            $httpClient = new CurlHttpClient();
+        }
         $this->httpClient = $httpClient;
         if (is_null($random)) {
             $random = new Random();
