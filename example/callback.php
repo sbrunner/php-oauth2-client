@@ -17,50 +17,51 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-$provider = new \fkooman\OAuth\Client\Provider(
-    'demo_client',
-    'demo_secret',
-    'http://localhost:8080/authorize.php',
-    'http://localhost:8080/token.php'
-);
+use fkooman\OAuth\Client\CurlHttpClient;
+use fkooman\OAuth\Client\Exception\OAuthException;
+use fkooman\OAuth\Client\OAuth2Client;
+use fkooman\OAuth\Client\Provider;
 
-$curlHttpClient = new \fkooman\OAuth\Client\CurlHttpClient();
-$curlHttpClient->setHttpsOnly(false);
-$client = new \fkooman\OAuth\Client\OAuth2Client(
-    $provider,
-    $curlHttpClient
-);
+$indexUri = 'http://localhost:8081/index.php';
 
 session_start();
 
 try {
-    $accessToken = $client->getAccessToken(
-        $_SESSION['oauth2_session'], // URI from session
-        $_GET['code'],               // the code value (e.g. 12345)
-        $_GET['state']               // the state value (e.g. abcde)
+    $provider = new Provider(
+        'demo_client',
+        'demo_secret',
+        'http://localhost:8080/authorize.php',
+        'http://localhost:8080/token.php'
     );
 
-    $curlChannel = curl_init();
-    $curlOptions = [
-        CURLOPT_URL => 'http://localhost:8080/resource.php',
-        CURLOPT_HEADER => 0,
-        CURLOPT_HTTPHEADER => [
-            sprintf('Authorization: Bearer %s', $accessToken->getToken()),
-        ],
-        CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_FOLLOWLOCATION => 0,
-        CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
-    ];
-    curl_setopt_array($curlChannel, $curlOptions);
-    if (false === $responseData = curl_exec($curlChannel)) {
-        $curlError = curl_error($curlChannel);
-        throw new RuntimeException(sprintf('failure performing the HTTP request: "%s"', $curlError));
-    }
-    echo $responseData;
-} catch (\fkooman\OAuth\Client\Exception\OAuthException $e) {
-    echo $e->getMessage();
-}
+    // we need to provide a client, because we need to disable https, if we only
+    // talk to HTTPS servers there would be no need for that
+    $httpClient = new CurlHttpClient();
+    $httpClient->setHttpsOnly(false);
 
-// unset session field as to not allow additional redirects to the same
-// URI to attempt to get another access token with this code
-//unset($_SESSION['oauth2_session']);
+    $client = new OAuth2Client(
+        $provider,
+        $httpClient
+    );
+
+    $accessToken = $client->getAccessToken(
+        $_SESSION['session'], // URI from session
+        $_GET['code'],        // the code value (e.g. 12345)
+        $_GET['state']        // the state value (e.g. abcde)
+    );
+
+    $_SESSION['access_token'] = $accessToken;
+    $_SESSION['refresh_token'] = $accessToken->getRefreshToken();
+
+    // unset session field as to not allow additional redirects to the same
+    // URI to attempt to get another access token with this code
+    unset($_SESSION['session']);
+
+    // redirect the browser back to the index (with a 302)
+    http_response_code(302);
+    header(sprintf('Location: %s', $indexUri));
+    exit(0);
+} catch (OAuthException $e) {
+    echo $e->getMessage();
+    exit(1);
+}

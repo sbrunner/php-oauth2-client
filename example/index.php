@@ -17,29 +17,95 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-$provider = new \fkooman\OAuth\Client\Provider(
-    'demo_client',
-    'demo_secret',
-    'http://localhost:8080/authorize.php',
-    'http://localhost:8080/token.php'
-);
+use fkooman\OAuth\Client\CurlHttpClient;
+use fkooman\OAuth\Client\Exception\OAuthException;
+use fkooman\OAuth\Client\OAuth2Client;
+use fkooman\OAuth\Client\Provider;
 
-$curlHttpClient = new \fkooman\OAuth\Client\CurlHttpClient();
-$curlHttpClient->setHttpsOnly(false);
-$client = new \fkooman\OAuth\Client\OAuth2Client(
-    $provider,
-    $curlHttpClient
-);
-
-$authorizationRequestUri = $client->getAuthorizationRequestUri(
-    'demo_scope',
-    'http://localhost:8081/callback.php'
-);
+$indexUri = 'http://localhost:8081/index.php';
+$resourceUri = 'http://localhost:8080/resource.php';
+$callbackUri = 'http://localhost:8081/callback.php';
+$requestScope = 'demo_scope';
 
 session_start();
-// store the state
-$_SESSION['oauth2_session'] = $authorizationRequestUri;
 
-// redirect the browser to the authorization endpoint (with a 302)
-http_response_code(302);
-header(sprintf('Location: %s', $authorizationRequestUri));
+try {
+    $provider = new Provider(
+        'demo_client',
+        'demo_secret',
+        'http://localhost:8080/authorize.php',
+        'http://localhost:8080/token.php'
+    );
+
+    // we need to provide a client, because we need to disable https, if we only
+    // talk to HTTPS servers there would be no need for that
+    $httpClient = new CurlHttpClient();
+    $httpClient->setHttpsOnly(false);
+
+    $client = new OAuth2Client(
+        $provider,
+        $httpClient
+    );
+
+    // do we have an access_token?
+    if (!array_key_exists('access_token', $_SESSION)) {
+        // no: request one
+        $authorizationRequestUri = $client->getAuthorizationRequestUri(
+            $requestScope,
+            $callbackUri
+        );
+        // store the request state
+        $_SESSION['session'] = $authorizationRequestUri;
+
+        // redirect the browser to the authorization endpoint (with a 302)
+        http_response_code(302);
+        header(sprintf('Location: %s', $authorizationRequestUri));
+        exit(0);
+    }
+
+    // we have a token
+    $accessToken = $_SESSION['access_token'];
+
+    // did it expire?
+    if (new DateTime() >= $accessToken->getExpiresAt()) {
+        // expired, try to refresh it
+        if (is_null($_SESSION['refresh_token'])) {
+            // we do not have a refresh_token, delete access_token and try again
+            unset($_SESSION['access_token']);
+            http_response_code(302);
+            header(sprintf('Location: %s', $indexUri));
+            exit(0);
+        }
+
+        // we have a refresh token, use it!
+        $accessToken = $client->refreshAccessToken($_SESSION['refresh_token'], $requestScope);
+
+        // update the token in the session as well
+        $_SESSION['access_token'] = $accessToken;
+
+        echo '** refreshed **';
+    }
+
+    $curlChannel = curl_init();
+    $curlOptions = [
+        CURLOPT_URL => $resourceUri,
+        CURLOPT_HEADER => 0,
+        CURLOPT_HTTPHEADER => [
+            sprintf('Authorization: Bearer %s', $accessToken->getToken()),
+        ],
+        CURLOPT_RETURNTRANSFER => 1,
+        CURLOPT_FOLLOWLOCATION => 0,
+        CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
+    ];
+    curl_setopt_array($curlChannel, $curlOptions);
+    if (false === $responseData = curl_exec($curlChannel)) {
+        $curlError = curl_error($curlChannel);
+        throw new RuntimeException(sprintf('failure performing the HTTP request: "%s"', $curlError));
+    }
+    echo $responseData;
+
+    // XXX deal with invalid tokens, e.g. when the user revokes it.
+} catch (OAuthException $e) {
+    echo $e->getMessage();
+    exit(1);
+}
