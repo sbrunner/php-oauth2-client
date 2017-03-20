@@ -70,7 +70,7 @@ try {
     // did it expire?
     if ($accessToken->isExpired()) {
         // expired, try to refresh it
-        if (is_null($_SESSION['refresh_token'])) {
+        if (is_null($accessToken->getRefreshToken())) {
             // we do not have a refresh_token, delete access_token and try again
             unset($_SESSION['access_token']);
             http_response_code(302);
@@ -79,11 +79,9 @@ try {
         }
 
         // we have a refresh token, use it!
-        $accessToken = $client->refreshAccessToken($_SESSION['refresh_token'], $requestScope);
-
+        $accessToken = $client->refreshAccessToken($accessToken->getRefreshToken(), $accessToken->getScope());
         // update the token in the session as well
         $_SESSION['access_token'] = $accessToken;
-
         echo '** refreshed **';
     }
 
@@ -110,7 +108,6 @@ try {
     // delete all tokens
     error_log($e->getMessage());
     unset($_SESSION['access_token']);
-    unset($_SESSION['refresh_token']);
     // try again
     http_response_code(302);
     header(sprintf('Location: %s', $indexUri));

@@ -186,7 +186,8 @@ class OAuth2Client
             $responseData['access_token'],
             $responseData['token_type'],
             $responseData['scope'],
-            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : null,
+            // if a new refresh_token was provided use that, if not reuse the old one
+            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : $refreshToken,
             $responseData['expires_at']
         );
     }

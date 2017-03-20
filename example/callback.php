@@ -51,7 +51,6 @@ try {
     );
 
     $_SESSION['access_token'] = $accessToken;
-    $_SESSION['refresh_token'] = $accessToken->getRefreshToken();
 
     // unset session field as to not allow additional redirects to the same
     // URI to attempt to get another access token with this code
