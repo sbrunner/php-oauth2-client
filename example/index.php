@@ -19,6 +19,7 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Client\CurlHttpClient;
 use fkooman\OAuth\Client\Exception\OAuthException;
+use fkooman\OAuth\Client\Exception\OAuthServerException;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
 
@@ -102,10 +103,20 @@ try {
         $curlError = curl_error($curlChannel);
         throw new RuntimeException(sprintf('failure performing the HTTP request: "%s"', $curlError));
     }
-    echo $responseData;
-
     // XXX deal with invalid tokens, e.g. when the user revokes it.
+    echo $responseData;
+} catch (OAuthServerException $e) {
+    // probably something went wrong with talking to the OAuth server, just
+    // delete all tokens
+    error_log($e->getMessage());
+    unset($_SESSION['access_token']);
+    unset($_SESSION['refresh_token']);
+    http_response_code(302);
+    header(sprintf('Location: %s', $indexUri));
+    exit(0);
 } catch (OAuthException $e) {
+    // most likely client error
+    error_log($e->getMessage());
     echo $e->getMessage();
     exit(1);
 }
