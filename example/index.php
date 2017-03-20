@@ -111,6 +111,7 @@ try {
     error_log($e->getMessage());
     unset($_SESSION['access_token']);
     unset($_SESSION['refresh_token']);
+    // try again
     http_response_code(302);
     header(sprintf('Location: %s', $indexUri));
     exit(0);
