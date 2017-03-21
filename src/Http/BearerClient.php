@@ -18,6 +18,7 @@
 
 namespace fkooman\OAuth\Client\Http;
 
+use DateTime;
 use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
 use fkooman\OAuth\Client\OAuth2Client;
@@ -25,20 +26,27 @@ use fkooman\OAuth\Client\TokenStorageInterface;
 
 class BearerClient
 {
-    /** @var string|null */
-    private $userId;
-
     /** @var \fkooman\OAuth\Client\OAuth2Client */
     private $oauthClient;
 
     /** @var \fkooman\OAuth\Client\TokenStorageInterface */
     private $tokenStorage;
 
-    public function __construct(OAuth2Client $oauthClient, TokenStorageInterface $tokenStorage, $userId = null)
+    /** @var string|null */
+    private $userId;
+
+    /** @var DateTime */
+    private $dateTime;
+
+    public function __construct(OAuth2Client $oauthClient, TokenStorageInterface $tokenStorage, $userId = null, DateTime $dateTime = null)
     {
         $this->oauthClient = $oauthClient;
         $this->tokenStorage = $tokenStorage;
         $this->userId = $userId;
+        if (is_null($dateTime)) {
+            $dateTime = new DateTime();
+        }
+        $this->dateTime = $dateTime;
     }
 
     /**
@@ -63,7 +71,7 @@ class BearerClient
         }
 
         $refreshedToken = false;
-        if ($accessToken->isExpired()) {
+        if ($accessToken->isExpired($this->dateTime)) {
             error_log('access_token expired');
             // access_token is expired, try to refresh it
             if (is_null($accessToken->getRefreshToken())) {
