@@ -16,20 +16,17 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace fkooman\OAuth\Client;
+namespace fkooman\OAuth\Client\Http;
 
 interface HttpClientInterface
 {
     /**
-     * Obtain an access token through a HTTP POST request.
-     *
-     * @param Provider $provider the OAuth provider information
-     * @param array    $postData the HTTP POST body that has to be part of the
-     *                           OAuth token request
-     *
-     * @return array JSON decoded response from HTTP POST request
-     *
-     * @throws \RuntimeException if there was an error with the request
+     * @return Response
      */
-    public function post(Provider $provider, array $postData);
+    public function get($requestUri, array $requestHeaders = []);
+
+    /**
+     * @return Response
+     */
+    public function post($requestUri, array $postData = [], array $requestHeaders = []);
 }

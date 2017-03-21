@@ -18,66 +18,72 @@
 
 namespace fkooman\OAuth\Client\Test;
 
-use fkooman\OAuth\Client\HttpClientInterface;
-use fkooman\OAuth\Client\Provider;
+use fkooman\OAuth\Client\Http\HttpClientInterface;
+use fkooman\OAuth\Client\Http\Response;
 use RuntimeException;
 
 class TestHttpClient implements HttpClientInterface
 {
-    public function post(Provider $provider, array $postData)
+    public function get($requestUri, array $requestHeaders = [])
+    {
+    }
+
+    public function post($requestUri, array $postData = [], array $requestHeaders = [])
     {
         if ('authorization_code' === $postData['grant_type']) {
             if ('code12345' === $postData['code']) {
-                return [
-                    'access_token' => sprintf(
-                        '%s:%s:%s:%s',
-                        $provider->getId(),
-                        $provider->getSecret(),
-                        $provider->getAuthorizationEndpoint(),
-                        $provider->getTokenEndpoint()
-                    ),
-                    'token_type' => 'bearer',
-                    'refresh_token' => 'refresh:x:y:z',
-                ];
+                return new Response(
+                    200,
+                    json_encode(
+                        [
+                            'access_token' => 'AT:code12345',
+                            'token_type' => 'bearer',
+                            'refresh_token' => 'refresh:x:y:z',
+                        ]
+                    )
+                );
             }
 
             if ('code12345expires' === $postData['code']) {
-                return [
-                    'access_token' => sprintf(
-                        '%s:%s:%s:%s',
-                        $provider->getId(),
-                        $provider->getSecret(),
-                        $provider->getAuthorizationEndpoint(),
-                        $provider->getTokenEndpoint()
-                    ),
-                    'token_type' => 'bearer',
-                    'expires_in' => 3600,
-                    'refresh_token' => 'refresh:x:y:z',
-                ];
+                return new Response(
+                    200,
+                    json_encode(
+                        [
+                            'access_token' => 'AT:code12345expires',
+                            'token_type' => 'bearer',
+                            'expires_in' => 3600,
+                            'refresh_token' => 'RT:code12345expires',
+                        ]
+                    )
+                );
             }
 
             if ('invalid_code' === $postData['code']) {
-                return [
-                    'error' => 'invalid_grant',
-                    'error_description' => 'invalid authorization code',
-                ];
+                return new Response(
+                    400,
+                    json_encode(
+                        [
+                            'error' => 'invalid_grant',
+                            'error_description' => 'invalid authorization code',
+                        ]
+                    )
+                );
             }
 
             throw new RuntimeException('invalid code in unit test');
         }
 
         if ('refresh_token' === $postData['grant_type']) {
-            return [
-                'access_token' => sprintf(
-                    'refreshed:%s:%s:%s:%s',
-                    $provider->getId(),
-                    $provider->getSecret(),
-                    $provider->getAuthorizationEndpoint(),
-                    $provider->getTokenEndpoint()
-                ),
-                'token_type' => 'bearer',
-                'expires_in' => 3600,
-            ];
+            return new Response(
+                200,
+                json_encode(
+                    [
+                        'access_token' => 'AT:refreshed',
+                        'token_type' => 'bearer',
+                        'expires_in' => 3600,
+                    ]
+                )
+            );
         }
 
         throw new RuntimeException('invalid grant_type in unit test');

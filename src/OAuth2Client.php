@@ -22,7 +22,11 @@ use DateInterval;
 use DateTime;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
+use fkooman\OAuth\Client\Http\CurlHttpClient;
+use fkooman\OAuth\Client\Http\HttpClientInterface;
+use fkooman\OAuth\Client\Http\Response;
 use InvalidArgumentException;
+use ParagonIE\ConstantTime\Base64;
 
 /**
  * OAuth 2.0 Client. Helper class to make it easy to obtain an access token
@@ -33,7 +37,7 @@ class OAuth2Client
     /** @var Provider */
     private $provider;
 
-    /** @var HttpClientInterface */
+    /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
     private $httpClient;
 
     /** @var RandomInterface */
@@ -101,6 +105,11 @@ class OAuth2Client
         );
     }
 
+    public function getHttpClient()
+    {
+        return $this->httpClient;
+    }
+
     /**
      * Obtain the access token from the OAuth provider after returning from the
      * OAuth provider on the redirectUri (callback URL).
@@ -141,8 +150,16 @@ class OAuth2Client
 
         $responseData = $this->validateTokenResponse(
             $this->httpClient->post(
-                $this->provider,
-                $tokenRequestData
+                $this->provider->getTokenEndpoint(),
+                $tokenRequestData,
+                [
+                    'Authorization' => sprintf(
+                        'Basic %s',
+                        Base64::encode(
+                            sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
+                        )
+                    ),
+                ]
             ),
             $requestParameters['scope']
         );
@@ -165,21 +182,29 @@ class OAuth2Client
      *
      * @return AccessToken
      */
-    public function refreshAccessToken($refreshToken, $requestScope)
+    public function refreshAccessToken(AccessToken $accessToken)
     {
         // prepare access_token request
         $tokenRequestData = [
             'grant_type' => 'refresh_token',
-            'refresh_token' => $refreshToken,
-            'scope' => $requestScope,
+            'refresh_token' => $accessToken->getRefreshToken(),
+            'scope' => $accessToken->getScope(),
         ];
 
         $responseData = $this->validateTokenResponse(
             $this->httpClient->post(
-                $this->provider,
-                $tokenRequestData
+                $this->provider->getTokenEndpoint(),
+                $tokenRequestData,
+                [
+                    'Authorization' => sprintf(
+                        'Basic %s',
+                        Base64::encode(
+                            sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
+                        )
+                    ),
+                ]
             ),
-            $requestScope
+            $accessToken->getScope()
         );
 
         return new AccessToken(
@@ -187,7 +212,7 @@ class OAuth2Client
             $responseData['token_type'],
             $responseData['scope'],
             // if a new refresh_token was provided use that, if not reuse the old one
-            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : $refreshToken,
+            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : $accessToken->getRefreshToken(),
             $responseData['expires_at']
         );
     }
@@ -232,8 +257,11 @@ class OAuth2Client
         return $requestParameters;
     }
 
-    private function validateTokenResponse(array $tokenResponse, $requestScope)
+    private function validateTokenResponse(Response $response, $requestScope)
     {
+        $tokenResponse = $response->json();
+        // XXX what if not array?
+
         // check if an error occurred
         if (array_key_exists('error', $tokenResponse)) {
             if (array_key_exists('error_description', $tokenResponse)) {

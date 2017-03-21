@@ -18,13 +18,13 @@
 
 namespace fkooman\OAuth\Client;
 
-use ParagonIE\ConstantTime\Encoding;
+use ParagonIE\ConstantTime\Hex;
 
 class Random implements RandomInterface
 {
     public function get($len)
     {
-        return Encoding::hexEncode(
+        return Hex::encode(
             random_bytes($len)
         );
     }

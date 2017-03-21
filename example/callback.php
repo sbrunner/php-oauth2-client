@@ -17,8 +17,7 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Client\CurlHttpClient;
-use fkooman\OAuth\Client\Exception\OAuthException;
+use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
 
@@ -60,7 +59,7 @@ try {
     http_response_code(302);
     header(sprintf('Location: %s', $indexUri));
     exit(0);
-} catch (OAuthException $e) {
+} catch (Exception $e) {
     echo $e->getMessage();
     exit(1);
 }

@@ -17,9 +17,9 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Client\CurlHttpClient;
-use fkooman\OAuth\Client\Exception\OAuthException;
-use fkooman\OAuth\Client\Exception\OAuthServerException;
+use fkooman\OAuth\Client\AccessToken;
+use fkooman\OAuth\Client\Http\BearerClient;
+use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
 
@@ -67,53 +67,23 @@ try {
     // we have a token
     $accessToken = $_SESSION['access_token'];
 
-    // did it expire?
-    if ($accessToken->isExpired()) {
-        // expired, try to refresh it
-        if (is_null($accessToken->getRefreshToken())) {
-            // we do not have a refresh_token, delete access_token and try again
+    $bearerClient = new BearerClient(
+        $client,
+        function (AccessToken $accessToken) {
+            $_SESSION['access_token'] = $accessToken;
+        },
+        function (AccessToken $accessToken) {
             unset($_SESSION['access_token']);
-            http_response_code(302);
-            header(sprintf('Location: %s', $indexUri));
-            exit(0);
         }
+    );
 
-        // we have a refresh token, use it!
-        $accessToken = $client->refreshAccessToken($accessToken->getRefreshToken(), $accessToken->getScope());
-        // update the token in the session as well
-        $_SESSION['access_token'] = $accessToken;
-        echo '** refreshed **';
+    if (false === $response = $bearerClient->get($accessToken, $resourceUri)) {
+        http_response_code(302);
+        header(sprintf('Location: %s', $indexUri));
+        exit(0);
     }
-
-    $curlChannel = curl_init();
-    $curlOptions = [
-        CURLOPT_URL => $resourceUri,
-        CURLOPT_HEADER => 0,
-        CURLOPT_HTTPHEADER => [
-            sprintf('Authorization: Bearer %s', $accessToken->getToken()),
-        ],
-        CURLOPT_RETURNTRANSFER => 1,
-        CURLOPT_FOLLOWLOCATION => 0,
-        CURLOPT_PROTOCOLS => CURLPROTO_HTTPS | CURLPROTO_HTTP,
-    ];
-    curl_setopt_array($curlChannel, $curlOptions);
-    if (false === $responseData = curl_exec($curlChannel)) {
-        $curlError = curl_error($curlChannel);
-        throw new RuntimeException(sprintf('failure performing the HTTP request: "%s"', $curlError));
-    }
-    // XXX deal with invalid tokens, e.g. when the user revokes it.
-    echo $responseData;
-} catch (OAuthServerException $e) {
-    // probably something went wrong with talking to the OAuth server, just
-    // delete all tokens
-    error_log($e->getMessage());
-    unset($_SESSION['access_token']);
-    // try again
-    http_response_code(302);
-    header(sprintf('Location: %s', $indexUri));
-    exit(0);
-} catch (OAuthException $e) {
-    // most likely client error
+    echo sprintf('<pre>%s</pre>', $response);
+} catch (Exception $e) {
     error_log($e->getMessage());
     echo $e->getMessage();
     exit(1);
