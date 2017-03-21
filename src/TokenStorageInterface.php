@@ -27,7 +27,7 @@ interface TokenStorageInterface
      */
     public function getAccessToken($userId);
 
-    public function updateAccessToken(AccessToken $accessToken);
+    public function setAccessToken($userId, AccessToken $accessToken);
 
-    public function deleteAccessToken(AccessToken $accessToken);
+    public function deleteAccessToken($userId, AccessToken $accessToken);
 }

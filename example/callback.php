@@ -20,8 +20,10 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
+use fkooman\OAuth\Client\SessionTokenStorage;
 
 $indexUri = 'http://localhost:8081/index.php';
+$userId = 'foo';
 
 session_start();
 
@@ -32,6 +34,8 @@ try {
         'http://localhost:8080/authorize.php',
         'http://localhost:8080/token.php'
     );
+
+    $tokenStorage = new SessionTokenStorage();
 
     // we need to provide a client, because we need to disable https, if we only
     // talk to HTTPS servers there would be no need for that
@@ -49,7 +53,7 @@ try {
         $_GET['state']        // the state value (e.g. abcde)
     );
 
-    $_SESSION['access_token'] = $accessToken;
+    $tokenStorage->setAccessToken($userId, $accessToken);
 
     // unset session field as to not allow additional redirects to the same
     // URI to attempt to get another access token with this code

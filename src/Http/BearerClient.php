@@ -25,23 +25,43 @@ use fkooman\OAuth\Client\TokenStorageInterface;
 
 class BearerClient
 {
+    /** @var string|null */
+    private $userId;
+
     /** @var \fkooman\OAuth\Client\OAuth2Client */
     private $oauthClient;
 
     /** @var \fkooman\OAuth\Client\TokenStorageInterface */
     private $tokenStorage;
 
-    public function __construct(OAuth2Client $oauthClient, TokenStorageInterface $tokenStorage)
+    public function __construct(OAuth2Client $oauthClient, TokenStorageInterface $tokenStorage, $userId = null)
     {
         $this->oauthClient = $oauthClient;
         $this->tokenStorage = $tokenStorage;
+        $this->userId = $userId;
+    }
+
+    /**
+     * @var string|null
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
     }
 
     /**
      * @return Response|false
      */
-    public function get(AccessToken $accessToken, $requestUri, array $requestHeaders = [])
+    public function get($requestUri, array $requestHeaders = [])
     {
+        // make sure we have an access token
+        $accessToken = $this->tokenStorage->getAccessToken($this->userId);
+        if (is_null($accessToken)) {
+            error_log('no access_token available');
+
+            return false;
+        }
+
         $refreshedToken = false;
         if ($accessToken->isExpired()) {
             error_log('access_token expired');
@@ -50,7 +70,7 @@ class BearerClient
                 error_log('no refresh_token available, delete access_token');
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
-                $this->tokenStorage->deleteAccessToken($accessToken);
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
                 return false;
             }
@@ -63,7 +83,7 @@ class BearerClient
                 error_log(sprintf('unable to use refresh_token %s', $e->getMessage()));
 
                 // delete the access_token, the refresh_token could not be used
-                $this->tokenStorage->deleteAccessToken($accessToken);
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
                 return false;
             }
@@ -80,7 +100,7 @@ class BearerClient
         if (401 === $response->getStatusCode()) {
             error_log('access_token appears to be invalid, delete access_token');
             // this indicates an invalid access_token
-            $this->tokenStorage->deleteAccessToken($accessToken);
+            $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
             return false;
         }
@@ -91,13 +111,13 @@ class BearerClient
             error_log('access_token was refreshed, so store it now for future use');
             // if we refreshed the token, and it was successful, i.e. not a 401,
             // update the stored AccessToken
-            $this->tokenStorage->updateAccessToken($accessToken);
+            $this->tokenStorage->setAccessToken($this->userId, $accessToken);
         }
 
         return $response;
     }
 
-    public function post(AccessToken $accessToken, $requestUri, array $postData = [], array $requestHeaders = [])
+    public function post($requestUri, array $postData = [], array $requestHeaders = [])
     {
     }
 }

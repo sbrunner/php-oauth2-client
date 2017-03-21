@@ -29,18 +29,20 @@ class SessionTokenStorage implements TokenStorageInterface
     {
         // there is only one token ever in the session, it is bound to the
         // browser
-        if (array_key_exists('access_token', $_SESSION)) {
-            return $_SESSION['access_token'];
+        if (array_key_exists($userId, $_SESSION)) {
+            if (array_key_exists('access_token', $_SESSION[$userId])) {
+                return $_SESSION[$userId]['access_token'];
+            }
         }
     }
 
-    public function updateAccessToken(AccessToken $accessToken)
+    public function setAccessToken($userId, AccessToken $accessToken)
     {
-        $_SESSION['access_Token'] = $accessToken;
+        $_SESSION[$userId]['access_token'] = $accessToken;
     }
 
-    public function deleteAccessToken(AccessToken $accessToken)
+    public function deleteAccessToken($userId, AccessToken $accessToken)
     {
-        unset($_SESSION['access_token']);
+        unset($_SESSION[$userId]['access_token']);
     }
 }

@@ -27,6 +27,7 @@ $indexUri = 'http://localhost:8081/index.php';
 $resourceUri = 'http://localhost:8080/resource.php';
 $callbackUri = 'http://localhost:8081/callback.php';
 $requestScope = 'demo_scope';
+$userId = 'foo';
 
 session_start();
 
@@ -51,7 +52,7 @@ try {
     );
 
     // do we have an access_token?
-    if (is_null($tokenStorage->getAccessToken('foo'))) {
+    if (is_null($tokenStorage->getAccessToken($userId))) {
         // no: request one
         $authorizationRequestUri = $client->getAuthorizationRequestUri(
             $requestScope,
@@ -66,20 +67,17 @@ try {
         exit(0);
     }
 
-    // we have a token
-    $accessToken = $tokenStorage->getAccessToken('foo');
-
     $bearerClient = new BearerClient(
         $client,
-        $tokenStorage
+        $tokenStorage,
+        $userId
     );
 
-    if (false === $response = $bearerClient->get($accessToken, $resourceUri)) {
+    if (false === $response = $bearerClient->get($resourceUri)) {
         http_response_code(302);
         header(sprintf('Location: %s', $indexUri));
         exit(0);
     }
-    echo 'Expires (UTC): '.$accessToken->getExpiresAt()->format('Y-m-d H:i:s');
     echo sprintf('<pre>%s</pre>', $response);
 } catch (Exception $e) {
     error_log($e->getMessage());
