@@ -17,11 +17,11 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\Http\BearerClient;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
+use fkooman\OAuth\Client\SessionTokenStorage;
 
 $indexUri = 'http://localhost:8081/index.php';
 $resourceUri = 'http://localhost:8080/resource.php';
@@ -38,6 +38,8 @@ try {
         'http://localhost:8080/token.php'
     );
 
+    $tokenStorage = new SessionTokenStorage();
+
     // we need to provide a client, because we need to disable https, if we only
     // talk to HTTPS servers there would be no need for that
     $httpClient = new CurlHttpClient();
@@ -49,7 +51,7 @@ try {
     );
 
     // do we have an access_token?
-    if (!array_key_exists('access_token', $_SESSION)) {
+    if (is_null($tokenStorage->getAccessToken('foo'))) {
         // no: request one
         $authorizationRequestUri = $client->getAuthorizationRequestUri(
             $requestScope,
@@ -65,16 +67,11 @@ try {
     }
 
     // we have a token
-    $accessToken = $_SESSION['access_token'];
+    $accessToken = $tokenStorage->getAccessToken('foo');
 
     $bearerClient = new BearerClient(
         $client,
-        function (AccessToken $accessToken) {
-            $_SESSION['access_token'] = $accessToken;
-        },
-        function (AccessToken $accessToken) {
-            unset($_SESSION['access_token']);
-        }
+        $tokenStorage
     );
 
     if (false === $response = $bearerClient->get($accessToken, $resourceUri)) {
