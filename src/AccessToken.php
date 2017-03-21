@@ -27,7 +27,7 @@ use DateTime;
 class AccessToken
 {
     /** @var string */
-    private $token;
+    private $accessToken;
 
     /** @var string */
     private $tokenType;
@@ -41,29 +41,13 @@ class AccessToken
     /** @var \DateTime */
     private $expiresAt;
 
-    public function __construct($token, $tokenType, $scope, $refreshToken, DateTime $expiresAt)
+    public function __construct($accessToken, $tokenType, $scope, $refreshToken, DateTime $expiresAt)
     {
-        $this->token = $token;
+        $this->accessToken = $accessToken;
         $this->tokenType = $tokenType;
         $this->scope = $scope;
         $this->refreshToken = $refreshToken;
         $this->expiresAt = $expiresAt;
-    }
-
-    /**
-     * Get the access token as string.
-     *
-     * @return string the access token
-     */
-    public function __toString()
-    {
-        return sprintf(
-            'token_type: %s, scope: %s, expires_at: %s, token: %s',
-            $this->getTokenType(),
-            $this->getScope(),
-            $this->getExpiresAt()->format('Y-m-d H:i:s'),
-            $this->getToken()
-        );
     }
 
     /**
@@ -75,7 +59,7 @@ class AccessToken
      */
     public function getToken()
     {
-        return $this->token;
+        return $this->accessToken;
     }
 
     /**
@@ -134,5 +118,40 @@ class AccessToken
         }
 
         return $dateTime >= $this->expiresAt;
+    }
+
+    /**
+     * @return string
+     */
+    public function json()
+    {
+        return json_encode(
+            [
+                'access_token' => $this->accessToken,
+                'token_type' => $this->tokenType,
+                'scope' => $this->scope,
+                'refresh_token' => $this->refreshToken,
+                'expires_at' => $this->expiresAt->format('Y-m-d H:i:s'),
+            ]
+        );
+    }
+
+    /**
+     * @param string $jsonData
+     *
+     * @return AccessToken
+     */
+    public static function fromJson($jsonData)
+    {
+        // XXX verify json decoding, verify all keys
+        $tokenData = json_decode($jsonData, true);
+
+        return new self(
+            $tokenData['access_token'],
+            $tokenData['token_type'],
+            $tokenData['scope'],
+            $tokenData['refresh_token'],
+            new DateTime($tokenData['expires_at'])
+        );
     }
 }

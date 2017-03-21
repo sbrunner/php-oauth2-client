@@ -82,6 +82,7 @@ try {
         header(sprintf('Location: %s', $indexUri));
         exit(0);
     }
+    echo 'Expires (UTC): '.$accessToken->getExpiresAt()->format('Y-m-d H:i:s');
     echo sprintf('<pre>%s</pre>', $response);
 } catch (Exception $e) {
     error_log($e->getMessage());

@@ -64,7 +64,6 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $this->assertSame('bearer', $accessToken->getTokenType());
         $this->assertSame('2017-01-01 00:00:00', $accessToken->getExpiresAt()->format('Y-m-d H:i:s'));
         $this->assertSame('my_scope', $accessToken->getScope());
-        $this->assertSame('token_type: bearer, scope: my_scope, expires_at: 2017-01-01 00:00:00, token: AT:code12345', (string) $accessToken);
     }
 
     public function testGetAccessTokenWithExpires()
@@ -131,6 +130,5 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
         $this->assertSame('bearer', $accessToken->getTokenType());
         $this->assertSame('2016-01-01 01:00:00', $accessToken->getExpiresAt()->format('Y-m-d H:i:s'));
         $this->assertSame('my_scope', $accessToken->getScope());
-        $this->assertSame('token_type: bearer, scope: my_scope, expires_at: 2016-01-01 01:00:00, token: AT:refreshed', (string) $accessToken);
     }
 }
