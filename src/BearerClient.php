@@ -16,13 +16,13 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace fkooman\OAuth\Client\Http;
+namespace fkooman\OAuth\Client;
 
 use DateTime;
-use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
-use fkooman\OAuth\Client\OAuth2Client;
-use fkooman\OAuth\Client\TokenStorageInterface;
+use fkooman\OAuth\Client\Http\Response;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class BearerClient
 {
@@ -35,14 +35,21 @@ class BearerClient
     /** @var string|null */
     private $userId;
 
+    /** @var \Psr\Log\LoggerInterface */
+    private $logger;
+
     /** @var DateTime */
     private $dateTime;
 
-    public function __construct(OAuth2Client $oauthClient, TokenStorageInterface $tokenStorage, $userId = null, DateTime $dateTime = null)
+    public function __construct(OAuth2Client $oauthClient, TokenStorageInterface $tokenStorage, $userId = null, LoggerInterface $logger = null, DateTime $dateTime = null)
     {
         $this->oauthClient = $oauthClient;
         $this->tokenStorage = $tokenStorage;
         $this->userId = $userId;
+        if (is_null($logger)) {
+            $logger = new NullLogger();
+        }
+        $this->logger = $logger;
         if (is_null($dateTime)) {
             $dateTime = new DateTime();
         }
@@ -65,17 +72,17 @@ class BearerClient
         // make sure we have an access token
         $accessToken = $this->tokenStorage->getAccessToken($this->userId);
         if (is_null($accessToken)) {
-            error_log('no access_token available');
+            $this->logger->info('no access_token available');
 
             return false;
         }
 
         $refreshedToken = false;
         if ($accessToken->isExpired($this->dateTime)) {
-            error_log('access_token expired');
+            $this->logger->info('access_token expired');
             // access_token is expired, try to refresh it
             if (is_null($accessToken->getRefreshToken())) {
-                error_log('no refresh_token available, delete access_token');
+                $this->logger->info('no refresh_token available, delete access_token');
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
                 $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
@@ -83,12 +90,12 @@ class BearerClient
                 return false;
             }
 
-            error_log('attempting to refresh access_token');
+            $this->logger->info('attempting to refresh access_token');
             // deal with possibly revoked authorization! XXX
             try {
                 $accessToken = $this->oauthClient->refreshAccessToken($accessToken);
             } catch (OAuthServerException $e) {
-                error_log(sprintf('unable to use refresh_token %s', $e->getMessage()));
+                $this->logger->info(sprintf('unable to use refresh_token %s', $e->getMessage()));
 
                 // delete the access_token, the refresh_token could not be used
                 $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
@@ -97,7 +104,7 @@ class BearerClient
             }
 
             // maybe delete old accesstoken here? XXX
-            error_log('access_token refreshed');
+            $this->logger->info('access_token refreshed');
             $refreshedToken = true;
         }
 
@@ -106,17 +113,17 @@ class BearerClient
 
         $response = $this->oauthClient->getHttpClient()->get($requestUri, $requestHeaders);
         if (401 === $response->getStatusCode()) {
-            error_log('access_token appears to be invalid, delete access_token');
+            $this->logger->info('access_token appears to be invalid, delete access_token');
             // this indicates an invalid access_token
             $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
             return false;
         }
 
-        error_log('access_token was valid, call succeeded');
+        $this->logger->info('access_token was valid, call succeeded');
 
         if ($refreshedToken) {
-            error_log('access_token was refreshed, so store it now for future use');
+            $this->logger->info('access_token was refreshed, so store it now for future use');
             // if we refreshed the token, and it was successful, i.e. not a 401,
             // update the stored AccessToken
             $this->tokenStorage->setAccessToken($this->userId, $accessToken);

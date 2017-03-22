@@ -17,7 +17,7 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Client\Http\BearerClient;
+use fkooman\OAuth\Client\BearerClient;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
