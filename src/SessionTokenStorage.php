@@ -20,6 +20,13 @@ namespace fkooman\OAuth\Client;
 
 class SessionTokenStorage implements TokenStorageInterface
 {
+    public function __construct()
+    {
+        if ('' === session_id()) {
+            session_start();
+        }
+    }
+
     /**
      * @param string $userId
      *

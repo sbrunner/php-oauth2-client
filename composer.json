@@ -18,6 +18,7 @@
         "ext-curl": "*",
         "ext-date": "*",
         "ext-json": "*",
+        "ext-session": "*",
         "ext-spl": "*",
         "paragonie/constant_time_encoding": "^1|^2",
         "paragonie/random_compat": "^1|^2",
