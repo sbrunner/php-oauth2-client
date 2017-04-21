@@ -27,6 +27,8 @@ use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Response;
 use InvalidArgumentException;
 use ParagonIE\ConstantTime\Base64;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * OAuth 2.0 Client. Helper class to make it easy to obtain an access token
@@ -37,26 +39,37 @@ class OAuth2Client
     /** @var Provider */
     private $provider;
 
+    /** @var TokenStorageInterface */
+    private $tokenStorage;
+
     /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
     private $httpClient;
 
     /** @var RandomInterface */
     private $random;
 
+    /** @var \Psr\Log\LoggerInterface */
+    private $logger;
+
     /** @var \DateTime */
     private $dateTime;
+
+    /** @var string|null */
+    private $userId = null;
 
     /**
      * Instantiate an OAuth 2.0 Client.
      *
-     * @param Provider                 $provider   the OAuth 2.0 provider configuration
-     * @param HttpClientInterface|null $httpClient the HTTP client implementation
-     * @param RandomInterface|null     $random     the random implementation
-     * @param DateTime|null            $dateTime   the DateTime object for the current time
+     * @param Provider                      $provider
+     * @param TokenStorageInterface         $tokenStorage
+     * @param Http\HttpClientInterface|null $httpClient
+     * @param RandomInterface|null          $random
+     * @param DateTime|null                 $dateTime
      */
-    public function __construct(Provider $provider, HttpClientInterface $httpClient = null, RandomInterface $random = null, DateTime $dateTime = null)
+    public function __construct(Provider $provider, TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient = null, RandomInterface $random = null, LoggerInterface $logger, DateTime $dateTime = null)
     {
         $this->provider = $provider;
+        $this->tokenStorage = $tokenStorage;
         if (is_null($httpClient)) {
             $httpClient = new CurlHttpClient();
         }
@@ -65,10 +78,90 @@ class OAuth2Client
             $random = new Random();
         }
         $this->random = $random;
+        if (is_null($logger)) {
+            $logger = new NullLogger();
+        }
+        $this->logger = $logger;
         if (is_null($dateTime)) {
             $dateTime = new DateTime();
         }
         $this->dateTime = $dateTime;
+    }
+
+    /**
+     * @param string $userId
+     */
+    public function setUserId($userId)
+    {
+        $this->userId = $userId;
+    }
+
+    public function get($requestScope, $requestUri, array $requestHeaders = [])
+    {
+        if (is_null($this->userId)) {
+            throw new OAuthException('userId not set');
+        }
+
+        // make sure we have an access token
+        if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId)) {
+            $this->logger->info('no access_token available');
+
+            return false;
+        }
+
+        $refreshedToken = false;
+        if ($accessToken->isExpired($this->dateTime)) {
+            $this->logger->info('access_token expired');
+            // access_token is expired, try to refresh it
+            if (is_null($accessToken->getRefreshToken())) {
+                $this->logger->info('no refresh_token available, delete access_token');
+                // we do not have a refresh_token, delete this access token, it
+                // is useless now...
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+
+                return false;
+            }
+
+            $this->logger->info('attempting to refresh access_token');
+            // deal with possibly revoked authorization! XXX
+            try {
+                $accessToken = $this->refreshAccessToken($accessToken);
+            } catch (OAuthServerException $e) {
+                $this->logger->info(sprintf('unable to use refresh_token %s', $e->getMessage()));
+
+                // delete the access_token, the refresh_token could not be used
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+
+                return false;
+            }
+
+            // maybe delete old accesstoken here? XXX
+            $this->logger->info('access_token refreshed');
+            $refreshedToken = true;
+        }
+
+        // add Authorization header to the request headers
+        $requestHeaders['Authorization'] = sprintf('Bearer %s', $accessToken->getToken());
+
+        $response = $this->httpClient->get($requestUri, $requestHeaders);
+        if (401 === $response->getStatusCode()) {
+            $this->logger->info('access_token appears to be invalid, delete access_token');
+            // this indicates an invalid access_token
+            $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+
+            return false;
+        }
+
+        $this->logger->info('access_token was valid, call succeeded');
+
+        if ($refreshedToken) {
+            $this->logger->info('access_token was refreshed and it worked, so store it now for future use');
+            // if we refreshed the token, and it was successful, i.e. not a 401,
+            // update the stored AccessToken
+            $this->tokenStorage->setAccessToken($this->userId, $accessToken);
+        }
+
+        return $response;
     }
 
     /**
@@ -84,7 +177,7 @@ class OAuth2Client
      * @see https://tools.ietf.org/html/rfc6749#section-3.3
      * @see https://tools.ietf.org/html/rfc6749#section-3.1.2
      */
-    public function getAuthorizationRequestUri($scope, $redirectUri)
+    public function getAuthorizeUri($scope, $redirectUri)
     {
         $queryParams = http_build_query(
             [
@@ -105,11 +198,6 @@ class OAuth2Client
         );
     }
 
-    public function getHttpClient()
-    {
-        return $this->httpClient;
-    }
-
     /**
      * Obtain the access token from the OAuth provider after returning from the
      * OAuth provider on the redirectUri (callback URL).
@@ -123,8 +211,12 @@ class OAuth2Client
      *
      * @return AccessToken
      */
-    public function getAccessToken($requestUri, $responseCode, $responseState)
+    public function handleCallback($requestUri, $responseCode, $responseState)
     {
+        if (is_null($this->userId)) {
+            throw new OAuthException('userId not set');
+        }
+
         // the requestUri parameter is provided by the caller of this call, and
         // does NOT contain external input so does not need to be validated
         $requestParameters = self::parseRequestUri($requestUri);
@@ -164,12 +256,15 @@ class OAuth2Client
             $requestParameters['scope']
         );
 
-        return new AccessToken(
-            $responseData['access_token'],
-            $responseData['token_type'],
-            $responseData['scope'],
-            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : null,
-            $responseData['expires_at']
+        $this->tokenStorage->setAccessToken(
+            $this->userId,
+            new AccessToken(
+                $responseData['access_token'],
+                $responseData['token_type'],
+                $responseData['scope'],
+                array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : null,
+                $responseData['expires_at']
+            )
         );
     }
 
@@ -182,7 +277,7 @@ class OAuth2Client
      *
      * @return AccessToken
      */
-    public function refreshAccessToken(AccessToken $accessToken)
+    private function refreshAccessToken(AccessToken $accessToken)
     {
         // prepare access_token request
         $tokenRequestData = [

@@ -17,10 +17,10 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
-use fkooman\OAuth\Client\BearerClient;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
+use fkooman\OAuth\Client\Random;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
 $indexUri = 'http://localhost:8081/index.php';
@@ -29,55 +29,40 @@ $callbackUri = 'http://localhost:8081/callback.php';
 $requestScope = 'demo_scope';
 $userId = 'foo';
 
+// XXX we should problably use Cookie for this, and not a session as to avoid
+// interfering with existing session handlers
 session_start();
 
 try {
-    $provider = new Provider(
-        'demo_client',
-        'demo_secret',
-        'http://localhost:8080/authorize.php',
-        'http://localhost:8080/token.php'
-    );
-
-    $tokenStorage = new SessionTokenStorage();
-
-    // we need to provide a client, because we need to disable https, if we only
-    // talk to HTTPS servers there would be no need for that
-    $httpClient = new CurlHttpClient();
-    $httpClient->setHttpsOnly(false);
-
     $client = new OAuth2Client(
-        $provider,
-        $httpClient
+        new Provider(
+            'demo_client',
+            'demo_secret',
+            'http://localhost:8080/authorize.php',
+            'http://localhost:8080/token.php'
+        ),
+        new SessionTokenStorage(),
+        new CurlHttpClient(['httpsOnly' => false]),
+        new Random(),
+        new DateTime()
     );
 
-    // do we have an access_token?
-    if (is_null($tokenStorage->getAccessToken($userId))) {
-        // no: request one
-        $authorizationRequestUri = $client->getAuthorizationRequestUri(
-            $requestScope,
-            $callbackUri
-        );
-        // store the request state
-        $_SESSION['session'] = $authorizationRequestUri;
+    $client->setUserId($userId);
 
+    if (false === $response = $client->get($requestScope, $resourceUri)) {
+        // no authorization yet for this scope, or obtaining the resource
+        // failed, access_token was not accepted by the resource server and
+        // refresh didn't work or was not possible. Nothing we can do but to
+        // re-request authorization
+        $authorizeUri = $client->getAuthorizeUri($callbackUri);
+        $_SESSION['session'] = $authorizeUri;
         // redirect the browser to the authorization endpoint (with a 302)
         http_response_code(302);
-        header(sprintf('Location: %s', $authorizationRequestUri));
+        header(sprintf('Location: %s', $authorizeUri));
         exit(0);
     }
 
-    $bearerClient = new BearerClient(
-        $client,
-        $tokenStorage,
-        $userId
-    );
-
-    if (false === $response = $bearerClient->get($resourceUri)) {
-        http_response_code(302);
-        header(sprintf('Location: %s', $indexUri));
-        exit(0);
-    }
+    // we got the resource, print the response
     echo sprintf('<pre>%s</pre>', $response);
 } catch (Exception $e) {
     error_log($e->getMessage());

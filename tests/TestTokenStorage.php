@@ -16,43 +16,46 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace fkooman\OAuth\Client;
+namespace fkooman\OAuth\Client\Tests;
 
-class SessionTokenStorage implements TokenStorageInterface
+use DateTime;
+use fkooman\OAuth\Client\AccessToken;
+use fkooman\OAuth\Client\TokenStorageInterface;
+
+class TestTokenStorage implements TokenStorageInterface
 {
+    /** @var array */
+    private $data = [];
+
+    public function __construct()
+    {
+        $this->data['bar']['access_token'] = new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00'));
+        $this->data['baz']['access_token'] = new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00'));
+    }
+
     /**
-     * @param string $userId
-     *
      * @return AccessToken|false
      */
     public function getAccessToken($userId)
     {
-        if (!array_key_exists($userId, $_SESSION)) {
+        if (!array_key_exists($userId, $this->data)) {
             return false;
         }
 
-        if (array_key_exists('access_token', $_SESSION[$userId])) {
-            return $_SESSION[$userId]['access_token'];
+        if (array_key_exists('access_token', $this->data[$userId])) {
+            return $this->data[$userId]['access_token'];
         }
 
         return false;
     }
 
-    /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
-     */
     public function setAccessToken($userId, AccessToken $accessToken)
     {
-        $_SESSION[$userId]['access_token'] = $accessToken;
+        $this->data[$userId]['access_token'] = $accessToken;
     }
 
-    /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
-     */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {
-        unset($_SESSION[$userId]['access_token']);
+        unset($this->data[$userId]['access_token']);
     }
 }

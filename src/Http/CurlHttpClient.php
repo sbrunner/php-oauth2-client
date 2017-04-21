@@ -28,21 +28,19 @@ class CurlHttpClient implements HttpClientInterface
     /** @var bool */
     private $httpsOnly = true;
 
-    public function __construct()
+    public function __construct(array $configData = [])
     {
         if (false === $this->curlChannel = curl_init()) {
             throw new RuntimeException('unable to create cURL channel');
+        }
+        if (array_key_exists('httpsOnly', $configData)) {
+            $this->httpsOnly = (bool) $configData['httpsOnly'];
         }
     }
 
     public function __destruct()
     {
         curl_close($this->curlChannel);
-    }
-
-    public function setHttpsOnly($httpsOnly)
-    {
-        $this->httpsOnly = (bool) $httpsOnly;
     }
 
     public function get($requestUri, array $requestHeaders = [])

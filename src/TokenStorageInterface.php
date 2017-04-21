@@ -1,4 +1,5 @@
 <?php
+
 /**
  *  Copyright (C) 2017 François Kooman <fkooman@tuxed.net>.
  *
@@ -23,11 +24,19 @@ interface TokenStorageInterface
     /**
      * @param string $userId
      *
-     * @return AccessToken|null
+     * @return AccessToken|false
      */
     public function getAccessToken($userId);
 
+    /**
+     * @param string      $userId
+     * @param AccessToken $accessToken
+     */
     public function setAccessToken($userId, AccessToken $accessToken);
 
+    /**
+     * @param string      $userId
+     * @param AccessToken $accessToken
+     */
     public function deleteAccessToken($userId, AccessToken $accessToken);
 }

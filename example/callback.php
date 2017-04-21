@@ -20,6 +20,7 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
+use fkooman\OAuth\Client\Random;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
 $indexUri = 'http://localhost:8081/index.php';
@@ -28,32 +29,25 @@ $userId = 'foo';
 session_start();
 
 try {
-    $provider = new Provider(
-        'demo_client',
-        'demo_secret',
-        'http://localhost:8080/authorize.php',
-        'http://localhost:8080/token.php'
-    );
-
-    $tokenStorage = new SessionTokenStorage();
-
-    // we need to provide a client, because we need to disable https, if we only
-    // talk to HTTPS servers there would be no need for that
-    $httpClient = new CurlHttpClient();
-    $httpClient->setHttpsOnly(false);
-
     $client = new OAuth2Client(
-        $provider,
-        $httpClient
+        new Provider(
+            'demo_client',
+            'demo_secret',
+            'http://localhost:8080/authorize.php',
+            'http://localhost:8080/token.php'
+        ),
+        new SessionTokenStorage(),
+        new CurlHttpClient(['httpsOnly' => false]),
+        new Random(),
+        new DateTime()
     );
 
-    $accessToken = $client->getAccessToken(
+    $client->setUserId($userId);
+    $client->handleCallback(
         $_SESSION['session'], // URI from session
         $_GET['code'],        // the code value (e.g. 12345)
         $_GET['state']        // the state value (e.g. abcde)
     );
-
-    $tokenStorage->setAccessToken($userId, $accessToken);
 
     // unset session field as to not allow additional redirects to the same
     // URI to attempt to get another access token with this code
