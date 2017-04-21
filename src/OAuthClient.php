@@ -30,11 +30,7 @@ use ParagonIE\ConstantTime\Base64;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-/**
- * OAuth 2.0 Client. Helper class to make it easy to obtain an access token
- * from an OAuth 2.0 provider.
- */
-class OAuth2Client
+class OAuthClient
 {
     /** @var Provider */
     private $provider;

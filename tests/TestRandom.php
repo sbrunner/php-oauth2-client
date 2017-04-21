@@ -16,14 +16,22 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace fkooman\OAuth\Client;
+namespace fkooman\OAuth\Client\Tests;
 
-interface RandomInterface
+use fkooman\OAuth\Client\RandomInterface;
+
+class TestRandom implements RandomInterface
 {
+    /** @var int */
+    private $counter = 0;
+
     /**
      * Get a randomly generated crypto secure string.
      *
-     * @param int $length the length (in bytes) of the random string
+     * @param $len int the length (in bytes) of the random string
      */
-    public function get($length);
+    public function get($length)
+    {
+        return sprintf('random_%d', $this->counter++);
+    }
 }

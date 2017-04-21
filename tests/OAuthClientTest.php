@@ -19,44 +19,35 @@
 namespace fkooman\OAuth\Client\Tests;
 
 use DateTime;
-use fkooman\OAuth\Client\OAuth2Client;
+use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use PHPUnit_Framework_TestCase;
 use Psr\Log\NullLogger;
 
-class OAuth2ClientTest extends PHPUnit_Framework_TestCase
+class OAuthClientTest extends PHPUnit_Framework_TestCase
 {
-    /** @var \fkooman\OAuth\Client\RandomInterface */
-    private $random;
-
-    public function setUp()
-    {
-        $this->random = $this->getMockBuilder('\fkooman\OAuth\Client\RandomInterface')->getMock();
-        $this->random->method('get')->willReturn('state12345abcde');
-    }
-
     public function testHasNoAccessToken()
     {
-        $o = new OAuth2Client(
+        $o = new OAuthClient(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             new TestTokenStorage(),
             new TestHttpClient(),
-            $this->random,
+            new TestRandom(),
             new NullLogger(),
             new DateTime('2016-01-01')
         );
         $o->setUserId('foo');
         $this->assertFalse($o->get('my_scope', 'https://example.org/resource'));
-        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code', $o->getAuthorizeUri('my_scope', 'https://example.org/callback'));
+        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $o->getAuthorizeUri('my_scope', 'https://example.org/callback'));
     }
 
     public function testHasValidAccessToken()
     {
-        $o = new OAuth2Client(
+        $o = new OAuthClient(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             new TestTokenStorage(),
             new TestHttpClient(),
-            $this->random,
+            new TestRandom(),
             new NullLogger(),
             new DateTime('2016-01-01')
         );
@@ -68,11 +59,11 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
 
     public function testHasExpiredAccessTokenNoRefreshToken()
     {
-        $o = new OAuth2Client(
+        $o = new OAuthClient(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             new TestTokenStorage(),
             new TestHttpClient(),
-            $this->random,
+            new TestRandom(),
             new NullLogger(),
             new DateTime('2016-01-01 02:00:00')
         );
@@ -82,11 +73,11 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
 
     public function testHasExpiredAccessTokenRefreshToken()
     {
-        $o = new OAuth2Client(
+        $o = new OAuthClient(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             new TestTokenStorage(),
             new TestHttpClient(),
-            $this->random,
+            new TestRandom(),
             new NullLogger(),
             new DateTime('2016-01-01 02:00:00')
         );
@@ -100,11 +91,11 @@ class OAuth2ClientTest extends PHPUnit_Framework_TestCase
     {
         $tokenStorage = new TestTokenStorage();
 
-        $o = new OAuth2Client(
+        $o = new OAuthClient(
             new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             $tokenStorage,
             new TestHttpClient(),
-            $this->random,
+            new TestRandom(),
             new NullLogger(),
             new DateTime('2016-01-01')
         );

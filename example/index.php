@@ -18,7 +18,7 @@
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
 use fkooman\OAuth\Client\Http\CurlHttpClient;
-use fkooman\OAuth\Client\OAuth2Client;
+use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\Random;
 use fkooman\OAuth\Client\SessionTokenStorage;
@@ -35,7 +35,7 @@ $userId = 'foo';
 session_start();
 
 try {
-    $client = new OAuth2Client(
+    $client = new OAuthClient(
         new Provider(
             'demo_client',
             'demo_secret',
