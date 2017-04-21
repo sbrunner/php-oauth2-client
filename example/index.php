@@ -22,6 +22,7 @@ use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\Random;
 use fkooman\OAuth\Client\SessionTokenStorage;
+use Psr\Log\NullLogger;
 
 $indexUri = 'http://localhost:8081/index.php';
 $resourceUri = 'http://localhost:8080/resource.php';
@@ -44,6 +45,7 @@ try {
         new SessionTokenStorage(),
         new CurlHttpClient(['httpsOnly' => false]),
         new Random(),
+        new NullLogger(),
         new DateTime()
     );
 
@@ -54,7 +56,7 @@ try {
         // failed, access_token was not accepted by the resource server and
         // refresh didn't work or was not possible. Nothing we can do but to
         // re-request authorization
-        $authorizeUri = $client->getAuthorizeUri($callbackUri);
+        $authorizeUri = $client->getAuthorizeUri($requestScope, $callbackUri);
         $_SESSION['session'] = $authorizeUri;
         // redirect the browser to the authorization endpoint (with a 302)
         http_response_code(302);

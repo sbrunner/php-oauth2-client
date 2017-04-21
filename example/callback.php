@@ -22,6 +22,7 @@ use fkooman\OAuth\Client\OAuth2Client;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\Random;
 use fkooman\OAuth\Client\SessionTokenStorage;
+use Psr\Log\NullLogger;
 
 $indexUri = 'http://localhost:8081/index.php';
 $userId = 'foo';
@@ -39,6 +40,7 @@ try {
         new SessionTokenStorage(),
         new CurlHttpClient(['httpsOnly' => false]),
         new Random(),
+        new NullLogger(),
         new DateTime()
     );
 
