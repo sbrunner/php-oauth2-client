@@ -12,7 +12,7 @@
         }
     },
     "description": "Very simple OAuth 2.0 client",
-    "license": "AGPL-3.0",
+    "license": "MIT",
     "name": "fkooman/oauth2-client",
     "require": {
         "ext-curl": "*",
