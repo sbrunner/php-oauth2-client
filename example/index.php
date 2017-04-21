@@ -49,6 +49,8 @@ try {
         new DateTime()
     );
 
+    // bind the tokens to a particular userId, this comes from your application
+    // where the user is already authenticated
     $client->setUserId($userId);
 
     if (false === $response = $client->get($requestScope, $resourceUri)) {

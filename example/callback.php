@@ -44,7 +44,10 @@ try {
         new DateTime()
     );
 
+    // bind the tokens to a particular userId, this comes from your application
+    // where the user is already authenticated
     $client->setUserId($userId);
+
     $client->handleCallback(
         $_SESSION['session'], // URI from session
         $_GET['code'],        // the code value (e.g. 12345)

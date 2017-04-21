@@ -20,7 +20,6 @@ namespace fkooman\OAuth\Client\Tests;
 
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Response;
-use RuntimeException;
 
 class TestHttpClient implements HttpClientInterface
 {
@@ -81,7 +80,27 @@ class TestHttpClient implements HttpClientInterface
 
                 return new Response(
                     400,
-                    json_encode(['error' => 'invalid_grant'])
+                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid refresh_token'])
+                );
+            }
+
+            if ('authorization_code' === $postData['grant_type']) {
+                if ('AC:abc' === $postData['code']) {
+                    return new Response(
+                        200,
+                        json_encode(
+                            [
+                                'access_token' => 'AT:code12345',
+                                'token_type' => 'bearer',
+                                'refresh_token' => 'refresh:x:y:z',
+                            ]
+                        )
+                    );
+                }
+
+                return new Response(
+                    400,
+                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid authorization_code'])
                 );
             }
 
@@ -98,63 +117,5 @@ class TestHttpClient implements HttpClientInterface
                 'Content-Type' => 'text/plain',
             ]
         );
-
-//        if ('authorization_code' === $postData['grant_type']) {
-//            if ('code12345' === $postData['code']) {
-//                return new Response(
-//                    200,
-//                    json_encode(
-//                        [
-//                            'access_token' => 'AT:code12345',
-//                            'token_type' => 'bearer',
-//                            'refresh_token' => 'refresh:x:y:z',
-//                        ]
-//                    )
-//                );
-//            }
-
-//            if ('code12345expires' === $postData['code']) {
-//                return new Response(
-//                    200,
-//                    json_encode(
-//                        [
-//                            'access_token' => 'AT:code12345expires',
-//                            'token_type' => 'bearer',
-//                            'expires_in' => 3600,
-//                            'refresh_token' => 'RT:code12345expires',
-//                        ]
-//                    )
-//                );
-//            }
-
-//            if ('invalid_code' === $postData['code']) {
-//                return new Response(
-//                    400,
-//                    json_encode(
-//                        [
-//                            'error' => 'invalid_grant',
-//                            'error_description' => 'invalid authorization code',
-//                        ]
-//                    )
-//                );
-//            }
-
-//            throw new RuntimeException('invalid code in unit test');
-//        }
-
-//        if ('refresh_token' === $postData['grant_type']) {
-//            return new Response(
-//                200,
-//                json_encode(
-//                    [
-//                        'access_token' => 'AT:refreshed',
-//                        'token_type' => 'bearer',
-//                        'expires_in' => 3600,
-//                    ]
-//                )
-//            );
-//        }
-
-//        throw new RuntimeException('invalid grant_type in unit test');
     }
 }
