@@ -121,3 +121,7 @@ i.e. [RFC 6749](https://tools.ietf.org/html/rfc6749),
 
 Make sure you send all relevant "security headers" to the browser as well, see 
 e.g. [securityheaders.io](https://securityheaders.io/).
+
+# License
+
+[MIT](LICENSE).
