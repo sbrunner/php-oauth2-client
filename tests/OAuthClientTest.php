@@ -53,7 +53,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     public function testHasNoAccessToken()
     {
         $this->client->setUserId('foo');
-        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
         $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $this->client->getAuthorizeUri('my_scope', 'https://example.org/callback'));
     }
 
@@ -69,7 +69,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     {
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
         $this->client->setUserId('bar');
-        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
     }
 
     public function testHasExpiredAccessTokenRefreshToken()

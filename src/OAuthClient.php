@@ -363,11 +363,10 @@ class OAuthClient
             throw new InvalidArgumentException('"requestUri" MUST be string');
         }
 
-        if (false === strpos($requestUri, '?')) {
+        if (false === $qPos = strpos($requestUri, '?')) {
             throw new OAuthException('"requestUri" not valid, no query string');
         }
-
-        parse_str(explode('?', $requestUri)[1], $requestParameters);
+        parse_str(substr($requestUri, $qPos + 1), $requestParameters);
 
         $requiredParameters = [
             'client_id',
