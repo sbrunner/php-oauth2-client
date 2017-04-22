@@ -34,9 +34,9 @@ $callbackUri = 'http://localhost:8081/callback.php';
 $requestScope = 'demo_scope';
 $userId = 'foo';
 
-// XXX we should problably use Cookie for this, and not a session as to avoid
-// interfering with existing session handlers
-session_start();
+if ('' === session_id()) {
+    session_start();
+}
 
 try {
     $client = new OAuthClient(

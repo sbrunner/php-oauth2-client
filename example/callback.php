@@ -31,7 +31,9 @@ use fkooman\OAuth\Client\SessionTokenStorage;
 $indexUri = 'http://localhost:8081/index.php';
 $userId = 'foo';
 
-session_start();
+if ('' === session_id()) {
+    session_start();
+}
 
 try {
     $client = new OAuthClient(
