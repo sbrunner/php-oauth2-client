@@ -60,15 +60,6 @@ class OAuthClient
     /** @var string|null */
     private $userId = null;
 
-    /**
-     * Instantiate an OAuth 2.0 Client.
-     *
-     * @param Provider                      $provider
-     * @param TokenStorageInterface         $tokenStorage
-     * @param Http\HttpClientInterface|null $httpClient
-     * @param RandomInterface|null          $random
-     * @param DateTime|null                 $dateTime
-     */
     public function __construct(Provider $provider, TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient = null, RandomInterface $random = null, LoggerInterface $logger, DateTime $dateTime = null)
     {
         $this->provider = $provider;
@@ -99,16 +90,37 @@ class OAuthClient
         $this->userId = $userId;
     }
 
+    /**
+     * @param string $requestScope
+     * @param string $requestUri
+     * @param array  $requestHeaders
+     *
+     * @return Http\Response|false
+     */
     public function get($requestScope, $requestUri, array $requestHeaders = [])
     {
         return $this->send($requestScope, Request::get($requestUri, $requestHeaders));
     }
 
+    /**
+     * @param string $requestScope
+     * @param string $requestUri
+     * @param array  $postBody
+     * @param array  $requestHeaders
+     *
+     * @return Http\Response|false
+     */
     public function post($requestScope, $requestUri, array $postBody, array $requestHeaders = [])
     {
         return $this->send($requestScope, Request::post($requestUri, $postBody, $requestHeaders));
     }
 
+    /**
+     * @param string       $requestScope
+     * @param Http\Request $request
+     *
+     * @return Response|false
+     */
     public function send($requestScope, Request $request)
     {
         if (is_null($this->userId)) {
@@ -221,8 +233,6 @@ class OAuthClient
      *                              query parameter on the callback URL
      * @param string $responseState the state passed to the 'state'
      *                              query parameter on the callback URL
-     *
-     * @return AccessToken
      */
     public function handleCallback($requestUri, $responseCode, $responseState)
     {
@@ -284,11 +294,7 @@ class OAuthClient
     }
 
     /**
-     * Refresh the access token from the OAuth.
-     *
-     * @param string $refreshToken the refresh token
-     * @param string $requestScope the scope associated with the previously
-     *                             obtained access token
+     * @param AccessToken $accessToken
      *
      * @return AccessToken
      */
@@ -330,8 +336,9 @@ class OAuthClient
     }
 
     /**
-     * Validate the provided URI to see if it has the right format, it is
-     * provided by the API consumer.
+     * @param string $requestUri
+     *
+     * @return array
      */
     private static function parseRequestUri($requestUri)
     {
@@ -369,6 +376,12 @@ class OAuthClient
         return $requestParameters;
     }
 
+    /**
+     * @param Http\Response $response
+     * @param string        $requestScope
+     *
+     * @return array
+     */
     private function validateTokenResponse(Response $response, $requestScope)
     {
         $tokenResponse = $response->json();
@@ -410,6 +423,11 @@ class OAuthClient
         return $tokenResponse;
     }
 
+    /**
+     * @param array $tokenResponse
+     *
+     * @return \DateTime
+     */
     private function calculateExpiresAt(array $tokenResponse)
     {
         $dateTime = clone $this->dateTime;
