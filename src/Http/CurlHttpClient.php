@@ -34,6 +34,9 @@ class CurlHttpClient implements HttpClientInterface
     /** @var bool */
     private $httpsOnly = true;
 
+    /**
+     * @param array $configData
+     */
     public function __construct(array $configData = [])
     {
         if (array_key_exists('httpsOnly', $configData)) {
@@ -47,6 +50,11 @@ class CurlHttpClient implements HttpClientInterface
         curl_close($this->curlChannel);
     }
 
+    /**
+     * @param Request $request
+     *
+     * @return Response
+     */
     public function send(Request $request)
     {
         $curlOptions = [
@@ -78,6 +86,12 @@ class CurlHttpClient implements HttpClientInterface
         }
     }
 
+    /**
+     * @param array $curlOptions
+     * @param array $requestHeaders
+     *
+     * @return Response
+     */
     private function exec(array $curlOptions, array $requestHeaders)
     {
         $headerList = [];

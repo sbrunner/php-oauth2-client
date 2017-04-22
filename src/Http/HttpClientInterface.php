@@ -27,6 +27,8 @@ namespace fkooman\OAuth\Client\Http;
 interface HttpClientInterface
 {
     /**
+     * @param Request $request
+     *
      * @return Response
      */
     public function send(Request $request);
