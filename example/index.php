@@ -26,9 +26,7 @@ require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
-use fkooman\OAuth\Client\Random;
 use fkooman\OAuth\Client\SessionTokenStorage;
-use Psr\Log\NullLogger;
 
 $indexUri = 'http://localhost:8081/index.php';
 $resourceUri = 'http://localhost:8080/resource.php';
@@ -49,10 +47,7 @@ try {
             'http://localhost:8080/token.php'
         ),
         new SessionTokenStorage(),
-        new CurlHttpClient(['httpsOnly' => false]),
-        new Random(),
-        new NullLogger(),
-        new DateTime()
+        new CurlHttpClient(['httpsOnly' => false])
     );
 
     // bind the tokens to a particular userId, this comes from your application

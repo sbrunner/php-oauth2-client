@@ -28,86 +28,64 @@ use DateTime;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use PHPUnit_Framework_TestCase;
-use Psr\Log\NullLogger;
 
 class OAuthClientTest extends PHPUnit_Framework_TestCase
 {
+    /** @var \fkooman\OAuth\Client\OAuthClient */
+    private $client;
+
+    /** @var \fkooman\OAuth\Client\TokenStorageInterface */
+    private $tokenStorage;
+
+    public function setUp()
+    {
+        $this->tokenStorage = new TestTokenStorage();
+        $this->client = new OAuthClient(
+            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
+            $this->tokenStorage,
+            new TestHttpClient()
+        );
+
+        $this->client->setRandom(new TestRandom());
+        $this->client->setDateTime(new DateTime('2016-01-01'));
+    }
+
     public function testHasNoAccessToken()
     {
-        $o = new OAuthClient(
-            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
-            new TestTokenStorage(),
-            new TestHttpClient(),
-            new TestRandom(),
-            new NullLogger(),
-            new DateTime('2016-01-01')
-        );
-        $o->setUserId('foo');
-        $this->assertFalse($o->get('my_scope', 'https://example.org/resource'));
-        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $o->getAuthorizeUri('my_scope', 'https://example.org/callback'));
+        $this->client->setUserId('foo');
+        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $this->client->getAuthorizeUri('my_scope', 'https://example.org/callback'));
     }
 
     public function testHasValidAccessToken()
     {
-        $o = new OAuthClient(
-            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
-            new TestTokenStorage(),
-            new TestHttpClient(),
-            new TestRandom(),
-            new NullLogger(),
-            new DateTime('2016-01-01')
-        );
-        $o->setUserId('bar');
-        $response = $o->get('my_scope', 'https://example.org/resource');
+        $this->client->setUserId('bar');
+        $response = $this->client->get('my_scope', 'https://example.org/resource');
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue($response->json()['ok']);
     }
 
     public function testHasExpiredAccessTokenNoRefreshToken()
     {
-        $o = new OAuthClient(
-            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
-            new TestTokenStorage(),
-            new TestHttpClient(),
-            new TestRandom(),
-            new NullLogger(),
-            new DateTime('2016-01-01 02:00:00')
-        );
-        $o->setUserId('bar');
-        $this->assertFalse($o->get('my_scope', 'https://example.org/resource'));
+        $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
+        $this->client->setUserId('bar');
+        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
     }
 
     public function testHasExpiredAccessTokenRefreshToken()
     {
-        $o = new OAuthClient(
-            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
-            new TestTokenStorage(),
-            new TestHttpClient(),
-            new TestRandom(),
-            new NullLogger(),
-            new DateTime('2016-01-01 02:00:00')
-        );
-        $o->setUserId('baz');
-        $response = $o->get('my_scope', 'https://example.org/resource');
+        $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
+        $this->client->setUserId('baz');
+        $response = $this->client->get('my_scope', 'https://example.org/resource');
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue($response->json()['refreshed']);
     }
 
     public function testCallback()
     {
-        $tokenStorage = new TestTokenStorage();
-
-        $o = new OAuthClient(
-            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
-            $tokenStorage,
-            new TestHttpClient(),
-            new TestRandom(),
-            new NullLogger(),
-            new DateTime('2016-01-01')
-        );
-        $o->setUserId('foo');
-        $o->handleCallback('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code', 'AC:abc', 'state12345abcde');
-        $accessToken = $tokenStorage->getAccessToken('foo');
+        $this->client->setUserId('foo');
+        $this->client->handleCallback('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code', 'AC:abc', 'state12345abcde');
+        $accessToken = $this->tokenStorage->getAccessToken('foo');
         $this->assertSame('AT:code12345', $accessToken->getToken());
     }
 }

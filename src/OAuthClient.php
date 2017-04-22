@@ -28,7 +28,6 @@ use DateInterval;
 use DateTime;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
-use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
@@ -60,25 +59,43 @@ class OAuthClient
     /** @var string|null */
     private $userId = null;
 
-    public function __construct(Provider $provider, TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient = null, RandomInterface $random = null, LoggerInterface $logger, DateTime $dateTime = null)
+    /**
+     * @param Provider                 $provider
+     * @param TokenStorageInterface    $tokenStorage
+     * @param Http\HttpClientInterface $httpClient
+     */
+    public function __construct(Provider $provider, TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
     {
         $this->provider = $provider;
         $this->tokenStorage = $tokenStorage;
-        if (is_null($httpClient)) {
-            $httpClient = new CurlHttpClient();
-        }
         $this->httpClient = $httpClient;
-        if (is_null($random)) {
-            $random = new Random();
-        }
+
+        $this->random = new Random();
+        $this->logger = new NullLogger();
+        $this->dateTime = new DateTime();
+    }
+
+    /**
+     * @param RandomInterface $random
+     */
+    public function setRandom(RandomInterface $random)
+    {
         $this->random = $random;
-        if (is_null($logger)) {
-            $logger = new NullLogger();
-        }
+    }
+
+    /**
+     * @param LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
         $this->logger = $logger;
-        if (is_null($dateTime)) {
-            $dateTime = new DateTime();
-        }
+    }
+
+    /**
+     * @param DateTime $dateTime
+     */
+    public function setDateTime(DateTime $dateTime)
+    {
         $this->dateTime = $dateTime;
     }
 
