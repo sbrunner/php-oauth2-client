@@ -129,11 +129,11 @@ class AccessToken
     {
         return json_encode(
             [
-                'access_token' => $this->accessToken,
-                'token_type' => $this->tokenType,
-                'scope' => $this->scope,
-                'refresh_token' => $this->refreshToken,
-                'expires_at' => $this->expiresAt->format('Y-m-d H:i:s'),
+                'access_token' => $this->getToken(),
+                'token_type' => $this->getTokenType(),
+                'scope' => $this->getScope(),
+                'refresh_token' => $this->getRefreshToken(),
+                'expires_at' => $this->getExpiresAt()->format('Y-m-d H:i:s'),
             ]
         );
     }
