@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
+use RuntimeException;
 
 /**
  * AccessToken object containing the response from the OAuth 2.0 provider's
@@ -145,8 +146,22 @@ class AccessToken
      */
     public static function fromJson($jsonData)
     {
-        // XXX verify json decoding, verify all keys
         $tokenData = json_decode($jsonData, true);
+        if (is_null($tokenData) && JSON_ERROR_NONE !== json_last_error()) {
+            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
+            throw new RuntimeException(sprintf('unable to decode JSON: %s', $errorMsg));
+        }
+
+        if (!is_array($tokenData)) {
+            throw new RuntimeException('JSON data MUST be an array');
+        }
+
+        $requiredKeys = ['access_token', 'token_type', 'scope', 'refresh_token', 'expires_at'];
+        foreach ($requiredKeys as $key) {
+            if (!array_key_exists($key, $tokenData)) {
+                throw new RuntimeException(sprintf('missing key "%s" in JSON data', $key));
+            }
+        }
 
         return new self(
             $tokenData['access_token'],
