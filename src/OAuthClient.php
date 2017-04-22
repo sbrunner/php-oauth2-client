@@ -30,6 +30,7 @@ use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
+use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
 use InvalidArgumentException;
 use ParagonIE\ConstantTime\Base64;
@@ -100,6 +101,16 @@ class OAuthClient
 
     public function get($requestScope, $requestUri, array $requestHeaders = [])
     {
+        return $this->send($requestScope, Request::get($requestUri, $requestHeaders));
+    }
+
+    public function post($requestScope, $requestUri, array $postBody, array $requestHeaders = [])
+    {
+        return $this->send($requestScope, Request::post($requestUri, $postBody, $requestHeaders));
+    }
+
+    public function send($requestScope, Request $request)
+    {
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
@@ -143,9 +154,9 @@ class OAuthClient
         }
 
         // add Authorization header to the request headers
-        $requestHeaders['Authorization'] = sprintf('Bearer %s', $accessToken->getToken());
+        $request->setHeader('Authorization', sprintf('Bearer %s', $accessToken->getToken()));
 
-        $response = $this->httpClient->get($requestUri, $requestHeaders);
+        $response = $this->httpClient->send($request);
         if (401 === $response->getStatusCode()) {
             $this->logger->info('access_token appears to be invalid, delete access_token');
             // this indicates an invalid access_token
@@ -243,17 +254,19 @@ class OAuthClient
         ];
 
         $responseData = $this->validateTokenResponse(
-            $this->httpClient->post(
-                $this->provider->getTokenEndpoint(),
-                $tokenRequestData,
-                [
-                    'Authorization' => sprintf(
-                        'Basic %s',
-                        Base64::encode(
-                            sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
-                        )
-                    ),
-                ]
+            $this->httpClient->send(
+                Request::post(
+                    $this->provider->getTokenEndpoint(),
+                    $tokenRequestData,
+                    [
+                        'Authorization' => sprintf(
+                            'Basic %s',
+                            Base64::encode(
+                                sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
+                            )
+                        ),
+                    ]
+                )
             ),
             $requestParameters['scope']
         );
@@ -289,17 +302,19 @@ class OAuthClient
         ];
 
         $responseData = $this->validateTokenResponse(
-            $this->httpClient->post(
-                $this->provider->getTokenEndpoint(),
-                $tokenRequestData,
-                [
-                    'Authorization' => sprintf(
-                        'Basic %s',
-                        Base64::encode(
-                            sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
-                        )
-                    ),
-                ]
+            $this->httpClient->send(
+                Request::post(
+                    $this->provider->getTokenEndpoint(),
+                    $tokenRequestData,
+                    [
+                        'Authorization' => sprintf(
+                            'Basic %s',
+                            Base64::encode(
+                                sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
+                            )
+                        ),
+                    ]
+                )
             ),
             $accessToken->getScope()
         );

@@ -49,41 +49,31 @@ class CurlHttpClient implements HttpClientInterface
         curl_close($this->curlChannel);
     }
 
-    public function get($requestUri, array $requestHeaders = [])
+    public function send(Request $request)
     {
-        return $this->exec(
-            [
-                CURLOPT_URL => $requestUri,
-            ],
-            $requestHeaders
-        );
-    }
+        $curlOptions = [
+            CURLOPT_CUSTOMREQUEST => $request->getMethod(),
+            CURLOPT_URL => $request->getUri(),
+        ];
 
-    public function post($requestUri, array $postData = [], array $requestHeaders = [])
-    {
-        return $this->exec(
-            [
-                CURLOPT_URL => $requestUri,
-                CURLOPT_POSTFIELDS => http_build_query($postData),
-            ],
-            $requestHeaders
-        );
+        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'])) {
+            $curlOptions[CURLOPT_POSTFIELDS] = $request->getBody();
+        }
+
+        return $this->exec($curlOptions, $request->getHeaders());
     }
 
     private function exec(array $curlOptions, array $requestHeaders)
     {
-        // reset all cURL options
-        $this->curlReset();
-
         $headerList = [];
 
         $defaultCurlOptions = [
             CURLOPT_HEADER => false,
             CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HTTPHEADER => [],
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_PROTOCOLS => $this->httpsOnly ? CURLPROTO_HTTPS : CURLPROTO_HTTPS | CURLPROTO_HTTP,
             CURLOPT_HEADERFUNCTION => function ($curlChannel, $headerData) use (&$headerList) {
-                // XXX is this secure? mb_strlen?
                 if (false !== strpos($headerData, ':')) {
                     list($key, $value) = explode(':', $headerData, 2);
                     $headerList[trim($key)] = trim($value);
@@ -115,27 +105,5 @@ class CurlHttpClient implements HttpClientInterface
             $responseData,
             $headerList
         );
-    }
-
-    private function curlReset()
-    {
-        // requires PHP >= 5.5 for curl_reset
-        if (function_exists('curl_reset')) {
-            curl_reset($this->curlChannel);
-
-            return;
-        }
-
-        // reset the request method to GET, that is enough to allow for
-        // multiple requests using the same cURL channel
-        if (false === curl_setopt_array(
-            $this->curlChannel,
-            [
-                CURLOPT_HTTPGET => true,
-                CURLOPT_HTTPHEADER => [],
-            ]
-        )) {
-            throw new RuntimeException('unable to set cURL options');
-        }
     }
 }

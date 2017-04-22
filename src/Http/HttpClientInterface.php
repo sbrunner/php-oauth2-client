@@ -29,10 +29,5 @@ interface HttpClientInterface
     /**
      * @return Response
      */
-    public function get($requestUri, array $requestHeaders = []);
-
-    /**
-     * @return Response
-     */
-    public function post($requestUri, array $postData = [], array $requestHeaders = []);
+    public function send(Request $request);
 }

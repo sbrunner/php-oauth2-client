@@ -25,11 +25,30 @@
 namespace fkooman\OAuth\Client\Tests;
 
 use fkooman\OAuth\Client\Http\HttpClientInterface;
+use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
 
 class TestHttpClient implements HttpClientInterface
 {
-    public function get($requestUri, array $requestHeaders = [])
+    public function send(Request $request)
+    {
+        if ('GET' === $request->getMethod()) {
+            return $this->get($request->getUri(), $request->getHeaders());
+        }
+
+        if ('POST' === $request->getMethod()) {
+            parse_str($request->getBody(), $postData);
+
+            return $this->post($request->getUri(), $postData, $request->getHeaders());
+        }
+
+        return new Response(
+            405,
+            'METHOD NOT ALLOWED'
+        );
+    }
+
+    private function get($requestUri, array $requestHeaders = [])
     {
         if ('https://example.org/resource' === $requestUri) {
             if (array_key_exists('Authorization', $requestHeaders)) {
@@ -47,14 +66,23 @@ class TestHttpClient implements HttpClientInterface
                 }
 
                 return new Response(
-                    400,
+                    401,
                     json_encode(['error' => 'invalid_token']),
                     [
                         'Content-Type' => 'application/json',
-                        'WWW-Authentication' => 'Bearer error="invalid_token"',
+                        'WWW-Authentication' => 'Bearer realm="foo",error="invalid_token"',
                     ]
                 );
             }
+
+            return new Response(
+                401,
+                json_encode(['error' => 'no_token']),
+                [
+                    'Content-Type' => 'application/json',
+                    'WWW-Authentication' => 'Bearer realm="foo"',
+                ]
+            );
         }
 
         return new Response(
@@ -66,7 +94,7 @@ class TestHttpClient implements HttpClientInterface
         );
     }
 
-    public function post($requestUri, array $postData = [], array $requestHeaders = [])
+    private function post($requestUri, array $postData = [], array $requestHeaders = [])
     {
         if ('http://localhost/token' === $requestUri) {
             // interacting with token endpoint
