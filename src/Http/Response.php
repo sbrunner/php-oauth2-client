@@ -40,6 +40,7 @@ class Response
     /**
      * @param int    $statusCode
      * @param string $responseBody
+     * @param array  $responseHeaders
      */
     public function __construct($statusCode, $responseBody, array $responseHeaders = [])
     {

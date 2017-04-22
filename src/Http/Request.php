@@ -32,15 +32,17 @@ class Request
     /** @var string */
     private $requestUri;
 
-    /** @var string */
+    /** @var string|null */
     private $requestBody;
 
     /** @var array */
     private $requestHeaders;
 
     /**
-     * @param int    $statusCode
-     * @param string $responseBody
+     * @param string $requestMethod
+     * @param string $requestUri
+     * @param array  $requestHeaders
+     * @param string $requestBody
      */
     public function __construct($requestMethod, $requestUri, array $requestHeaders = [], $requestBody = null)
     {
@@ -69,11 +71,20 @@ class Request
         );
     }
 
+    /**
+     * @param string $requestUri
+     * @param array  $requestHeaders
+     */
     public static function get($requestUri, array $requestHeaders = [])
     {
         return new self('GET', $requestUri, $requestHeaders);
     }
 
+    /**
+     * @param string $requestUri
+     * @param array  $postData
+     * @param array  $requestHeaders
+     */
     public static function post($requestUri, array $postData = [], array $requestHeaders = [])
     {
         return new self(
@@ -87,6 +98,10 @@ class Request
         );
     }
 
+    /**
+     * @param string $key
+     * @param string $value
+     */
     public function setHeader($key, $value)
     {
         $this->requestHeaders[$key] = $value;
@@ -109,7 +124,7 @@ class Request
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getBody()
     {
@@ -122,19 +137,5 @@ class Request
     public function getHeaders()
     {
         return $this->requestHeaders;
-    }
-
-    /**
-     * @return string|null
-     */
-    public function getHeader($key)
-    {
-        foreach ($this->requestHeaders as $k => $v) {
-            if (strtoupper($key) === strtoupper($k)) {
-                return $v;
-            }
-        }
-
-        return null;
     }
 }
