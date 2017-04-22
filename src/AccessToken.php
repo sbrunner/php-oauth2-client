@@ -113,16 +113,12 @@ class AccessToken
     }
 
     /**
-     * @param DateTime|null $dateTime
+     * @param DateTime $dateTime
      *
      * @return bool
      */
-    public function isExpired(DateTime $dateTime = null)
+    public function isExpired(DateTime $dateTime)
     {
-        if (is_null($dateTime)) {
-            $dateTime = new DateTime();
-        }
-
         return $dateTime >= $this->expiresAt;
     }
 
