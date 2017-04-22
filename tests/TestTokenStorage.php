@@ -35,8 +35,8 @@ class TestTokenStorage implements TokenStorageInterface
 
     public function __construct()
     {
-        $this->data['bar']['access_token'] = new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00'));
-        $this->data['baz']['access_token'] = new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00'));
+        $this->setAccessToken('bar', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
+        $this->setAccessToken('baz', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
     }
 
     /**
@@ -49,7 +49,7 @@ class TestTokenStorage implements TokenStorageInterface
         }
 
         if (array_key_exists('access_token', $this->data[$userId])) {
-            return $this->data[$userId]['access_token'];
+            return AccessToken::fromJson($this->data[$userId]['access_token']);
         }
 
         return false;
@@ -57,7 +57,7 @@ class TestTokenStorage implements TokenStorageInterface
 
     public function setAccessToken($userId, AccessToken $accessToken)
     {
-        $this->data[$userId]['access_token'] = $accessToken;
+        $this->data[$userId]['access_token'] = $accessToken->json();
     }
 
     public function deleteAccessToken($userId, AccessToken $accessToken)
