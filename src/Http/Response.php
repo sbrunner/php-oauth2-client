@@ -49,6 +49,9 @@ class Response
         $this->responseHeaders = $responseHeaders;
     }
 
+    /**
+     * @return string
+     */
     public function __toString()
     {
         $fmtHdrs = '';
@@ -113,8 +116,8 @@ class Response
     {
         $decodedJson = json_decode($this->responseBody, true);
         if (is_null($decodedJson) && JSON_ERROR_NONE !== json_last_error()) {
-            // XXX better exception!!!
-            throw new RuntimeException('unable to decode JSON');
+            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
+            throw new RuntimeException(sprintf('unable to decode JSON: %s', $errorMsg));
         }
 
         return $decodedJson;
