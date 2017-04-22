@@ -36,12 +36,10 @@ class CurlHttpClient implements HttpClientInterface
 
     public function __construct(array $configData = [])
     {
-        if (false === $this->curlChannel = curl_init()) {
-            throw new RuntimeException('unable to create cURL channel');
-        }
         if (array_key_exists('httpsOnly', $configData)) {
             $this->httpsOnly = (bool) $configData['httpsOnly'];
         }
+        $this->curlInit();
     }
 
     public function __destruct()
@@ -63,9 +61,28 @@ class CurlHttpClient implements HttpClientInterface
         return $this->exec($curlOptions, $request->getHeaders());
     }
 
+    private function curlInit()
+    {
+        if (false === $this->curlChannel = curl_init()) {
+            throw new RuntimeException('unable to create cURL channel');
+        }
+    }
+
+    private function curlReset()
+    {
+        if (function_exists('curl_reset')) {
+            curl_reset($this->curlChannel);
+        } else {
+            curl_close($this->curlChannel);
+            $this->curlInit();
+        }
+    }
+
     private function exec(array $curlOptions, array $requestHeaders)
     {
         $headerList = [];
+
+        $this->curlReset();
 
         $defaultCurlOptions = [
             CURLOPT_HEADER => false,
