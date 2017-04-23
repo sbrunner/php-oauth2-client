@@ -28,44 +28,55 @@ use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
+// absolute link to index.php in this directory
+// after handling the callback, we redirect back to this URL...
 $indexUri = 'http://localhost:8081/index.php';
+
+// the user ID to bind to, typically the currently logged in user on the
+// _CLIENT_ service...
 $userId = 'foo';
 
+// start a session to store the OAuth authorization request, to among other
+// things avoid CSRF, this is **NOT** used for storing access_tokens...
 if ('' === session_id()) {
     session_start();
 }
 
 try {
     $client = new OAuthClient(
+        // the OAuth provider configuration
         new Provider(
             'demo_client',
             'demo_secret',
             'http://localhost:8080/authorize.php',
             'http://localhost:8080/token.php'
         ),
+        // for DEMO purposes we store the AccessToken in the user session
+        // data...
         new SessionTokenStorage(),
+
+        // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
+        // do this in production
         new CurlHttpClient(['httpsOnly' => false])
     );
-
-    // bind the tokens to a particular userId, this comes from your application
-    // where the user is already authenticated
     $client->setUserId($userId);
 
+    // handle the callback from the OAuth server
     $client->handleCallback(
-        $_SESSION['session'], // URI from session
-        $_GET['code'],        // the code value (e.g. 12345)
-        $_GET['state']        // the state value (e.g. abcde)
+        $_SESSION['_oauth2_session'], // URI from session
+        $_GET['code'],                // the authorization_code
+        $_GET['state']                // the state
     );
 
     // unset session field as to not allow additional redirects to the same
     // URI to attempt to get another access token with this code
-    unset($_SESSION['session']);
+    unset($_SESSION['_oauth2_session']);
 
-    // redirect the browser back to the index (with a 302)
+    // redirect the browser back to the index
     http_response_code(302);
     header(sprintf('Location: %s', $indexUri));
     exit(0);
 } catch (Exception $e) {
-    echo $e->getMessage();
+    echo sprintf('ERROR: %s', $e->getMessage());
     exit(1);
 }

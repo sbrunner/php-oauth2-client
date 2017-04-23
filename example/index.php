@@ -28,49 +28,61 @@ use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
-$indexUri = 'http://localhost:8081/index.php';
-$resourceUri = 'http://localhost:8080/resource.php';
-$callbackUri = 'http://localhost:8081/callback.php';
 $requestScope = 'demo_scope';
+$resourceUri = 'http://localhost:8080/resource.php';
+
+// absolute link to callback.php in this directory
+$callbackUri = 'http://localhost:8081/callback.php';
+
+// the user ID to bind to, typically the currently logged in user on the
+// _CLIENT_ service...
 $userId = 'foo';
 
+// start a session to store the OAuth authorization request, to among other
+// things avoid CSRF, this is **NOT** used for storing access_tokens...
 if ('' === session_id()) {
     session_start();
 }
 
 try {
     $client = new OAuthClient(
+        // the OAuth provider configuration
         new Provider(
             'demo_client',
             'demo_secret',
             'http://localhost:8080/authorize.php',
             'http://localhost:8080/token.php'
         ),
+        // for DEMO purposes we store the AccessToken in the user session
+        // data...
         new SessionTokenStorage(),
+
+        // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
+        // do this in production
         new CurlHttpClient(['httpsOnly' => false])
     );
-
-    // bind the tokens to a particular userId, this comes from your application
-    // where the user is already authenticated
     $client->setUserId($userId);
 
     if (false === $response = $client->get($requestScope, $resourceUri)) {
-        // no authorization yet for this scope, or obtaining the resource
-        // failed, access_token was not accepted by the resource server and
-        // refresh didn't work or was not possible. Nothing we can do but to
-        // re-request authorization
+        // "false" is returned for a number of reasons:
+        // * no access_token yet for this user ID / scope
+        // * access_token expired (and no refresh_token available)
+        // * access_token was not accepted (revoked?)
+        // * refresh_token was rejected (revoked?)
+        //
+        // we need to re-request authorization at the OAuth server
         $authorizeUri = $client->getAuthorizeUri($requestScope, $callbackUri);
-        $_SESSION['session'] = $authorizeUri;
+        $_SESSION['_oauth2_session'] = $authorizeUri;
         // redirect the browser to the authorization endpoint (with a 302)
         http_response_code(302);
         header(sprintf('Location: %s', $authorizeUri));
         exit(0);
     }
 
-    // we got the resource, print the response
+    // getting the resource succeeded!
+    // print the Response object
     echo sprintf('<pre>%s</pre>', $response);
 } catch (Exception $e) {
-    error_log($e->getMessage());
-    echo $e->getMessage();
+    echo sprintf('ERROR: %s', $e->getMessage());
     exit(1);
 }
