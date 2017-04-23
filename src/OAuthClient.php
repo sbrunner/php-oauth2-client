@@ -169,19 +169,16 @@ class OAuthClient
             }
 
             $this->logger->info(sprintf('using refresh_token to obtain new access_token for user "%s" with scope "%s"', $this->userId, $requestScope));
-            // XXX deal with possibly revoked authorization!???
+
             try {
+                // delete the old one, and use it to try to get a new one
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
                 $accessToken = $this->refreshAccessToken($accessToken);
             } catch (OAuthServerException $e) {
                 $this->logger->info(sprintf('deleting access_token as refresh_token for user "%s" with scope "%s" was not accepted by the authorization server: "%s"', $this->userId, $requestScope, $e->getMessage()));
 
-                // delete the access_token, the refresh_token could not be used
-                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
-
                 return false;
             }
-
-            // maybe delete old accesstoken here? XXX
             $this->logger->info(sprintf('got a new access_token using the refresh_token for user "%s" with scope "%s"', $this->userId, $requestScope));
             $refreshedToken = true;
         }
