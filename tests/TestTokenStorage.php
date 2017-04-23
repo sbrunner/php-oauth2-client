@@ -35,8 +35,10 @@ class TestTokenStorage implements TokenStorageInterface
 
     public function __construct()
     {
+        $this->setAccessToken('fooz', new AccessToken('AT:abc', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
         $this->setAccessToken('bar', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
         $this->setAccessToken('baz', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
+        $this->setAccessToken('bazz', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:invalid', new DateTime('2016-01-01 01:00:00')));
     }
 
     /**

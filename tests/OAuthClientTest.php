@@ -65,6 +65,13 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($response->json()['ok']);
     }
 
+    public function testHasValidAccessTokenNotAccepted()
+    {
+        // the access_token is deemed valid, but the resource does not accept it
+        $this->client->setUserId('fooz');
+        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
+    }
+
     public function testHasExpiredAccessTokenNoRefreshToken()
     {
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
@@ -79,6 +86,14 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $response = $this->client->get('my_scope', 'https://example.org/resource');
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue($response->json()['refreshed']);
+    }
+
+    public function testHasExpiredAccessTokenRefreshTokenNotAccepted()
+    {
+        // the refresh_token is not accepted to obtain a new access_token
+        $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
+        $this->client->setUserId('bazz');
+        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
     }
 
     public function testCallback()
