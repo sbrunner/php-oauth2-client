@@ -27,19 +27,31 @@ namespace fkooman\OAuth\Client;
 interface TokenStorageInterface
 {
     /**
+     * Get the AccessToken stored for this userId with this requestScope.
+     *
+     * There MUST only be one AccessToken stored that satisfies this!
+     *
      * @param string $userId
+     * @param string $requestScope
      *
      * @return AccessToken|false
      */
-    public function getAccessToken($userId);
+    public function getAccessToken($userId, $requestScope);
 
     /**
+     * Store AccessToken for this userId.
+     *
      * @param string      $userId
      * @param AccessToken $accessToken
      */
     public function setAccessToken($userId, AccessToken $accessToken);
 
     /**
+     * Delete the AccessToken for this userId with the scope from the
+     * AccessToken parameter extracted using AccessToken::getScope().
+     *
+     * There MUST only be one AccessToken stored that satisfies this!
+     *
      * @param string      $userId
      * @param AccessToken $accessToken
      */

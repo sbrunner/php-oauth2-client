@@ -31,21 +31,25 @@ class SessionTokenStorage implements TokenStorageInterface
         if ('' === session_id()) {
             session_start();
         }
+
+        if (!array_key_exists('access_token_list', $_SESSION)) {
+            $_SESSION['access_token_list'] = [];
+        }
     }
 
     /**
      * @param string $userId
+     * @param string $requestScope
      *
      * @return AccessToken|false
      */
-    public function getAccessToken($userId)
+    public function getAccessToken($userId, $requestScope)
     {
-        if (!array_key_exists($userId, $_SESSION)) {
-            return false;
-        }
-
-        if (array_key_exists('access_token', $_SESSION[$userId])) {
-            return $_SESSION[$userId]['access_token'];
+        // ignore userId as this is the user's private session storage
+        foreach ($_SESSION['access_token_list'] as $accessToken) {
+            if ($requestScope === $accessToken->getScope()) {
+                return $accessToken;
+            }
         }
 
         return false;
@@ -57,7 +61,7 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function setAccessToken($userId, AccessToken $accessToken)
     {
-        $_SESSION[$userId]['access_token'] = $accessToken;
+        $_SESSION['access_token_list'][] = $accessToken;
     }
 
     /**
@@ -66,6 +70,11 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {
-        unset($_SESSION[$userId]['access_token']);
+        // there can only be one AccessToken that satisfies this
+        foreach ($_SESSION['access_token_list'] as $k => $sessionAccessToken) {
+            if ($accessToken->getScope() === $sessionAccessToken->getScope()) {
+                unset($_SESSION['access_token_list'][$k]);
+            }
+        }
     }
 }

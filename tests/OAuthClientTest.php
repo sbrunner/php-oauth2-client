@@ -85,7 +85,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     {
         $this->client->setUserId('foo');
         $this->client->handleCallback('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code', 'AC:abc', 'state12345abcde');
-        $accessToken = $this->tokenStorage->getAccessToken('foo');
+        $accessToken = $this->tokenStorage->getAccessToken('foo', 'my_scope');
         $this->assertSame('AT:code12345', $accessToken->getToken());
     }
 }

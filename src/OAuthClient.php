@@ -145,18 +145,22 @@ class OAuthClient
         }
 
         // make sure we have an access token
-        if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId)) {
-            $this->logger->info('no access_token available');
+        if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId, $requestScope)) {
+            $this->logger->info(sprintf('no access_token available for user "%s" with scope "%s"', $this->userId, $requestScope));
 
             return false;
         }
 
+        if ($requestScope !== $accessToken->getScope()) {
+            throw new OAuthException('access_token does not have the required scope');
+        }
+
         $refreshedToken = false;
         if ($accessToken->isExpired($this->dateTime)) {
-            $this->logger->info('access_token expired');
+            $this->logger->info(sprintf('access_token for user "%s" with scope "%s" expired', $this->userId, $requestScope));
             // access_token is expired, try to refresh it
             if (is_null($accessToken->getRefreshToken())) {
-                $this->logger->info('no refresh_token available, delete access_token');
+                $this->logger->info(sprintf('no refresh_token available in this access_token for user "%s" with scope "%s", deleting it', $this->userId, $requestScope));
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
                 $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
@@ -164,12 +168,12 @@ class OAuthClient
                 return false;
             }
 
-            $this->logger->info('attempting to refresh access_token');
-            // deal with possibly revoked authorization! XXX
+            $this->logger->info(sprintf('using refresh_token to obtain new access_token for user "%s" with scope "%s"', $this->userId, $requestScope));
+            // XXX deal with possibly revoked authorization!???
             try {
                 $accessToken = $this->refreshAccessToken($accessToken);
             } catch (OAuthServerException $e) {
-                $this->logger->info(sprintf('unable to use refresh_token %s', $e->getMessage()));
+                $this->logger->info(sprintf('deleting access_token as refresh_token for user "%s" with scope "%s" was not accepted by the authorization server: "%s"', $this->userId, $requestScope, $e->getMessage()));
 
                 // delete the access_token, the refresh_token could not be used
                 $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
@@ -178,7 +182,7 @@ class OAuthClient
             }
 
             // maybe delete old accesstoken here? XXX
-            $this->logger->info('access_token refreshed');
+            $this->logger->info(sprintf('got a new access_token using the refresh_token for user "%s" with scope "%s"', $this->userId, $requestScope));
             $refreshedToken = true;
         }
 
@@ -187,17 +191,17 @@ class OAuthClient
 
         $response = $this->httpClient->send($request);
         if (401 === $response->getStatusCode()) {
-            $this->logger->info('access_token appears to be invalid, delete access_token');
+            $this->logger->info(sprintf('deleting access_token for user "%s" with scope "%s" that was supposed to work, but did not, possibly revoked by user', $this->userId, $requestScope));
             // this indicates an invalid access_token
             $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
             return false;
         }
 
-        $this->logger->info('access_token was valid, call succeeded');
+        $this->logger->info(sprintf('access_token for use "%s" with scope "%s" successfully used', $this->userId, $requestScope));
 
         if ($refreshedToken) {
-            $this->logger->info('access_token was refreshed and it worked, so store it now for future use');
+            $this->logger->info(sprintf('storing refreshed access_token for user "%s" with scope "%s" as it was successfully used', $this->userId, $requestScope));
             // if we refreshed the token, and it was successful, i.e. not a 401,
             // update the stored AccessToken
             $this->tokenStorage->setAccessToken($this->userId, $accessToken);

@@ -42,7 +42,7 @@ class TestTokenStorage implements TokenStorageInterface
     /**
      * @return AccessToken|false
      */
-    public function getAccessToken($userId)
+    public function getAccessToken($userId, $requestScope)
     {
         if (!array_key_exists($userId, $this->data)) {
             return false;
