@@ -2,10 +2,7 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fkooman/php-oauth2-client/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/fkooman/php-oauth2-client/?branch=master)
 
 # Introduction
-This is a very simple to use OAuth 2.0 client for integration in your own 
-application. It has minimal dependencies, and tries to be as secure as 
-possible. The main reason for starting this library was to be compatible with 
-PHP >= 5.4.
+This is a very simple to use OAuth 2.0 client. It has minimal dependencies.
 
 **NOTE**: if you are not bound to PHP 5.4, you are probably better of using the 
 OAuth 2.0 client of the League of Extraordinary Packages! It can be found 
@@ -13,16 +10,18 @@ OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 
 # Features
 
-- Simplicity
-- Easy integration with your own application and/or framework;
-- Does not enforce a framework on you;
-- Only "authorization code" profile support, will not implement anything else;
-- Only conforming OAuth 2.0 servers will work, this library will not get out of 
+* Simplicity
+* Works with PHP >= 5.4
+* Minimal dependencies;
+* Supports OAuth refresh tokens.
+* Easy integration with your own application and/or framework;
+* Does not enforce a framework on you;
+* Only "authorization code" profile support, will not implement anything else;
+* Only conforming OAuth 2.0 servers will work, this library will not get out of 
   its way to deal with services that violate the OAuth 2.0 RFC;
-- There will be no toggles to shoot yourself in the foot;
-- Uses `paragonie/constant_time_encoding` for constant time encoding;
-- Uses `paragonie/random_compat` polyfill for CSPRNG;
-- Supports OAuth refresh tokens.
+* There will be no toggles to shoot yourself in the foot;
+* Uses `paragonie/constant_time_encoding` for constant time encoding;
+* Uses `paragonie/random_compat` polyfill for CSPRNG;
 
 # API
 
