@@ -50,6 +50,13 @@ class TestHttpClient implements HttpClientInterface
 
     private function get($requestUri, array $requestHeaders = [])
     {
+        if ('https://example.org/unprotected_resource' === $requestUri) {
+            return new Response(
+                200,
+                json_encode(['has_bearer_token' => array_key_exists('Authorization', $requestHeaders)])
+            );
+        }
+
         if ('https://example.org/resource' === $requestUri) {
             if (array_key_exists('Authorization', $requestHeaders)) {
                 if ('Bearer AT:xyz' === $requestHeaders['Authorization']) {

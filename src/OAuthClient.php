@@ -108,7 +108,11 @@ class OAuthClient
     }
 
     /**
-     * @param string|null $requestScope
+     * Perform a GET request.
+     *
+     * @param string|null $requestScope   the required scope to perform the
+     *                                    request, use `null` if you want to
+     *                                    request a resource without token
      * @param string      $requestUri
      * @param array       $requestHeaders
      *
@@ -120,6 +124,8 @@ class OAuthClient
     }
 
     /**
+     * Perform a POST request.
+     *
      * @param string|null $requestScope
      * @param string      $requestUri
      * @param array       $postBody
@@ -133,6 +139,8 @@ class OAuthClient
     }
 
     /**
+     * Perform a HTTP request.
+     *
      * @param string|null  $requestScope
      * @param Http\Request $request
      *
@@ -249,14 +257,11 @@ class OAuthClient
     }
 
     /**
-     * Obtain the access token from the OAuth provider after returning from the
-     * OAuth provider on the redirectUri (callback URL).
-     *
-     * @param string $requestUri    the original authorization
-     *                              request URL as obtained by getAuthorzationRequestUri
-     * @param string $responseCode  the code passed to the 'code'
+     * @param string $requestUri    the original authorization URL as obtained
+     *                              by getAuthorizeUri
+     * @param string $responseCode  the code passed to the "code"
      *                              query parameter on the callback URL
-     * @param string $responseState the state passed to the 'state'
+     * @param string $responseState the state passed to the "state"
      *                              query parameter on the callback URL
      */
     public function handleCallback($requestUri, $responseCode, $responseState)
