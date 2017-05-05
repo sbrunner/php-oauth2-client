@@ -23,6 +23,11 @@ OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 * Uses `paragonie/constant_time_encoding` for constant time encoding;
 * Uses `paragonie/random_compat` polyfill for CSPRNG;
 
+You **MUST** configure PHP in such a way that it enforces secure cookies! 
+See 
+[this](https://paragonie.com/blog/2015/04/fast-track-safe-and-secure-php-sessions) 
+resource for more information.
+
 # API
 
 The API is very simple to use. Below, the API is explained in more detail, see
