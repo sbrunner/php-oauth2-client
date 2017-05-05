@@ -26,17 +26,6 @@ namespace fkooman\OAuth\Client;
 
 class SessionTokenStorage implements TokenStorageInterface
 {
-    public function __construct()
-    {
-        if ('' === session_id()) {
-            session_start();
-        }
-
-        if (!array_key_exists('access_token_list', $_SESSION)) {
-            $_SESSION['access_token_list'] = [];
-        }
-    }
-
     /**
      * @param string $userId
      * @param string $requestScope
@@ -45,8 +34,8 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function getAccessToken($userId, $requestScope)
     {
-        // ignore userId as this is the user's private session storage
-        foreach ($_SESSION['access_token_list'] as $accessToken) {
+        $this->startSession($userId);
+        foreach ($_SESSION['_oauth2_client'][$userId] as $accessToken) {
             if ($requestScope === $accessToken->getScope()) {
                 return $accessToken;
             }
@@ -61,7 +50,8 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function setAccessToken($userId, AccessToken $accessToken)
     {
-        $_SESSION['access_token_list'][] = $accessToken;
+        $this->startSession($userId);
+        $_SESSION['_oauth2_client'][$userId][] = $accessToken;
     }
 
     /**
@@ -70,11 +60,22 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {
-        // there can only be one AccessToken that satisfies this
-        foreach ($_SESSION['access_token_list'] as $k => $sessionAccessToken) {
+        $this->startSession($userId);
+        foreach ($_SESSION['_oauth2_client'][$userId] as $i => $sessionAccessToken) {
             if ($accessToken->getScope() === $sessionAccessToken->getScope()) {
-                unset($_SESSION['access_token_list'][$k]);
+                unset($_SESSION['_oauth2_client'][$userId][$i]);
             }
+        }
+    }
+
+    private function startSession($userId)
+    {
+        if ('' === session_id()) {
+            session_start();
+        }
+
+        if (!isset($_SESSION['_oauth2_client'][$userId])) {
+            $_SESSION['_oauth2_client'][$userId] = [];
         }
     }
 }
