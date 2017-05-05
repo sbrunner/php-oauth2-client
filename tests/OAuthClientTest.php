@@ -37,6 +37,9 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     /** @var \fkooman\OAuth\Client\TokenStorageInterface */
     private $tokenStorage;
 
+    /** @var \fkooman\OAuth\Client\SessionInterface */
+    private $session;
+
     public function setUp()
     {
         $this->tokenStorage = new TestTokenStorage();
@@ -46,6 +49,8 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
             new TestHttpClient()
         );
 
+        $this->session = new TestSession();
+        $this->client->setSession($this->session);
         $this->client->setRandom(new TestRandom());
         $this->client->setDateTime(new DateTime('2016-01-01'));
     }
@@ -105,8 +110,9 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
 
     public function testCallback()
     {
+        $this->session->set('_oauth2_session', 'http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code');
         $this->client->setUserId('foo');
-        $this->client->handleCallback('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code', 'AC:abc', 'state12345abcde');
+        $this->client->handleCallback('AC:abc', 'state12345abcde');
         $accessToken = $this->tokenStorage->getAccessToken('foo', 'my_scope');
         $this->assertSame('AT:code12345', $accessToken->getToken());
     }

@@ -36,12 +36,6 @@ $indexUri = 'http://localhost:8081/index.php';
 // _CLIENT_ service...
 $userId = 'foo';
 
-// start a session to store the OAuth authorization request, to among other
-// things avoid CSRF, this is **NOT** used for storing access_tokens...
-if ('' === session_id()) {
-    session_start();
-}
-
 try {
     $client = new OAuthClient(
         // the OAuth provider configuration
@@ -63,14 +57,9 @@ try {
 
     // handle the callback from the OAuth server
     $client->handleCallback(
-        $_SESSION['_oauth2_session'], // URI from session
-        $_GET['code'],                // the authorization_code
-        $_GET['state']                // the state
+        $_GET['code'], // the authorization_code
+        $_GET['state'] // the state
     );
-
-    // unset session field as to not allow additional redirects to the same
-    // URI to attempt to get another access token with this code
-    unset($_SESSION['_oauth2_session']);
 
     // redirect the browser back to the index
     http_response_code(302);

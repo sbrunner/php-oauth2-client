@@ -38,12 +38,6 @@ $callbackUri = 'http://localhost:8081/callback.php';
 // _CLIENT_ service...
 $userId = 'foo';
 
-// start a session to store the OAuth authorization request, to among other
-// things avoid CSRF, this is **NOT** used for storing access_tokens...
-if ('' === session_id()) {
-    session_start();
-}
-
 try {
     $client = new OAuthClient(
         // the OAuth provider configuration
@@ -70,12 +64,15 @@ try {
         // * access_token was not accepted (revoked?)
         // * refresh_token was rejected (revoked?)
         //
-        // we need to re-request authorization at the OAuth server
-        $authorizeUri = $client->getAuthorizeUri($requestScope, $callbackUri);
-        $_SESSION['_oauth2_session'] = $authorizeUri;
-        // redirect the browser to the authorization endpoint (with a 302)
+        // we need to re-request authorization at the OAuth server, redirect
+        // the browser to the authorization endpoint (with a 302)
         http_response_code(302);
-        header(sprintf('Location: %s', $authorizeUri));
+        header(
+            sprintf(
+                'Location: %s',
+                $client->getAuthorizeUri($requestScope, $callbackUri)
+            )
+        );
         exit(0);
     }
 

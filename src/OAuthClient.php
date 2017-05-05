@@ -47,6 +47,9 @@ class OAuthClient
     /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
     private $httpClient;
 
+    /** @var SessionInterface */
+    private $session;
+
     /** @var RandomInterface */
     private $random;
 
@@ -70,9 +73,18 @@ class OAuthClient
         $this->tokenStorage = $tokenStorage;
         $this->httpClient = $httpClient;
 
+        $this->session = new Session();
         $this->random = new Random();
         $this->logger = new NullLogger();
         $this->dateTime = new DateTime();
+    }
+
+    /**
+     * @param SessionInterface $session
+     */
+    public function setSession(SessionInterface $session)
+    {
+        $this->session = $session;
     }
 
     /**
@@ -248,31 +260,32 @@ class OAuthClient
             '&'
         );
 
-        return sprintf(
+        $authorizeUri = sprintf(
             '%s%s%s',
             $this->provider->getAuthorizationEndpoint(),
             false === strpos($this->provider->getAuthorizationEndpoint(), '?') ? '?' : '&',
             $queryParams
         );
+        $this->session->set('_oauth2_session', $authorizeUri);
+
+        return $authorizeUri;
     }
 
     /**
-     * @param string $requestUri    the original authorization URL as obtained
-     *                              by getAuthorizeUri
      * @param string $responseCode  the code passed to the "code"
      *                              query parameter on the callback URL
      * @param string $responseState the state passed to the "state"
      *                              query parameter on the callback URL
      */
-    public function handleCallback($requestUri, $responseCode, $responseState)
+    public function handleCallback($responseCode, $responseState)
     {
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
 
-        // the requestUri parameter is provided by the caller of this call, and
-        // does NOT contain external input so does not need to be validated
-        $requestParameters = self::parseRequestUri($requestUri);
+        $requestParameters = self::parseRequestUri(
+            $this->session->get('_oauth2_session')
+        );
         if ($responseState !== $requestParameters['state']) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
@@ -310,6 +323,9 @@ class OAuthClient
             ),
             $requestParameters['scope']
         );
+
+        // delete the session
+        $this->session->del('_oauth2_session');
 
         $this->tokenStorage->setAccessToken(
             $this->userId,
