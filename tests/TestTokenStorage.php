@@ -24,7 +24,6 @@
 
 namespace fkooman\OAuth\Client\Tests;
 
-use DateTime;
 use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\TokenStorageInterface;
 
@@ -33,37 +32,55 @@ class TestTokenStorage implements TokenStorageInterface
     /** @var array */
     private $data = [];
 
-    public function __construct()
-    {
-        $this->setAccessToken('fooz', new AccessToken('AT:abc', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
-        $this->setAccessToken('bar', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
-        $this->setAccessToken('baz', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
-        $this->setAccessToken('bazz', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:invalid', new DateTime('2016-01-01 01:00:00')));
-    }
-
     /**
+     * @param string $userId
+     * @param string $providerId
+     * @param string $requestScope
+     *
      * @return AccessToken|false
      */
-    public function getAccessToken($userId, $requestScope)
+    public function getAccessToken($userId, $providerId, $requestScope)
     {
-        if (!array_key_exists($userId, $this->data)) {
-            return false;
-        }
-
-        if (array_key_exists('access_token', $this->data[$userId])) {
-            return AccessToken::fromJson($this->data[$userId]['access_token']);
+        $this->startSession($userId, $providerId);
+        foreach ($this->data['_oauth2_client'][$userId][$providerId] as $accessToken) {
+            if ($requestScope === $accessToken->getScope()) {
+                return $accessToken;
+            }
         }
 
         return false;
     }
 
-    public function setAccessToken($userId, AccessToken $accessToken)
+    /**
+     * @param string      $userId
+     * @param string      $providerId
+     * @param AccessToken $accessToken
+     */
+    public function setAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        $this->data[$userId]['access_token'] = $accessToken->json();
+        $this->startSession($userId, $providerId);
+        $this->data['_oauth2_client'][$userId][$providerId][] = $accessToken;
     }
 
-    public function deleteAccessToken($userId, AccessToken $accessToken)
+    /**
+     * @param string      $userId
+     * @param string      $providerId
+     * @param AccessToken $accessToken
+     */
+    public function deleteAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        unset($this->data[$userId]['access_token']);
+        $this->startSession($userId, $providerId);
+        foreach ($this->data['_oauth2_client'][$userId][$providerId] as $i => $sessionAccessToken) {
+            if ($accessToken->getScope() === $sessionAccessToken->getScope()) {
+                unset($this->data['_oauth2_client'][$userId][$providerId][$i]);
+            }
+        }
+    }
+
+    private function startSession($userId, $providerId)
+    {
+        if (!isset($this->data['_oauth2_client'][$userId][$providerId])) {
+            $this->data['_oauth2_client'][$userId][$providerId] = [];
+        }
     }
 }

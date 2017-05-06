@@ -28,14 +28,15 @@ class SessionTokenStorage implements TokenStorageInterface
 {
     /**
      * @param string $userId
+     * @param string $providerId
      * @param string $requestScope
      *
      * @return AccessToken|false
      */
-    public function getAccessToken($userId, $requestScope)
+    public function getAccessToken($userId, $providerId, $requestScope)
     {
-        $this->startSession($userId);
-        foreach ($_SESSION['_oauth2_client'][$userId] as $accessToken) {
+        $this->startSession($userId, $providerId);
+        foreach ($_SESSION['_oauth2_client'][$userId][$providerId] as $accessToken) {
             if ($requestScope === $accessToken->getScope()) {
                 return $accessToken;
             }
@@ -46,36 +47,38 @@ class SessionTokenStorage implements TokenStorageInterface
 
     /**
      * @param string      $userId
+     * @param string      $providerId
      * @param AccessToken $accessToken
      */
-    public function setAccessToken($userId, AccessToken $accessToken)
+    public function setAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        $this->startSession($userId);
-        $_SESSION['_oauth2_client'][$userId][] = $accessToken;
+        $this->startSession($userId, $providerId);
+        $_SESSION['_oauth2_client'][$userId][$providerId][] = $accessToken;
     }
 
     /**
      * @param string      $userId
+     * @param string      $providerId
      * @param AccessToken $accessToken
      */
-    public function deleteAccessToken($userId, AccessToken $accessToken)
+    public function deleteAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        $this->startSession($userId);
-        foreach ($_SESSION['_oauth2_client'][$userId] as $i => $sessionAccessToken) {
+        $this->startSession($userId, $providerId);
+        foreach ($_SESSION['_oauth2_client'][$userId][$providerId] as $i => $sessionAccessToken) {
             if ($accessToken->getScope() === $sessionAccessToken->getScope()) {
-                unset($_SESSION['_oauth2_client'][$userId][$i]);
+                unset($_SESSION['_oauth2_client'][$userId][$providerId][$i]);
             }
         }
     }
 
-    private function startSession($userId)
+    private function startSession($userId, $providerId)
     {
         if ('' === session_id()) {
             session_start();
         }
 
-        if (!isset($_SESSION['_oauth2_client'][$userId])) {
-            $_SESSION['_oauth2_client'][$userId] = [];
+        if (!isset($_SESSION['_oauth2_client'][$userId][$providerId])) {
+            $_SESSION['_oauth2_client'][$userId][$providerId] = [];
         }
     }
 }

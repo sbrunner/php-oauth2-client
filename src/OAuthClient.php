@@ -38,9 +38,6 @@ use Psr\Log\NullLogger;
 
 class OAuthClient
 {
-    /** @var Provider */
-    private $provider;
-
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
@@ -59,17 +56,21 @@ class OAuthClient
     /** @var \DateTime */
     private $dateTime;
 
+    /** @var array */
+    private $providerList = [];
+
+    /** @var string */
+    private $providerId = null;
+
     /** @var string|null */
     private $userId = null;
 
     /**
-     * @param Provider                 $provider
      * @param TokenStorageInterface    $tokenStorage
      * @param Http\HttpClientInterface $httpClient
      */
-    public function __construct(Provider $provider, TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
+    public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
     {
-        $this->provider = $provider;
         $this->tokenStorage = $tokenStorage;
         $this->httpClient = $httpClient;
 
@@ -77,6 +78,30 @@ class OAuthClient
         $this->random = new Random();
         $this->logger = new NullLogger();
         $this->dateTime = new DateTime();
+    }
+
+    /**
+     * @param string   $providerId
+     * @param Provider $provider
+     */
+    public function addProvider($providerId, Provider $provider)
+    {
+        $this->providerList[$providerId] = $provider;
+        // the first provider we add becomes the active provider, can be
+        // overridden by the "setProviderId" method
+        if (1 === count($this->providerList)) {
+            $this->providerId = $providerId;
+        }
+    }
+
+    /**
+     * @param string $providerId
+     */
+    public function setProviderId($providerId)
+    {
+        if (!array_key_exists($providerId, $this->providerList)) {
+            throw new OAuthException(sprintf('provider with providerId "%s" does not exist', $this->providerId));
+        }
     }
 
     /**
@@ -172,7 +197,7 @@ class OAuthClient
         }
 
         // make sure we have an access token
-        if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId, $requestScope)) {
+        if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId, $this->providerId, $requestScope)) {
             $this->logger->info(sprintf('no access_token available for user "%s" with scope "%s"', $this->userId, $requestScope));
 
             return false;
@@ -190,7 +215,7 @@ class OAuthClient
                 $this->logger->info(sprintf('no refresh_token available in this access_token for user "%s" with scope "%s", deleting it', $this->userId, $requestScope));
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
-                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+                $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
 
                 return false;
             }
@@ -199,7 +224,7 @@ class OAuthClient
 
             try {
                 // delete the old one, and use it to try to get a new one
-                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+                $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
                 $accessToken = $this->refreshAccessToken($accessToken);
             } catch (OAuthServerException $e) {
                 $this->logger->info(sprintf('deleting access_token as refresh_token for user "%s" with scope "%s" was not accepted by the authorization server: "%s"', $this->userId, $requestScope, $e->getMessage()));
@@ -217,7 +242,7 @@ class OAuthClient
         if (401 === $response->getStatusCode()) {
             $this->logger->info(sprintf('deleting access_token for user "%s" with scope "%s" that was supposed to work, but did not, possibly revoked by user', $this->userId, $requestScope));
             // this indicates an invalid access_token
-            $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+            $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
 
             return false;
         }
@@ -228,7 +253,7 @@ class OAuthClient
             $this->logger->info(sprintf('storing refreshed access_token for user "%s" with scope "%s" as it was successfully used', $this->userId, $requestScope));
             // if we refreshed the token, and it was successful, i.e. not a 401,
             // update the stored AccessToken
-            $this->tokenStorage->setAccessToken($this->userId, $accessToken);
+            $this->tokenStorage->setAccessToken($this->userId, $this->providerId, $accessToken);
         }
 
         return $response;
@@ -251,7 +276,7 @@ class OAuthClient
     {
         $queryParams = http_build_query(
             [
-                'client_id' => $this->provider->getId(),
+                'client_id' => $this->getActiveProvider()->getId(),
                 'redirect_uri' => $redirectUri,
                 'scope' => $scope,
                 'state' => $this->random->get(16),
@@ -262,8 +287,8 @@ class OAuthClient
 
         $authorizeUri = sprintf(
             '%s%s%s',
-            $this->provider->getAuthorizationEndpoint(),
-            false === strpos($this->provider->getAuthorizationEndpoint(), '?') ? '?' : '&',
+            $this->getActiveProvider()->getAuthorizationEndpoint(),
+            false === strpos($this->getActiveProvider()->getAuthorizationEndpoint(), '?') ? '?' : '&',
             $queryParams
         );
         $this->session->set('_oauth2_session', $authorizeUri);
@@ -292,7 +317,7 @@ class OAuthClient
             throw new OAuthException('invalid OAuth state');
         }
 
-        if ($requestParameters['client_id'] !== $this->provider->getId()) {
+        if ($requestParameters['client_id'] !== $this->getActiveProvider()->getId()) {
             // the client_id used for the initial request differs from the
             // currently configured Provider, the client_id MUST be identical
             throw new OAuthException('unexpected client identifier');
@@ -300,7 +325,7 @@ class OAuthClient
 
         // prepare access_token request
         $tokenRequestData = [
-            'client_id' => $this->provider->getId(),
+            'client_id' => $this->getActiveProvider()->getId(),
             'grant_type' => 'authorization_code',
             'code' => $responseCode,
             'redirect_uri' => $requestParameters['redirect_uri'],
@@ -309,13 +334,13 @@ class OAuthClient
         $responseData = $this->validateTokenResponse(
             $this->httpClient->send(
                 Request::post(
-                    $this->provider->getTokenEndpoint(),
+                    $this->getActiveProvider()->getTokenEndpoint(),
                     $tokenRequestData,
                     [
                         'Authorization' => sprintf(
                             'Basic %s',
                             Base64::encode(
-                                sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
+                                sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
                             )
                         ),
                     ]
@@ -329,6 +354,7 @@ class OAuthClient
 
         $this->tokenStorage->setAccessToken(
             $this->userId,
+            $this->providerId,
             new AccessToken(
                 $responseData['access_token'],
                 $responseData['token_type'],
@@ -356,13 +382,13 @@ class OAuthClient
         $responseData = $this->validateTokenResponse(
             $this->httpClient->send(
                 Request::post(
-                    $this->provider->getTokenEndpoint(),
+                    $this->getActiveProvider()->getTokenEndpoint(),
                     $tokenRequestData,
                     [
                         'Authorization' => sprintf(
                             'Basic %s',
                             Base64::encode(
-                                sprintf('%s:%s', $this->provider->getId(), $this->provider->getSecret())
+                                sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
                             )
                         ),
                     ]
@@ -482,5 +508,15 @@ class OAuthClient
 
         // if the 'expires_in' field is not available, we default to 1 year
         return date_add($dateTime, new DateInterval('P1Y'));
+    }
+
+    /**
+     * Get the active OAuth provider.
+     *
+     * @return Provider
+     */
+    private function getActiveProvider()
+    {
+        return $this->providerList[$this->providerId];
     }
 }

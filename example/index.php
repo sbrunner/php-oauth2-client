@@ -40,21 +40,29 @@ $userId = 'foo';
 
 try {
     $client = new OAuthClient(
-        // the OAuth provider configuration
+        // for DEMO purposes we store the AccessToken in the user session
+        // data...
+        new SessionTokenStorage(),
+        // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
+        // do this in production
+        new CurlHttpClient(['httpsOnly' => false])
+    );
+
+    // the OAuth provider configuration
+    $client->addProvider(
+        'default',
         new Provider(
             'demo_client',
             'demo_secret',
             'http://localhost:8080/authorize.php',
             'http://localhost:8080/token.php'
-        ),
-        // for DEMO purposes we store the AccessToken in the user session
-        // data...
-        new SessionTokenStorage(),
-
-        // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
-        // do this in production
-        new CurlHttpClient(['httpsOnly' => false])
+        )
     );
+    // make the request to the provider with ID "default", if there is only one
+    // provider, this is not needed
+    //$client->setProviderId('default');
+
+    // set the userId to bind the access token to
     $client->setUserId($userId);
 
     if (false === $response = $client->get($requestScope, $resourceUri)) {

@@ -32,19 +32,21 @@ interface TokenStorageInterface
      * There MUST only be one AccessToken stored that satisfies this!
      *
      * @param string $userId
+     * @param string $providerId
      * @param string $requestScope
      *
      * @return AccessToken|false
      */
-    public function getAccessToken($userId, $requestScope);
+    public function getAccessToken($userId, $providerId, $requestScope);
 
     /**
      * Store AccessToken for this userId.
      *
      * @param string      $userId
+     * @param string      $providerId
      * @param AccessToken $accessToken
      */
-    public function setAccessToken($userId, AccessToken $accessToken);
+    public function setAccessToken($userId, $providerId, AccessToken $accessToken);
 
     /**
      * Delete the AccessToken for this userId with the scope from the
@@ -53,7 +55,8 @@ interface TokenStorageInterface
      * There MUST only be one AccessToken stored that satisfies this!
      *
      * @param string      $userId
+     * @param string      $providerId
      * @param AccessToken $accessToken
      */
-    public function deleteAccessToken($userId, AccessToken $accessToken);
+    public function deleteAccessToken($userId, $providerId, AccessToken $accessToken);
 }

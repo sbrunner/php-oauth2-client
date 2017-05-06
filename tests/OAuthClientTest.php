@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client\Tests;
 
 use DateTime;
+use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use PHPUnit_Framework_TestCase;
@@ -43,12 +44,17 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->tokenStorage = new TestTokenStorage();
+
+        $this->tokenStorage->setAccessToken('fooz', 'default', new AccessToken('AT:abc', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken('bar', 'default', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken('baz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken('bazz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:invalid', new DateTime('2016-01-01 01:00:00')));
+
         $this->client = new OAuthClient(
-            new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'),
             $this->tokenStorage,
             new TestHttpClient()
         );
-
+        $this->client->addProvider('default', new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'));
         $this->session = new TestSession();
         $this->client->setSession($this->session);
         $this->client->setRandom(new TestRandom());
@@ -113,7 +119,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->session->set('_oauth2_session', 'http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code');
         $this->client->setUserId('foo');
         $this->client->handleCallback('AC:abc', 'state12345abcde');
-        $accessToken = $this->tokenStorage->getAccessToken('foo', 'my_scope');
+        $accessToken = $this->tokenStorage->getAccessToken('foo', 'default', 'my_scope');
         $this->assertSame('AT:code12345', $accessToken->getToken());
     }
 }
