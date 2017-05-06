@@ -57,7 +57,8 @@ try {
         )
     );
     // make the request to the provider with ID "default", if there is only one
-    // provider, this is not needed
+    // provider, this is not needed, the first added Provider will be the
+    // default
     //$client->setProviderId('default');
 
     // set the userId to bind the access token to
