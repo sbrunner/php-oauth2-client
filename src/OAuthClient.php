@@ -291,7 +291,8 @@ class OAuthClient
             false === strpos($this->getActiveProvider()->getAuthorizationEndpoint(), '?') ? '?' : '&',
             $queryParams
         );
-        $this->session->set('_oauth2_session', $authorizeUri);
+        $this->session->set('_oauth2_session_provider_id', $this->providerId);
+        $this->session->set('_oauth2_session_authorize_uri', $authorizeUri);
 
         return $authorizeUri;
     }
@@ -308,9 +309,18 @@ class OAuthClient
             throw new OAuthException('userId not set');
         }
 
+        // set the providerId from session, Provider *MUST* already be
+        // registered at this time...
+        $this->setProviderId($this->session->get('_oauth2_session_provider_id'));
+
         $requestParameters = self::parseRequestUri(
-            $this->session->get('_oauth2_session')
+            $this->session->get('_oauth2_session_authorize_uri')
         );
+
+        // delete the session, we don't want it to be used multiple times...
+        $this->session->del('_oauth2_session_authorize_uri');
+        $this->session->del('_oauth2_session_provider_id');
+
         if ($responseState !== $requestParameters['state']) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
@@ -348,9 +358,6 @@ class OAuthClient
             ),
             $requestParameters['scope']
         );
-
-        // delete the session
-        $this->session->del('_oauth2_session');
 
         $this->tokenStorage->setAccessToken(
             $this->userId,

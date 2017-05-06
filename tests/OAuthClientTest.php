@@ -116,7 +116,8 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
 
     public function testCallback()
     {
-        $this->session->set('_oauth2_session', 'http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code');
+        $this->session->set('_oauth2_session_provider_id', 'default');
+        $this->session->set('_oauth2_session_authorize_uri', 'http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=state12345abcde&response_type=code');
         $this->client->setUserId('foo');
         $this->client->handleCallback('AC:abc', 'state12345abcde');
         $accessToken = $this->tokenStorage->getAccessToken('foo', 'default', 'my_scope');
