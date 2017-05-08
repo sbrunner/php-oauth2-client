@@ -27,11 +27,8 @@ namespace fkooman\OAuth\Client\Tests;
 use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\TokenStorageInterface;
 
-class TestTokenStorage implements TokenStorageInterface
+class TestTokenStorage extends TestSession implements TokenStorageInterface
 {
-    /** @var array */
-    private $data = [];
-
     /**
      * @param string $userId
      * @param string $providerId
@@ -41,14 +38,11 @@ class TestTokenStorage implements TokenStorageInterface
      */
     public function getAccessToken($userId, $providerId, $requestScope)
     {
-        $this->startSession($userId, $providerId);
-        foreach ($this->data['_oauth2_client'][$userId][$providerId] as $accessToken) {
-            if ($requestScope === $accessToken->getScope()) {
-                return $accessToken;
-            }
+        if (!$this->has(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $requestScope))) {
+            return false;
         }
 
-        return false;
+        return $this->get(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $requestScope));
     }
 
     /**
@@ -58,8 +52,7 @@ class TestTokenStorage implements TokenStorageInterface
      */
     public function setAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        $this->startSession($userId, $providerId);
-        $this->data['_oauth2_client'][$userId][$providerId][] = $accessToken;
+        $this->set(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()), $accessToken);
     }
 
     /**
@@ -69,18 +62,8 @@ class TestTokenStorage implements TokenStorageInterface
      */
     public function deleteAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        $this->startSession($userId, $providerId);
-        foreach ($this->data['_oauth2_client'][$userId][$providerId] as $i => $sessionAccessToken) {
-            if ($accessToken->getScope() === $sessionAccessToken->getScope()) {
-                unset($this->data['_oauth2_client'][$userId][$providerId][$i]);
-            }
-        }
-    }
-
-    private function startSession($userId, $providerId)
-    {
-        if (!isset($this->data['_oauth2_client'][$userId][$providerId])) {
-            $this->data['_oauth2_client'][$userId][$providerId] = [];
+        if ($this->has(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()))) {
+            $this->del(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()));
         }
     }
 }

@@ -30,11 +30,25 @@ class Session implements SessionInterface
 {
     /**
      * @param string $key
+     *
+     * @return bool
+     */
+    public function has($key)
+    {
+        $this->startSession();
+
+        return array_key_exists($key, $_SESSION);
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return mixed
      */
     public function get($key)
     {
         $this->startSession();
-        if (!array_key_exists($key, $_SESSION)) {
+        if (!$this->has($key)) {
             throw new SessionException(sprintf('key "%s" not found in session', $key));
         }
 
@@ -44,8 +58,6 @@ class Session implements SessionInterface
     /**
      * @param string $key
      * @param mixed  $value
-     *
-     * @return mixed
      */
     public function set($key, $value)
     {
