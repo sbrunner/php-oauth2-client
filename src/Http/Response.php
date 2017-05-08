@@ -50,28 +50,6 @@ class Response
     }
 
     /**
-     * @return string
-     */
-    public function __toString()
-    {
-        $fmtHdrs = '';
-        foreach ($this->responseHeaders as $k => $v) {
-            $fmtHdrs .= sprintf('%s: %s', $k, $v).PHP_EOL;
-        }
-
-        return implode(
-            PHP_EOL,
-            [
-                $this->statusCode,
-                '',
-                $fmtHdrs,
-                '',
-                $this->responseBody,
-            ]
-        );
-    }
-
-    /**
      * @return int
      */
     public function getStatusCode()

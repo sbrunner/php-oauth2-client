@@ -52,25 +52,6 @@ class Request
         $this->requestHeaders = $requestHeaders;
     }
 
-    public function __toString()
-    {
-        $fmtHdrs = '';
-        foreach ($this->requestHeaders as $k => $v) {
-            $fmtHdrs .= sprintf('%s: %s', $k, $v).PHP_EOL;
-        }
-
-        return implode(
-            PHP_EOL,
-            [
-                $this->requestUri,
-                $this->requestMethod,
-                $fmtHdrs,
-                '',
-                $this->requestBody,
-            ]
-        );
-    }
-
     /**
      * @param string $requestUri
      * @param array  $requestHeaders

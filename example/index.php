@@ -87,7 +87,7 @@ try {
 
     // getting the resource succeeded!
     // print the Response object
-    echo sprintf('<pre>%s</pre>', $response);
+    echo sprintf('<pre>%s</pre>', var_export($response, true));
 } catch (Exception $e) {
     echo sprintf('ERROR: %s', $e->getMessage());
     exit(1);
