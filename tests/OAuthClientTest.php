@@ -61,13 +61,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->client->setDateTime(new DateTime('2016-01-01'));
     }
 
-    public function testNoOAuthRequest()
-    {
-        $response = $this->client->get(null, 'https://example.org/unprotected_resource');
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertFalse($response->json()['has_bearer_token']);
-    }
-
     public function testHasNoAccessToken()
     {
         $this->client->setUserId('foo');

@@ -147,11 +147,9 @@ class OAuthClient
     /**
      * Perform a GET request.
      *
-     * @param string|null $requestScope   the required scope to perform the
-     *                                    request, use `null` if you want to
-     *                                    request a resource without token
-     * @param string      $requestUri
-     * @param array       $requestHeaders
+     * @param string $requestScope
+     * @param string $requestUri
+     * @param array  $requestHeaders
      *
      * @return Http\Response|false
      */
@@ -163,10 +161,10 @@ class OAuthClient
     /**
      * Perform a POST request.
      *
-     * @param string|null $requestScope
-     * @param string      $requestUri
-     * @param array       $postBody
-     * @param array       $requestHeaders
+     * @param string $requestScope
+     * @param string $requestUri
+     * @param array  $postBody
+     * @param array  $requestHeaders
      *
      * @return Http\Response|false
      */
@@ -178,20 +176,13 @@ class OAuthClient
     /**
      * Perform a HTTP request.
      *
-     * @param string|null  $requestScope
+     * @param string       $requestScope
      * @param Http\Request $request
      *
      * @return Response|false
      */
     public function send($requestScope, Request $request)
     {
-        // if the requestScope is null, the request is sent without an OAuth
-        // token, useful to use the same API to request resources that are not
-        // protected
-        if (is_null($requestScope)) {
-            return $this->httpClient->send($request);
-        }
-
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
