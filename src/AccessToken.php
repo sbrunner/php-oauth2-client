@@ -27,10 +27,6 @@ namespace fkooman\OAuth\Client;
 use DateTime;
 use RuntimeException;
 
-/**
- * AccessToken object containing the response from the OAuth 2.0 provider's
- * token response.
- */
 class AccessToken
 {
     /** @var string */
@@ -48,6 +44,13 @@ class AccessToken
     /** @var \DateTime */
     private $expiresAt;
 
+    /**
+     * @param string      $accessToken
+     * @param string      $tokenType
+     * @param string      $scope
+     * @param string|null $refreshToken
+     * @param \DateTime   $expiresAt
+     */
     public function __construct($accessToken, $tokenType, $scope, $refreshToken, DateTime $expiresAt)
     {
         $this->accessToken = $accessToken;
@@ -106,7 +109,7 @@ class AccessToken
     }
 
     /**
-     * @return DateTime
+     * @return \DateTime
      */
     public function getExpiresAt()
     {
@@ -114,7 +117,7 @@ class AccessToken
     }
 
     /**
-     * @param DateTime $dateTime
+     * @param DateTime $dateTime the current time
      *
      * @return bool
      */
@@ -157,9 +160,9 @@ class AccessToken
         }
 
         $requiredKeys = ['access_token', 'token_type', 'scope', 'refresh_token', 'expires_at'];
-        foreach ($requiredKeys as $key) {
-            if (!array_key_exists($key, $tokenData)) {
-                throw new RuntimeException(sprintf('missing key "%s" in JSON data', $key));
+        foreach ($requiredKeys as $requiredKey) {
+            if (!array_key_exists($requiredKey, $tokenData)) {
+                throw new RuntimeException(sprintf('missing key "%s" in JSON data', $requiredKey));
             }
         }
 

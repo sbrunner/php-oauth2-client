@@ -24,6 +24,7 @@
 
 namespace fkooman\OAuth\Client;
 
+// XXX extend Session
 class SessionTokenStorage implements TokenStorageInterface
 {
     /**
@@ -36,7 +37,7 @@ class SessionTokenStorage implements TokenStorageInterface
     public function getAccessToken($userId, $providerId, $requestScope)
     {
         $this->startSession($userId, $providerId);
-        foreach ($_SESSION['_oauth2_client'][$userId][$providerId] as $accessToken) {
+        foreach ($_SESSION['_oauth2_tokens'][$userId][$providerId] as $accessToken) {
             if ($requestScope === $accessToken->getScope()) {
                 return $accessToken;
             }
@@ -53,7 +54,7 @@ class SessionTokenStorage implements TokenStorageInterface
     public function setAccessToken($userId, $providerId, AccessToken $accessToken)
     {
         $this->startSession($userId, $providerId);
-        $_SESSION['_oauth2_client'][$userId][$providerId][] = $accessToken;
+        $_SESSION['_oauth2_tokens'][$userId][$providerId][] = $accessToken;
     }
 
     /**
@@ -64,9 +65,9 @@ class SessionTokenStorage implements TokenStorageInterface
     public function deleteAccessToken($userId, $providerId, AccessToken $accessToken)
     {
         $this->startSession($userId, $providerId);
-        foreach ($_SESSION['_oauth2_client'][$userId][$providerId] as $i => $sessionAccessToken) {
+        foreach ($_SESSION['_oauth2_tokens'][$userId][$providerId] as $i => $sessionAccessToken) {
             if ($accessToken->getScope() === $sessionAccessToken->getScope()) {
-                unset($_SESSION['_oauth2_client'][$userId][$providerId][$i]);
+                unset($_SESSION['_oauth2_tokens'][$userId][$providerId][$i]);
             }
         }
     }
@@ -77,8 +78,8 @@ class SessionTokenStorage implements TokenStorageInterface
             session_start();
         }
 
-        if (!isset($_SESSION['_oauth2_client'][$userId][$providerId])) {
-            $_SESSION['_oauth2_client'][$userId][$providerId] = [];
+        if (!isset($_SESSION['_oauth2_tokens'][$userId][$providerId])) {
+            $_SESSION['_oauth2_tokens'][$userId][$providerId] = [];
         }
     }
 }

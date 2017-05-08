@@ -32,15 +32,15 @@ class CurlHttpClient implements HttpClientInterface
     private $curlChannel;
 
     /** @var bool */
-    private $httpsOnly = true;
+    private $allowHttp = false;
 
     /**
      * @param array $configData
      */
     public function __construct(array $configData = [])
     {
-        if (array_key_exists('httpsOnly', $configData)) {
-            $this->httpsOnly = (bool) $configData['httpsOnly'];
+        if (array_key_exists('allowHttp', $configData)) {
+            $this->allowHttp = (bool) $configData['allowHttp'];
         }
         $this->curlInit();
     }
@@ -105,7 +105,7 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_HTTPHEADER => [],
             CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_PROTOCOLS => $this->httpsOnly ? CURLPROTO_HTTPS : CURLPROTO_HTTPS | CURLPROTO_HTTP,
+            CURLOPT_PROTOCOLS => $this->allowHttp ? CURLPROTO_HTTPS | CURLPROTO_HTTP : CURLPROTO_HTTPS,
             CURLOPT_HEADERFUNCTION => function ($curlChannel, $headerData) use (&$headerList) {
                 if (false !== strpos($headerData, ':')) {
                     list($key, $value) = explode(':', $headerData, 2);

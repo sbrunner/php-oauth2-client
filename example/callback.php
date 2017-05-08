@@ -43,7 +43,7 @@ try {
         new SessionTokenStorage(),
         // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
         // do this in production
-        new CurlHttpClient(['httpsOnly' => false])
+        new CurlHttpClient(['allowHttp' => true])
     );
 
     // the OAuth provider configuration

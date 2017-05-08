@@ -42,12 +42,10 @@ class Provider
     private $tokenEndpoint;
 
     /**
-     * Instantiate an OAuth 2.0 provider.
-     *
-     * @param string $clientId              client id
-     * @param string $clientSecret          the client secret
-     * @param string $authorizationEndpoint the authorization endpoint
-     * @param string $tokenEndpoint         the token endpoint
+     * @param string $clientId
+     * @param string $clientSecret
+     * @param string $authorizationEndpoint
+     * @param string $tokenEndpoint
      */
     public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint)
     {

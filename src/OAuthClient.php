@@ -31,7 +31,6 @@ use fkooman\OAuth\Client\Exception\OAuthServerException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
-use InvalidArgumentException;
 use ParagonIE\ConstantTime\Base64;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -145,7 +144,7 @@ class OAuthClient
     }
 
     /**
-     * Perform a GET request.
+     * Perform a GET request, convenience wrapper for ::send().
      *
      * @param string $requestScope
      * @param string $requestUri
@@ -159,7 +158,7 @@ class OAuthClient
     }
 
     /**
-     * Perform a POST request.
+     * Perform a POST request, convenience wrapper for ::send().
      *
      * @param string $requestScope
      * @param string $requestUri
@@ -255,8 +254,8 @@ class OAuthClient
      * at the OAuth provider.
      *
      * @param string $scope       the space separated scope tokens
-     * @param string $redirectUri the URL to redirect back to after coming back
-     *                            from the OAuth provider (callback URL)
+     * @param string $redirectUri the URL registered at the OAuth provider, to
+     *                            be redirected back to
      *
      * @return string the authorization request URL
      *
@@ -265,25 +264,21 @@ class OAuthClient
      */
     public function getAuthorizeUri($scope, $redirectUri)
     {
-        $queryParams = http_build_query(
-            [
-                'client_id' => $this->getActiveProvider()->getId(),
-                'redirect_uri' => $redirectUri,
-                'scope' => $scope,
-                'state' => $this->random->get(16),
-                'response_type' => 'code',
-            ],
-            '&'
-        );
+        $queryParameters = [
+            'client_id' => $this->getActiveProvider()->getId(),
+            'redirect_uri' => $redirectUri,
+            'scope' => $scope,
+            'state' => $this->random->get(16),
+            'response_type' => 'code',
+        ];
 
         $authorizeUri = sprintf(
             '%s%s%s',
             $this->getActiveProvider()->getAuthorizationEndpoint(),
             false === strpos($this->getActiveProvider()->getAuthorizationEndpoint(), '?') ? '?' : '&',
-            $queryParams
+            http_build_query($queryParameters, '&')
         );
-        $this->session->set('_oauth2_session_provider_id', $this->providerId);
-        $this->session->set('_oauth2_session_authorize_uri', $authorizeUri);
+        $this->session->set('_oauth2_session', array_merge($queryParameters, ['provider_id' => $this->providerId]));
 
         return $authorizeUri;
     }
@@ -300,25 +295,19 @@ class OAuthClient
             throw new OAuthException('userId not set');
         }
 
-        // set the providerId from session, Provider *MUST* already be
-        // registered at this time...
-        $this->setProviderId($this->session->get('_oauth2_session_provider_id'));
-
-        $requestParameters = self::parseRequestUri(
-            $this->session->get('_oauth2_session_authorize_uri')
-        );
+        $sessionData = $this->session->get('_oauth2_session');
+        $this->setProviderId($sessionData['provider_id']);
 
         // delete the session, we don't want it to be used multiple times...
-        $this->session->del('_oauth2_session_authorize_uri');
-        $this->session->del('_oauth2_session_provider_id');
+        $this->session->del('_oauth2_session');
 
-        if ($responseState !== $requestParameters['state']) {
+        if ($responseState !== $sessionData['state']) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
             throw new OAuthException('invalid OAuth state');
         }
 
-        if ($requestParameters['client_id'] !== $this->getActiveProvider()->getId()) {
+        if ($sessionData['client_id'] !== $this->getActiveProvider()->getId()) {
             // the client_id used for the initial request differs from the
             // currently configured Provider, the client_id MUST be identical
             throw new OAuthException('unexpected client identifier');
@@ -329,7 +318,7 @@ class OAuthClient
             'client_id' => $this->getActiveProvider()->getId(),
             'grant_type' => 'authorization_code',
             'code' => $responseCode,
-            'redirect_uri' => $requestParameters['redirect_uri'],
+            'redirect_uri' => $sessionData['redirect_uri'],
         ];
 
         $responseData = $this->validateTokenResponse(
@@ -347,7 +336,7 @@ class OAuthClient
                     ]
                 )
             ),
-            $requestParameters['scope']
+            $sessionData['scope']
         );
 
         $this->tokenStorage->setAccessToken(
@@ -364,9 +353,9 @@ class OAuthClient
     }
 
     /**
-     * @param AccessToken $accessToken
+     * @param AccessToken $accessToken the current AccessToken
      *
-     * @return AccessToken
+     * @return AccessToken the refreshed AccessToken
      */
     private function refreshAccessToken(AccessToken $accessToken)
     {
@@ -403,46 +392,6 @@ class OAuthClient
             array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : $accessToken->getRefreshToken(),
             $responseData['expires_at']
         );
-    }
-
-    /**
-     * @param string $requestUri
-     *
-     * @return array
-     */
-    private static function parseRequestUri($requestUri)
-    {
-        if (!is_string($requestUri)) {
-            throw new InvalidArgumentException('"requestUri" MUST be string');
-        }
-
-        if (false === $qPos = strpos($requestUri, '?')) {
-            throw new OAuthException('"requestUri" not valid, no query string');
-        }
-        parse_str(substr($requestUri, $qPos + 1), $requestParameters);
-
-        $requiredParameters = [
-            'client_id',
-            'redirect_uri',
-            'scope',
-            'state',
-            'response_type',
-        ];
-
-        // all of the above parameters were part of the requestUri, make sure
-        // they are still there...
-        foreach ($requiredParameters as $requiredParameter) {
-            if (!array_key_exists($requiredParameter, $requestParameters)) {
-                throw new OAuthException(
-                    sprintf(
-                        'request URI not valid, missing required query parameter "%s"',
-                        $requiredParameter
-                    )
-                );
-            }
-        }
-
-        return $requestParameters;
     }
 
     /**
