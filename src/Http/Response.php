@@ -66,14 +66,6 @@ class Response
     }
 
     /**
-     * @return array
-     */
-    public function getHeaders()
-    {
-        return $this->responseHeaders;
-    }
-
-    /**
      * @return string|null
      */
     public function getHeader($key)
