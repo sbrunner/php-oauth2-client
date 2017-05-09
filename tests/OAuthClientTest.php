@@ -188,4 +188,26 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->client->setUserId('foo');
         $this->client->handleCallback('AC:fail', 'state12345abcde');
     }
+
+    /**
+     * @expectedException \fkooman\OAuth\Client\Exception\AccessTokenException
+     * @expectedExceptionMessage "expires_in" must be int
+     */
+    public function testCallbackMalformedAccessTokenResponse()
+    {
+        // XXX we should probably wrap this in an OAuthException as well!
+        $this->session->set(
+            '_oauth2_session',
+            [
+                'provider_id' => 'default',
+                'client_id' => 'foo',
+                'redirect_uri' => 'https://example.org/callback',
+                'scope' => 'my_scope',
+                'state' => 'state12345abcde',
+                'response_type' => 'code',
+            ]
+        );
+        $this->client->setUserId('foo');
+        $this->client->handleCallback('AC:broken', 'state12345abcde');
+    }
 }

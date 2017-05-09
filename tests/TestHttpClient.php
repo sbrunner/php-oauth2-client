@@ -145,6 +145,21 @@ class TestHttpClient implements HttpClientInterface
                     );
                 }
 
+                if ('AC:broken' === $postData['code']) {
+                    return new Response(
+                        200,
+                        json_encode(
+                            [
+                                'access_token' => 'AT:code12345',
+                                'token_type' => 'bearer',
+                                'refresh_token' => 'refresh:x:y:z',
+                                'expires_in' => '12345',    // expires_in MUST be int
+                            ]
+                        ),
+                        ['Content-Type' => 'application/json']
+                    );
+                }
+
                 if ('AC:abc' === $postData['code']) {
                     return new Response(
                         200,
