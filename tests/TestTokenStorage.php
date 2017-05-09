@@ -42,7 +42,7 @@ class TestTokenStorage extends TestSession implements TokenStorageInterface
             return false;
         }
 
-        return $this->get(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $requestScope));
+        return AccessToken::fromStorage($this->get(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $requestScope)));
     }
 
     /**
@@ -52,7 +52,7 @@ class TestTokenStorage extends TestSession implements TokenStorageInterface
      */
     public function setAccessToken($userId, $providerId, AccessToken $accessToken)
     {
-        $this->set(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()), $accessToken);
+        $this->set(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()), $accessToken->toStorage());
     }
 
     /**
