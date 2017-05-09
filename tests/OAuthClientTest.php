@@ -149,9 +149,28 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->assertSame('AT:code12345', $accessToken->getToken());
     }
 
+    public function testCallbackInvalidCredentials()
+    {
+        $this->session->set(
+            '_oauth2_session',
+            [
+                'provider_id' => 'default',
+                'client_id' => 'foo',
+                'redirect_uri' => 'https://example.org/callback',
+                'scope' => 'my_scope',
+                'state' => 'state12345abcde',
+                'response_type' => 'code',
+            ]
+        );
+        $this->client->setUserId('foo');
+        $this->client->handleCallback('AC:abc', 'state12345abcde');
+        $accessToken = $this->tokenStorage->getAccessToken('foo', 'default', 'my_scope');
+        $this->assertSame('AT:code12345', $accessToken->getToken());
+    }
+
     /**
      * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
-     * @expectedExceptionMessage invalid OAuth state
+     * @expectedExceptionMessage [401] foo (bar)
      */
     public function testCallbackUnexpectedState()
     {
@@ -167,6 +186,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
             ]
         );
         $this->client->setUserId('foo');
-        $this->client->handleCallback('AC:abc', 'invalid_state');
+        $this->client->handleCallback('AC:fail', 'state12345abcde');
     }
 }

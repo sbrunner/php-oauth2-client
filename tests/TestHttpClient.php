@@ -131,6 +131,20 @@ class TestHttpClient implements HttpClientInterface
             }
 
             if ('authorization_code' === $postData['grant_type']) {
+                if ('AC:fail' === $postData['code']) {
+                    // emulate wrong credentials
+                    return new Response(
+                        401,
+                        json_encode(['error' => 'foo', 'error_description' => 'bar']),
+                        [
+                            'Content-Type' => 'application/json',
+                            'Cache-Control' => 'no-store',
+                            'Pragma' => 'no-cache',
+                            'WWW-Authenticate' => 'Basic realm="OAuth"',
+                        ]
+                    );
+                }
+
                 if ('AC:abc' === $postData['code']) {
                     return new Response(
                         200,
