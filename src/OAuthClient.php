@@ -31,8 +31,6 @@ use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
 use ParagonIE\ConstantTime\Base64;
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class OAuthClient
 {
@@ -48,9 +46,6 @@ class OAuthClient
     /** @var RandomInterface */
     private $random;
 
-    /** @var \Psr\Log\LoggerInterface */
-    private $logger;
-
     /** @var \DateTime */
     private $dateTime;
 
@@ -60,7 +55,7 @@ class OAuthClient
     /** @var string */
     private $providerId = null;
 
-    /** @var string|null */
+    /** @var string */
     private $userId = null;
 
     /**
@@ -74,7 +69,6 @@ class OAuthClient
 
         $this->session = new Session();
         $this->random = new Random();
-        $this->logger = new NullLogger();
         $this->dateTime = new DateTime();
     }
 
@@ -116,14 +110,6 @@ class OAuthClient
     public function setRandom(RandomInterface $random)
     {
         $this->random = $random;
-    }
-
-    /**
-     * @param LoggerInterface $logger
-     */
-    public function setLogger(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
     }
 
     /**
@@ -184,11 +170,12 @@ class OAuthClient
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
+        if (is_null($this->providerId)) {
+            throw new OAuthException('providerId not set');
+        }
 
         // make sure we have an access token
         if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId, $this->providerId, $requestScope)) {
-            $this->logger->info(sprintf('no access_token available for user "%s" with scope "%s"', $this->userId, $requestScope));
-
             return false;
         }
 
@@ -196,12 +183,9 @@ class OAuthClient
             throw new OAuthException('access_token does not have the required scope');
         }
 
-        $refreshedToken = false;
         if ($accessToken->isExpired($this->dateTime)) {
-            $this->logger->info(sprintf('access_token for user "%s" with scope "%s" expired', $this->userId, $requestScope));
             // access_token is expired, try to refresh it
             if (is_null($accessToken->getRefreshToken())) {
-                $this->logger->info(sprintf('no refresh_token available in this access_token for user "%s" with scope "%s", deleting it', $this->userId, $requestScope));
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
                 $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
@@ -209,23 +193,11 @@ class OAuthClient
                 return false;
             }
 
-            $this->logger->info(sprintf('using refresh_token to obtain new access_token for user "%s" with scope "%s"', $this->userId, $requestScope));
-
-            try {
-                // keep a copy of the expired AccessToken around, only delete
-                // it after the refresh succeeded, otherwise we may lose our
-                // long lived refresh_token that would then trigger a new
-                // authorization!
-                $expiredAccessToken = $accessToken;
-                $accessToken = $this->refreshAccessToken($accessToken);
-                $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $expiredAccessToken);
-            } catch (OAuthServerException $e) {
-                $this->logger->info(sprintf('deleting access_token as refresh_token for user "%s" with scope "%s" was not accepted by the authorization server: "%s"', $this->userId, $requestScope, $e->getMessage()));
-
+            // try to refresh the AccessToken
+            if (false === $accessToken = $this->refreshAccessToken($accessToken)) {
+                // didn't work
                 return false;
             }
-            $this->logger->info(sprintf('got a new access_token using the refresh_token for user "%s" with scope "%s"', $this->userId, $requestScope));
-            $refreshedToken = true;
         }
 
         // add Authorization header to the request headers
@@ -233,20 +205,11 @@ class OAuthClient
 
         $response = $this->httpClient->send($request);
         if (401 === $response->getStatusCode()) {
-            $this->logger->info(sprintf('deleting access_token for user "%s" with scope "%s" that was supposed to work, but did not, possibly revoked by user', $this->userId, $requestScope));
-            // this indicates an invalid access_token
+            // the access_token was not accepted, but isn't expired, we assume
+            // the user revoked it, also no need to try with refresh_token
             $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
 
             return false;
-        }
-
-        $this->logger->info(sprintf('access_token for use "%s" with scope "%s" successfully used', $this->userId, $requestScope));
-
-        if ($refreshedToken) {
-            $this->logger->info(sprintf('storing refreshed access_token for user "%s" with scope "%s" as it was successfully used', $this->userId, $requestScope));
-            // if we refreshed the token, and it was successful, i.e. not a 401,
-            // update the stored AccessToken
-            $this->tokenStorage->setAccessToken($this->userId, $this->providerId, $accessToken);
         }
 
         return $response;
@@ -297,6 +260,9 @@ class OAuthClient
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
+        if (is_null($this->providerId)) {
+            throw new OAuthException('providerId not set');
+        }
 
         $sessionData = $this->session->get('_oauth2_session');
         $this->setProviderId($sessionData['provider_id']);
@@ -339,7 +305,19 @@ class OAuthClient
             )
         );
 
+        if (400 === $response->getStatusCode()) {
+            // check for "invalid_grant"
+            $responseData = $response->json();
+            if (!array_key_exists('error', $responseData) || 'invalid_grant' !== $responseData['error']) {
+                // not an "invalid_grant", we can't deal with this here...
+                throw new OAuthServerException($response);
+            }
+
+            throw new OAuthException('authorization_code was not accepted by the server');
+        }
+
         if (!$response->isOkay()) {
+            // if there is any other error, we can't deal with this here...
             throw new OAuthServerException($response);
         }
 
@@ -349,16 +327,17 @@ class OAuthClient
             AccessToken::fromCodeResponse(
                 $this->dateTime,
                 $response->json(),
-                // in case server does not return a scope, we know it granted our requested scope
+                // in case server does not return a scope, we know it granted
+                // our requested scope
                 $sessionData['scope']
             )
         );
     }
 
     /**
-     * @param AccessToken $accessToken the current AccessToken
+     * @param AccessToken $accessToken
      *
-     * @return AccessToken the refreshed AccessToken
+     * @return AccessToken|false
      */
     private function refreshAccessToken(AccessToken $accessToken)
     {
@@ -384,17 +363,37 @@ class OAuthClient
             )
         );
 
+        if (400 === $response->getStatusCode()) {
+            // check for "invalid_grant"
+            $responseData = $response->json();
+            if (!array_key_exists('error', $responseData) || 'invalid_grant' !== $responseData['error']) {
+                // not an "invalid_grant", we can't deal with this here...
+                throw new OAuthServerException($response);
+            }
+
+            // delete the access_token, we assume the user revoked it
+            $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
+
+            return false;
+        }
+
         if (!$response->isOkay()) {
+            // if there is any other error, we can't deal with this here...
             throw new OAuthServerException($response);
         }
 
-        return AccessToken::fromRefreshResponse(
+        $accessToken = AccessToken::fromRefreshResponse(
             $this->dateTime,
             $response->json(),
             // provide the old AccessToken to borrow some fields if the server
             // does not provide them on "refresh"
             $accessToken
         );
+
+        // store the refreshed AccessToken
+        $this->tokenStorage->setAccessToken($this->userId, $this->providerId, $accessToken);
+
+        return $accessToken;
     }
 
     /**
