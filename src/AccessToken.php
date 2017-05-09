@@ -156,6 +156,7 @@ class AccessToken
     {
         return json_encode(
             [
+                'issued_at' => $this->issuedAt->format('Y-m-d H:i:s'),
                 'access_token' => $this->getToken(),
                 'token_type' => $this->getTokenType(),
                 'expires_in' => $this->getExpiresIn(),
