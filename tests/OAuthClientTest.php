@@ -149,6 +149,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->assertSame('AT:code12345', $accessToken->getToken());
     }
 
+    // ???? what does this test?
     public function testCallbackInvalidCredentials()
     {
         $this->session->set(
@@ -170,7 +171,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
-     * @expectedExceptionMessage [401] foo (bar)
+     * @expectedExceptionMessage invalid OAuth state
      */
     public function testCallbackUnexpectedState()
     {
@@ -186,7 +187,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
             ]
         );
         $this->client->setUserId('foo');
-        $this->client->handleCallback('AC:fail', 'state12345abcde');
+        $this->client->handleCallback('AC:abc', 'non-matching-state');
     }
 
     /**
