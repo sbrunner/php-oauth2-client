@@ -22,6 +22,7 @@ OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 * There will be no toggles to shoot yourself in the foot;
 * Uses `paragonie/constant_time_encoding` for constant time encoding;
 * Uses `paragonie/random_compat` polyfill for CSPRNG;
+* Uses `symfony/polyfill-php56` polyfill for `hash_equals`;
 
 You **MUST** configure PHP in such a way that it enforces secure cookies! 
 See 
@@ -30,8 +31,7 @@ resource for more information.
 
 # API
 
-The API is very simple to use. Below, the API is explained in more detail, see
-the `example/` folder for a working example!
+The API is very simple to use. See the `example/` folder for a working example!
 
 # Security
 
