@@ -152,7 +152,7 @@ class AccessToken
     /**
      * @return string a JSON encoded AccessToken
      */
-    public function toTokenStorage()
+    public function toStorage()
     {
         return json_encode(
             [
