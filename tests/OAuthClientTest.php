@@ -44,8 +44,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->tokenStorage = new TestTokenStorage();
-
-//        $this->tokenStorage->setAccessToken('fooz', 'default', new AccessToken('AT:abc', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
         $this->tokenStorage->setAccessToken(
             'fooz',
             'default',
@@ -53,8 +51,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
                 json_encode(['access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
-
-//        $this->tokenStorage->setAccessToken('bar', 'default', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
         $this->tokenStorage->setAccessToken(
             'bar',
             'default',
@@ -62,8 +58,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
                 json_encode(['access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
-
-//        $this->tokenStorage->setAccessToken('baz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
         $this->tokenStorage->setAccessToken(
             'baz',
             'default',
@@ -71,8 +65,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
                 json_encode(['access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
-
-//        $this->tokenStorage->setAccessToken('bazz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:invalid', new DateTime('2016-01-01 01:00:00')));
         $this->tokenStorage->setAccessToken(
             'bazz',
             'default',
@@ -155,5 +147,26 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->client->handleCallback('AC:abc', 'state12345abcde');
         $accessToken = $this->tokenStorage->getAccessToken('foo', 'default', 'my_scope');
         $this->assertSame('AT:code12345', $accessToken->getToken());
+    }
+
+    /**
+     * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
+     * @expectedExceptionMessage invalid OAuth state
+     */
+    public function testCallbackUnexpectedState()
+    {
+        $this->session->set(
+            '_oauth2_session',
+            [
+                'provider_id' => 'default',
+                'client_id' => 'foo',
+                'redirect_uri' => 'https://example.org/callback',
+                'scope' => 'my_scope',
+                'state' => 'state12345abcde',
+                'response_type' => 'code',
+            ]
+        );
+        $this->client->setUserId('foo');
+        $this->client->handleCallback('AC:abc', 'invalid_state');
     }
 }

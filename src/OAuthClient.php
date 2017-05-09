@@ -300,8 +300,7 @@ class OAuthClient
         // delete the session, we don't want it to be used multiple times...
         $this->session->del('_oauth2_session');
 
-        // XXX constant time compare!
-        if ($responseState !== $sessionData['state']) {
+        if (!hash_equals($sessionData['state'], $responseState)) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
             throw new OAuthException('invalid OAuth state');
