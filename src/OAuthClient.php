@@ -335,12 +335,16 @@ class OAuthClient
             )
         );
 
+        if (!$response->isOkay()) {
+            throw new OAuthServerException($response);
+        }
+
         $this->tokenStorage->setAccessToken(
             $this->userId,
             $this->providerId,
             AccessToken::fromCodeResponse(
                 $this->dateTime,
-                $response,
+                $response->json(),
                 // in case server does not return a scope, we know it granted our requested scope
                 $sessionData['scope']
             )
@@ -376,9 +380,13 @@ class OAuthClient
             )
         );
 
+        if (!$response->isOkay()) {
+            throw new OAuthServerException($response);
+        }
+
         return AccessToken::fromRefreshResponse(
             $this->dateTime,
-            $response,
+            $response->json(),
             // provide the old AccessToken to borrow some fields if the server
             // does not provide them on "refresh"
             $accessToken

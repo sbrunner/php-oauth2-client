@@ -27,8 +27,6 @@ namespace fkooman\OAuth\Client;
 use DateInterval;
 use DateTime;
 use fkooman\OAuth\Client\Exception\AccessTokenException;
-use fkooman\OAuth\Client\Exception\OAuthServerException;
-use fkooman\OAuth\Client\Http\Response;
 
 class AccessToken
 {
@@ -80,16 +78,12 @@ class AccessToken
     }
 
     /**
-     * @param \DateTime     $dateTime
-     * @param Http\Response $response
-     * @param string        $scope
+     * @param \DateTime $dateTime
+     * @param array     $tokenData
+     * @param string    $scope
      */
-    public static function fromCodeResponse(DateTime $dateTime, Response $response, $scope)
+    public static function fromCodeResponse(DateTime $dateTime, array $tokenData, $scope)
     {
-        if (!$response->isOkay()) {
-            throw new OAuthServerException($response);
-        }
-        $tokenData = $response->json();
         // if the scope was not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
@@ -104,17 +98,12 @@ class AccessToken
     }
 
     /**
-     * @param \DateTime     $dateTime
-     * @param Http\Response $response
-     * @param AccessToken   $accessToken to steal the old scope and refresh_token from!
+     * @param \DateTime   $dateTime
+     * @param array       $tokenData
+     * @param AccessToken $accessToken to steal the old scope and refresh_token from!
      */
-    public static function fromRefreshResponse(DateTime $dateTime, Response $response, AccessToken $accessToken)
+    public static function fromRefreshResponse(DateTime $dateTime, array $tokenData, AccessToken $accessToken)
     {
-        if (!$response->isOkay()) {
-            throw new OAuthServerException($response);
-        }
-
-        $tokenData = $response->json();
         // if the scope is not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
