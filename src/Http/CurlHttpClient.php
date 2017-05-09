@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Client\Http;
 
-use RuntimeException;
+use fkooman\OAuth\Client\Http\Exception\CurlException;
 
 class CurlHttpClient implements HttpClientInterface
 {
@@ -72,7 +72,7 @@ class CurlHttpClient implements HttpClientInterface
     private function curlInit()
     {
         if (false === $this->curlChannel = curl_init()) {
-            throw new RuntimeException('unable to create cURL channel');
+            throw new CurlException('unable to create cURL channel');
         }
     }
 
@@ -125,11 +125,11 @@ class CurlHttpClient implements HttpClientInterface
         }
 
         if (false === curl_setopt_array($this->curlChannel, $curlOptions + $defaultCurlOptions)) {
-            throw new RuntimeException('unable to set cURL options');
+            throw new CurlException('unable to set cURL options');
         }
 
         if (false === $responseData = curl_exec($this->curlChannel)) {
-            throw new RuntimeException(
+            throw new CurlException(
                 sprintf(
                     'failure performing the HTTP request: "[%d] %s"',
                     curl_errno($this->curlChannel),
