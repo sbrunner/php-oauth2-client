@@ -25,11 +25,23 @@
 namespace fkooman\OAuth\Client\Exception;
 
 use Exception;
+use fkooman\OAuth\Client\Http\Response;
 
 class OAuthServerException extends OAuthException
 {
-    public function __construct($message, $code = 0, Exception $previous = null)
+    public function __construct(Response $response, $code = 0, Exception $previous = null)
     {
-        parent::__construct(sprintf('[SERVER] %s', $message), $code, $previous);
+        $responseData = $response->json();
+        $statusCode = $response->getStatusCode();
+
+        $errorMsg = sprintf('[%d] error', $statusCode);
+        if (array_key_exists('error', $responseData)) {
+            $errorMsg = sprintf('[%d] %s', $statusCode, $responseData['error']);
+            if (array_key_exists('error_description', $responseData)) {
+                $errorMsg = sprintf('[%d] %s (%s)', $statusCode, $responseData['error'], $responseData['error_description']);
+            }
+        }
+
+        parent::__construct($errorMsg, $code, $previous);
     }
 }

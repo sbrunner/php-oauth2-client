@@ -84,6 +84,9 @@ class Response
      */
     public function json()
     {
+        if (false === strpos($this->getHeader('Content-Type'), 'application/json')) {
+            throw new RuntimeException(sprintf('response MUST have JSON content type'));
+        }
         $decodedJson = json_decode($this->responseBody, true);
         if (is_null($decodedJson) && JSON_ERROR_NONE !== json_last_error()) {
             $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();

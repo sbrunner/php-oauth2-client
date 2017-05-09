@@ -24,7 +24,6 @@
 
 namespace fkooman\OAuth\Client;
 
-use DateInterval;
 use DateTime;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
@@ -321,33 +320,29 @@ class OAuthClient
             'redirect_uri' => $sessionData['redirect_uri'],
         ];
 
-        $responseData = $this->validateTokenResponse(
-            $this->httpClient->send(
-                Request::post(
-                    $this->getActiveProvider()->getTokenEndpoint(),
-                    $tokenRequestData,
-                    [
-                        'Authorization' => sprintf(
-                            'Basic %s',
-                            Base64::encode(
-                                sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
-                            )
-                        ),
-                    ]
-                )
-            ),
-            $sessionData['scope']
+        $response = $this->httpClient->send(
+            Request::post(
+                $this->getActiveProvider()->getTokenEndpoint(),
+                $tokenRequestData,
+                [
+                    'Authorization' => sprintf(
+                        'Basic %s',
+                        Base64::encode(
+                            sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
+                        )
+                    ),
+                ]
+            )
         );
 
         $this->tokenStorage->setAccessToken(
             $this->userId,
             $this->providerId,
-            new AccessToken(
-                $responseData['access_token'],
-                $responseData['token_type'],
-                $responseData['scope'],
-                array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : null,
-                $responseData['expires_at']
+            AccessToken::fromCodeResponse(
+                $this->dateTime,
+                $response,
+                // in case server does not return a scope, we know it granted our requested scope
+                $sessionData['scope']
             )
         );
     }
@@ -366,95 +361,28 @@ class OAuthClient
             'scope' => $accessToken->getScope(),
         ];
 
-        $responseData = $this->validateTokenResponse(
-            $this->httpClient->send(
-                Request::post(
-                    $this->getActiveProvider()->getTokenEndpoint(),
-                    $tokenRequestData,
-                    [
-                        'Authorization' => sprintf(
-                            'Basic %s',
-                            Base64::encode(
-                                sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
-                            )
-                        ),
-                    ]
-                )
-            ),
-            $accessToken->getScope()
+        $response = $this->httpClient->send(
+            Request::post(
+                $this->getActiveProvider()->getTokenEndpoint(),
+                $tokenRequestData,
+                [
+                    'Authorization' => sprintf(
+                        'Basic %s',
+                        Base64::encode(
+                            sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
+                        )
+                    ),
+                ]
+            )
         );
 
-        return new AccessToken(
-            $responseData['access_token'],
-            $responseData['token_type'],
-            $responseData['scope'],
-            // if a new refresh_token was provided use that, if not reuse the old one
-            array_key_exists('refresh_token', $responseData) ? $responseData['refresh_token'] : $accessToken->getRefreshToken(),
-            $responseData['expires_at']
+        return AccessToken::fromRefreshResponse(
+            $this->dateTime,
+            $response,
+            // provide the old AccessToken to borrow some fields if the server
+            // does not provide them on "refresh"
+            $accessToken
         );
-    }
-
-    /**
-     * @param Http\Response $response
-     * @param string        $requestScope
-     *
-     * @return array
-     */
-    private function validateTokenResponse(Response $response, $requestScope)
-    {
-        $tokenResponse = $response->json();
-        // XXX what if not array?
-
-        // check if an error occurred
-        if (array_key_exists('error', $tokenResponse)) {
-            if (array_key_exists('error_description', $tokenResponse)) {
-                throw new OAuthServerException(sprintf('%s: %s', $tokenResponse['error'], $tokenResponse['error_description']));
-            }
-
-            throw new OAuthServerException($tokenResponse['error']);
-        }
-
-        $requiredParameters = [
-            'access_token',
-            'token_type',
-        ];
-
-        foreach ($requiredParameters as $requiredParameter) {
-            if (!array_key_exists($requiredParameter, $tokenResponse)) {
-                throw new OAuthException(
-                    sprintf(
-                        'token response not valid, missing required parameter "%s"',
-                        $requiredParameter
-                    )
-                );
-            }
-        }
-
-        if (!array_key_exists('scope', $tokenResponse)) {
-            // if the token endpoint does not return a 'scope' value, the
-            // specification says the requested scope was granted
-            $tokenResponse['scope'] = $requestScope;
-        }
-
-        $tokenResponse['expires_at'] = $this->calculateExpiresAt($tokenResponse);
-
-        return $tokenResponse;
-    }
-
-    /**
-     * @param array $tokenResponse
-     *
-     * @return \DateTime
-     */
-    private function calculateExpiresAt(array $tokenResponse)
-    {
-        $dateTime = clone $this->dateTime;
-        if (array_key_exists('expires_in', $tokenResponse)) {
-            return date_add($dateTime, new DateInterval(sprintf('PT%dS', $tokenResponse['expires_in'])));
-        }
-
-        // if the 'expires_in' field is not available, we default to 1 year
-        return date_add($dateTime, new DateInterval('P1Y'));
     }
 
     /**

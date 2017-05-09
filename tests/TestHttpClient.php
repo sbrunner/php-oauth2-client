@@ -53,7 +53,8 @@ class TestHttpClient implements HttpClientInterface
         if ('https://example.org/unprotected_resource' === $requestUri) {
             return new Response(
                 200,
-                json_encode(['has_bearer_token' => array_key_exists('Authorization', $requestHeaders)])
+                json_encode(['has_bearer_token' => array_key_exists('Authorization', $requestHeaders)]),
+                ['Content-Type' => 'application/json']
             );
         }
 
@@ -62,13 +63,15 @@ class TestHttpClient implements HttpClientInterface
                 if ('Bearer AT:xyz' === $requestHeaders['Authorization']) {
                     return new Response(
                         200,
-                        json_encode(['ok' => true])
+                        json_encode(['ok' => true]),
+                        ['Content-Type' => 'application/json']
                     );
                 }
                 if ('Bearer AT:refreshed' === $requestHeaders['Authorization']) {
                     return new Response(
                         200,
-                        json_encode(['refreshed' => true])
+                        json_encode(['refreshed' => true]),
+                        ['Content-Type' => 'application/json']
                     );
                 }
 
@@ -115,13 +118,15 @@ class TestHttpClient implements HttpClientInterface
                                 'token_type' => 'bearer',
                                 'expires_in' => 3600,
                             ]
-                        )
+                        ),
+                        ['Content-Type' => 'application/json']
                     );
                 }
 
                 return new Response(
                     400,
-                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid refresh_token'])
+                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid refresh_token']),
+                    ['Content-Type' => 'application/json']
                 );
             }
 
@@ -135,19 +140,22 @@ class TestHttpClient implements HttpClientInterface
                                 'token_type' => 'bearer',
                                 'refresh_token' => 'refresh:x:y:z',
                             ]
-                        )
+                        ),
+                        ['Content-Type' => 'application/json']
                     );
                 }
 
                 return new Response(
                     400,
-                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid authorization_code'])
+                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid authorization_code']),
+                    ['Content-Type' => 'application/json']
                 );
             }
 
             return new Response(
                 400,
-                json_encode(['error' => 'unsupported_grant_type'])
+                json_encode(['error' => 'unsupported_grant_type']),
+                ['Content-Type' => 'application/json']
             );
         }
 

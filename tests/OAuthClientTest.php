@@ -45,10 +45,41 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     {
         $this->tokenStorage = new TestTokenStorage();
 
-        $this->tokenStorage->setAccessToken('fooz', 'default', new AccessToken('AT:abc', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
-        $this->tokenStorage->setAccessToken('bar', 'default', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
-        $this->tokenStorage->setAccessToken('baz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
-        $this->tokenStorage->setAccessToken('bazz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:invalid', new DateTime('2016-01-01 01:00:00')));
+//        $this->tokenStorage->setAccessToken('fooz', 'default', new AccessToken('AT:abc', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken(
+            'fooz',
+            'default',
+            AccessToken::fromStorage(
+                json_encode(['access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            )
+        );
+
+//        $this->tokenStorage->setAccessToken('bar', 'default', new AccessToken('AT:xyz', 'bearer', 'my_scope', null, new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken(
+            'bar',
+            'default',
+            AccessToken::fromStorage(
+                json_encode(['access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            )
+        );
+
+//        $this->tokenStorage->setAccessToken('baz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:abc', new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken(
+            'baz',
+            'default',
+            AccessToken::fromStorage(
+                json_encode(['access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            )
+        );
+
+//        $this->tokenStorage->setAccessToken('bazz', 'default', new AccessToken('AT:expired', 'bearer', 'my_scope', 'RT:invalid', new DateTime('2016-01-01 01:00:00')));
+        $this->tokenStorage->setAccessToken(
+            'bazz',
+            'default',
+            AccessToken::fromStorage(
+                json_encode(['access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:invalid', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            )
+        );
 
         $this->client = new OAuthClient(
             $this->tokenStorage,
