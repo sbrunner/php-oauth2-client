@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
+use RuntimeException;
 
 class AccessToken
 {
@@ -138,6 +139,39 @@ class AccessToken
                 'refresh_token' => $this->getRefreshToken(),
                 'expires_at' => $this->getExpiresAt()->format('Y-m-d H:i:s'),
             ]
+        );
+    }
+
+    /**
+     * @param string $jsonData
+     *
+     * @return AccessToken
+     */
+    public static function fromJson($jsonData)
+    {
+        $tokenData = json_decode($jsonData, true);
+        if (is_null($tokenData) && JSON_ERROR_NONE !== json_last_error()) {
+            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
+            throw new RuntimeException(sprintf('unable to decode JSON: %s', $errorMsg));
+        }
+
+        if (!is_array($tokenData)) {
+            throw new RuntimeException('JSON data MUST be an array');
+        }
+
+        $requiredKeys = ['access_token', 'token_type', 'scope', 'refresh_token', 'expires_at'];
+        foreach ($requiredKeys as $requiredKey) {
+            if (!array_key_exists($requiredKey, $tokenData)) {
+                throw new RuntimeException(sprintf('missing key "%s" in JSON data', $requiredKey));
+            }
+        }
+
+        return new self(
+            $tokenData['access_token'],
+            $tokenData['token_type'],
+            $tokenData['scope'],
+            $tokenData['refresh_token'],
+            new DateTime($tokenData['expires_at'])
         );
     }
 }
