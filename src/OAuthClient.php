@@ -203,6 +203,10 @@ class OAuthClient
      */
     public function getAuthorizeUri($scope, $redirectUri)
     {
+        if (is_null($this->userId)) {
+            throw new OAuthException('userId not set');
+        }
+
         $queryParameters = [
             'client_id' => $this->provider->getClientId(),
             'redirect_uri' => $redirectUri,
