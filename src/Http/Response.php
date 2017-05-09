@@ -24,7 +24,7 @@
 
 namespace fkooman\OAuth\Client\Http;
 
-use RuntimeException;
+use fkooman\OAuth\Client\Http\Exception\ResponseException;
 
 class Response
 {
@@ -66,7 +66,25 @@ class Response
     }
 
     /**
-     * @return string|null
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function hasHeader($key)
+    {
+        foreach ($this->responseHeaders as $k => $v) {
+            if (strtoupper($key) === strtoupper($k)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param string $key
+     *
+     * @return string
      */
     public function getHeader($key)
     {
@@ -76,7 +94,7 @@ class Response
             }
         }
 
-        return null;
+        throw new ResponseException(sprintf('header "%s" not set', $key));
     }
 
     /**
@@ -85,12 +103,12 @@ class Response
     public function json()
     {
         if (false === strpos($this->getHeader('Content-Type'), 'application/json')) {
-            throw new RuntimeException(sprintf('response MUST have JSON content type'));
+            throw new ResponseException(sprintf('response MUST have JSON content type'));
         }
         $decodedJson = json_decode($this->responseBody, true);
         if (is_null($decodedJson) && JSON_ERROR_NONE !== json_last_error()) {
             $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
-            throw new RuntimeException(sprintf('unable to decode JSON: %s', $errorMsg));
+            throw new ResponseException(sprintf('unable to decode JSON: %s', $errorMsg));
         }
 
         return $decodedJson;
