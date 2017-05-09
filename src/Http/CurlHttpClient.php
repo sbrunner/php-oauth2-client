@@ -131,7 +131,7 @@ class CurlHttpClient implements HttpClientInterface
         if (false === $responseData = curl_exec($this->curlChannel)) {
             throw new CurlException(
                 sprintf(
-                    'failure performing the HTTP request: "[%d] %s"',
+                    '[%d] %s',
                     curl_errno($this->curlChannel),
                     curl_error($this->curlChannel)
                 )

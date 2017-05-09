@@ -212,9 +212,13 @@ class OAuthClient
             $this->logger->info(sprintf('using refresh_token to obtain new access_token for user "%s" with scope "%s"', $this->userId, $requestScope));
 
             try {
-                // delete the old one, and use it to try to get a new one
-                $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
+                // keep a copy of the expired AccessToken around, only delete
+                // it after the refresh succeeded, otherwise we may lose our
+                // long lived refresh_token that would then trigger a new
+                // authorization!
+                $expiredAccessToken = $accessToken;
                 $accessToken = $this->refreshAccessToken($accessToken);
+                $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $expiredAccessToken);
             } catch (OAuthServerException $e) {
                 $this->logger->info(sprintf('deleting access_token as refresh_token for user "%s" with scope "%s" was not accepted by the authorization server: "%s"', $this->userId, $requestScope, $e->getMessage()));
 
