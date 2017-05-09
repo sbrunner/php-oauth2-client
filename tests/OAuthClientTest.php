@@ -44,32 +44,28 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->tokenStorage = new TestTokenStorage();
-        $this->tokenStorage->setAccessToken(
+        $this->tokenStorage->addAccessToken(
             'fooz',
-            'default',
             AccessToken::fromStorage(
-                json_encode(['access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
-        $this->tokenStorage->setAccessToken(
+        $this->tokenStorage->addAccessToken(
             'bar',
-            'default',
             AccessToken::fromStorage(
-                json_encode(['access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
-        $this->tokenStorage->setAccessToken(
+        $this->tokenStorage->addAccessToken(
             'baz',
-            'default',
             AccessToken::fromStorage(
-                json_encode(['access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
-        $this->tokenStorage->setAccessToken(
+        $this->tokenStorage->addAccessToken(
             'bazz',
-            'default',
             AccessToken::fromStorage(
-                json_encode(['access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:invalid', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:invalid', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
             )
         );
 
@@ -77,7 +73,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
             $this->tokenStorage,
             new TestHttpClient()
         );
-        $this->client->addProvider('default', new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'));
+        $this->client->setProvider(new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'));
         $this->session = new TestSession();
         $this->client->setSession($this->session);
         $this->client->setRandom(new TestRandom());
@@ -135,7 +131,8 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->session->set(
             '_oauth2_session',
             [
-                'provider_id' => 'default',
+                'user_id' => 'foo',
+                'provider_id' => 'http://localhost/authorize|foo',
                 'client_id' => 'foo',
                 'redirect_uri' => 'https://example.org/callback',
                 'scope' => 'my_scope',
@@ -145,8 +142,9 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         );
         $this->client->setUserId('foo');
         $this->client->handleCallback('AC:abc', 'state12345abcde');
-        $accessToken = $this->tokenStorage->getAccessToken('foo', 'default', 'my_scope');
-        $this->assertSame('AT:code12345', $accessToken->getToken());
+        $accessTokenList = $this->tokenStorage->getAccessToken('foo');
+        $this->assertSame(1, count($accessTokenList));
+        $this->assertSame('AT:code12345', $accessTokenList[0]->getToken());
     }
 
     // ???? what does this test?
@@ -155,7 +153,8 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->session->set(
             '_oauth2_session',
             [
-                'provider_id' => 'default',
+                'user_id' => 'foo',
+                'provider_id' => 'http://localhost/authorize|foo',
                 'client_id' => 'foo',
                 'redirect_uri' => 'https://example.org/callback',
                 'scope' => 'my_scope',
@@ -165,20 +164,22 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         );
         $this->client->setUserId('foo');
         $this->client->handleCallback('AC:abc', 'state12345abcde');
-        $accessToken = $this->tokenStorage->getAccessToken('foo', 'default', 'my_scope');
-        $this->assertSame('AT:code12345', $accessToken->getToken());
+        $accessTokenList = $this->tokenStorage->getAccessToken('foo');
+        $this->assertSame(1, count($accessTokenList));
+        $this->assertSame('AT:code12345', $accessTokenList[0]->getToken());
     }
 
     /**
      * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
-     * @expectedExceptionMessage invalid OAuth state
+     * @expectedExceptionMessage invalid session (state)
      */
     public function testCallbackUnexpectedState()
     {
         $this->session->set(
             '_oauth2_session',
             [
-                'provider_id' => 'default',
+                'user_id' => 'foo',
+                'provider_id' => 'http://localhost/authorize|foo',
                 'client_id' => 'foo',
                 'redirect_uri' => 'https://example.org/callback',
                 'scope' => 'my_scope',
@@ -200,7 +201,8 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->session->set(
             '_oauth2_session',
             [
-                'provider_id' => 'default',
+                'user_id' => 'foo',
+                'provider_id' => 'http://localhost/authorize|foo',
                 'client_id' => 'foo',
                 'redirect_uri' => 'https://example.org/callback',
                 'scope' => 'my_scope',

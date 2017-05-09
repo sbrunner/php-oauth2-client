@@ -24,9 +24,6 @@
 
 namespace fkooman\OAuth\Client;
 
-/**
- * OAuth 2.0 provider definition.
- */
 class Provider
 {
     /** @var string */
@@ -55,22 +52,23 @@ class Provider
         $this->tokenEndpoint = $tokenEndpoint;
     }
 
+    public function getProviderId()
+    {
+        return sprintf('%s|%s', $this->getAuthorizationEndpoint(), $this->getClientId());
+    }
+
     /**
-     * Get the client id.
-     *
-     * @return string the client id
+     * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-2.2
      */
-    public function getId()
+    public function getClientId()
     {
         return $this->clientId;
     }
 
     /**
-     * Get the client secret.
-     *
-     * @return string the client secret
+     * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
      */
@@ -80,9 +78,7 @@ class Provider
     }
 
     /**
-     * Get the authorization endpoint.
-     *
-     * @return string the authorization endpoint
+     * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-3.1
      */
@@ -92,9 +88,7 @@ class Provider
     }
 
     /**
-     * Get the token endpoint.
-     *
-     * @return string the token endpoint
+     * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-3.2
      */

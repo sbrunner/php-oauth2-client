@@ -30,6 +30,9 @@ use fkooman\OAuth\Client\Exception\AccessTokenException;
 
 class AccessToken
 {
+    /** @var string */
+    private $providerId;
+
     /** @var \DateTime */
     private $issuedAt;
 
@@ -53,7 +56,7 @@ class AccessToken
      */
     private function __construct(array $tokenData)
     {
-        $requiredKeys = ['issued_at', 'access_token', 'token_type'];
+        $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type'];
         foreach ($requiredKeys as $requiredKey) {
             if (!array_key_exists($requiredKey, $tokenData)) {
                 throw new AccessTokenException(sprintf('missing key "%s"', $requiredKey));
@@ -61,6 +64,7 @@ class AccessToken
         }
 
         // set required keys
+        $this->setProviderId($tokenData['provider_id']);
         $this->setIssuedAt($tokenData['issued_at']);
         $this->setAccessToken($tokenData['access_token']);
         $this->setTokenType($tokenData['token_type']);
@@ -78,12 +82,15 @@ class AccessToken
     }
 
     /**
+     * @param Provider  $provider
      * @param \DateTime $dateTime
      * @param array     $tokenData
      * @param string    $scope
      */
-    public static function fromCodeResponse(DateTime $dateTime, array $tokenData, $scope)
+    public static function fromCodeResponse(Provider $provider, DateTime $dateTime, array $tokenData, $scope)
     {
+        $tokenData['provider_id'] = $provider->getProviderId();
+
         // if the scope was not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
@@ -98,12 +105,15 @@ class AccessToken
     }
 
     /**
+     * @param Provider    $provider
      * @param \DateTime   $dateTime
      * @param array       $tokenData
      * @param AccessToken $accessToken to steal the old scope and refresh_token from!
      */
-    public static function fromRefreshResponse(DateTime $dateTime, array $tokenData, AccessToken $accessToken)
+    public static function fromRefreshResponse(Provider $provider, DateTime $dateTime, array $tokenData, AccessToken $accessToken)
     {
+        $tokenData['provider_id'] = $provider->getProviderId();
+
         // if the scope is not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
@@ -145,6 +155,7 @@ class AccessToken
     {
         return json_encode(
             [
+                'provider_id' => $this->getProviderId(),
                 'issued_at' => $this->issuedAt->format('Y-m-d H:i:s'),
                 'access_token' => $this->getToken(),
                 'token_type' => $this->getTokenType(),
@@ -153,6 +164,11 @@ class AccessToken
                 'scope' => $this->getScope(),
             ]
         );
+    }
+
+    public function getProviderId()
+    {
+        return $this->providerId;
     }
 
     /**
@@ -222,6 +238,14 @@ class AccessToken
         $expiresAt = date_add($issuedAt, new DateInterval(sprintf('PT%dS', $this->getExpiresIn())));
 
         return $dateTime >= $expiresAt;
+    }
+
+    /**
+     * @param string $providerId
+     */
+    private function setProviderId($providerId)
+    {
+        $this->providerId = $providerId;
     }
 
     /**

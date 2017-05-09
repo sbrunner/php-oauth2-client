@@ -49,19 +49,14 @@ try {
     );
 
     // the OAuth provider configuration
-    $client->addProvider(
-        'default',
+    $client->setProvider(
         new Provider(
-            'demo_client',
-            'demo_secret',
-            'http://localhost:8080/authorize.php',
-            'http://localhost:8080/token.php'
+            'demo_client',                          // client_id
+            'demo_secret',                          // client_secret
+            'http://localhost:8080/authorize.php',  // authorization_uri
+            'http://localhost:8080/token.php'       // token_uri
         )
     );
-    // make the request to the provider with ID "default", if there is only one
-    // provider, this is not needed, the first added Provider will be the
-    // default
-    //$client->setProviderId('default');
 
     // set the userId to bind the access token to
     $client->setUserId($userId);

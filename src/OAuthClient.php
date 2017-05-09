@@ -49,11 +49,8 @@ class OAuthClient
     /** @var \DateTime */
     private $dateTime;
 
-    /** @var array */
-    private $providerList = [];
-
-    /** @var string */
-    private $providerId = null;
+    /** @var Provider */
+    private $provider = null;
 
     /** @var string */
     private $userId = null;
@@ -73,27 +70,11 @@ class OAuthClient
     }
 
     /**
-     * @param string   $providerId
      * @param Provider $provider
      */
-    public function addProvider($providerId, Provider $provider)
+    public function setProvider(Provider $provider)
     {
-        $this->providerList[$providerId] = $provider;
-        // the first provider we add becomes the active provider, can be
-        // overridden by the "setProviderId" method
-        if (1 === count($this->providerList)) {
-            $this->providerId = $providerId;
-        }
-    }
-
-    /**
-     * @param string $providerId
-     */
-    public function setProviderId($providerId)
-    {
-        if (!array_key_exists($providerId, $this->providerList)) {
-            throw new OAuthException(sprintf('provider with providerId "%s" does not exist', $this->providerId));
-        }
+        $this->provider = $provider;
     }
 
     /**
@@ -170,17 +151,9 @@ class OAuthClient
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
-        if (is_null($this->providerId)) {
-            throw new OAuthException('providerId not set');
-        }
 
-        // make sure we have an access token
-        if (false === $accessToken = $this->tokenStorage->getAccessToken($this->userId, $this->providerId, $requestScope)) {
+        if (false === $accessToken = $this->getAccessToken($requestScope)) {
             return false;
-        }
-
-        if ($requestScope !== $accessToken->getScope()) {
-            throw new OAuthException('access_token does not have the required scope');
         }
 
         if ($accessToken->isExpired($this->dateTime)) {
@@ -188,7 +161,7 @@ class OAuthClient
             if (is_null($accessToken->getRefreshToken())) {
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
-                $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
                 return false;
             }
@@ -207,7 +180,7 @@ class OAuthClient
         if (401 === $response->getStatusCode()) {
             // the access_token was not accepted, but isn't expired, we assume
             // the user revoked it, also no need to try with refresh_token
-            $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
+            $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
             return false;
         }
@@ -231,7 +204,7 @@ class OAuthClient
     public function getAuthorizeUri($scope, $redirectUri)
     {
         $queryParameters = [
-            'client_id' => $this->getActiveProvider()->getId(),
+            'client_id' => $this->provider->getClientId(),
             'redirect_uri' => $redirectUri,
             'scope' => $scope,
             'state' => $this->random->get(16),
@@ -240,11 +213,20 @@ class OAuthClient
 
         $authorizeUri = sprintf(
             '%s%s%s',
-            $this->getActiveProvider()->getAuthorizationEndpoint(),
-            false === strpos($this->getActiveProvider()->getAuthorizationEndpoint(), '?') ? '?' : '&',
+            $this->provider->getAuthorizationEndpoint(),
+            false === strpos($this->provider->getAuthorizationEndpoint(), '?') ? '?' : '&',
             http_build_query($queryParameters, '&')
         );
-        $this->session->set('_oauth2_session', array_merge($queryParameters, ['provider_id' => $this->providerId]));
+        $this->session->set(
+            '_oauth2_session',
+            array_merge(
+                $queryParameters,
+                [
+                    'user_id' => $this->userId,
+                    'provider_id' => $this->provider->getProviderId(),
+                ]
+            )
+        );
 
         return $authorizeUri;
     }
@@ -260,12 +242,8 @@ class OAuthClient
         if (is_null($this->userId)) {
             throw new OAuthException('userId not set');
         }
-        if (is_null($this->providerId)) {
-            throw new OAuthException('providerId not set');
-        }
 
         $sessionData = $this->session->get('_oauth2_session');
-        $this->setProviderId($sessionData['provider_id']);
 
         // delete the session, we don't want it to be used multiple times...
         $this->session->del('_oauth2_session');
@@ -273,18 +251,22 @@ class OAuthClient
         if (!hash_equals($sessionData['state'], $responseState)) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
-            throw new OAuthException('invalid OAuth state');
+            throw new OAuthException('invalid session (state)');
         }
 
-        if ($sessionData['client_id'] !== $this->getActiveProvider()->getId()) {
-            // the client_id used for the initial request differs from the
-            // currently configured Provider, the client_id MUST be identical
-            throw new OAuthException('unexpected client identifier');
+        // session providerId MUST match current set Provider
+        if ($sessionData['provider_id'] !== $this->provider->getProviderId()) {
+            throw new OAuthException('invalid session (provider_id)');
+        }
+
+        // session userId MUST match current set userId
+        if ($sessionData['user_id'] !== $this->userId) {
+            throw new OAuthException('invalid session (user_id)');
         }
 
         // prepare access_token request
         $tokenRequestData = [
-            'client_id' => $this->getActiveProvider()->getId(),
+            'client_id' => $this->provider->getClientId(),
             'grant_type' => 'authorization_code',
             'code' => $responseCode,
             'redirect_uri' => $sessionData['redirect_uri'],
@@ -292,13 +274,13 @@ class OAuthClient
 
         $response = $this->httpClient->send(
             Request::post(
-                $this->getActiveProvider()->getTokenEndpoint(),
+                $this->provider->getTokenEndpoint(),
                 $tokenRequestData,
                 [
                     'Authorization' => sprintf(
                         'Basic %s',
                         Base64::encode(
-                            sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
+                            sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
                         )
                     ),
                 ]
@@ -321,10 +303,10 @@ class OAuthClient
             throw new OAuthServerException($response);
         }
 
-        $this->tokenStorage->setAccessToken(
+        $this->tokenStorage->addAccessToken(
             $this->userId,
-            $this->providerId,
             AccessToken::fromCodeResponse(
+                $this->provider,
                 $this->dateTime,
                 $response->json(),
                 // in case server does not return a scope, we know it granted
@@ -350,13 +332,13 @@ class OAuthClient
 
         $response = $this->httpClient->send(
             Request::post(
-                $this->getActiveProvider()->getTokenEndpoint(),
+                $this->provider->getTokenEndpoint(),
                 $tokenRequestData,
                 [
                     'Authorization' => sprintf(
                         'Basic %s',
                         Base64::encode(
-                            sprintf('%s:%s', $this->getActiveProvider()->getId(), $this->getActiveProvider()->getSecret())
+                            sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
                         )
                     ),
                 ]
@@ -372,7 +354,7 @@ class OAuthClient
             }
 
             // delete the access_token, we assume the user revoked it
-            $this->tokenStorage->deleteAccessToken($this->userId, $this->providerId, $accessToken);
+            $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
 
             return false;
         }
@@ -383,6 +365,7 @@ class OAuthClient
         }
 
         $accessToken = AccessToken::fromRefreshResponse(
+            $this->provider,
             $this->dateTime,
             $response->json(),
             // provide the old AccessToken to borrow some fields if the server
@@ -391,18 +374,33 @@ class OAuthClient
         );
 
         // store the refreshed AccessToken
-        $this->tokenStorage->setAccessToken($this->userId, $this->providerId, $accessToken);
+        $this->tokenStorage->addAccessToken($this->userId, $accessToken);
 
         return $accessToken;
     }
 
     /**
-     * Get the active OAuth provider.
+     * Find an AccessToken in the list that matches this scope, bound to
+     * providerId and userId.
      *
-     * @return Provider
+     * @param string $scope
+     *
+     * @return AccessToken|false
      */
-    private function getActiveProvider()
+    private function getAccessToken($scope)
     {
-        return $this->providerList[$this->providerId];
+        $accessTokenList = $this->tokenStorage->getAccessToken($this->userId);
+        foreach ($accessTokenList as $accessToken) {
+            if ($this->provider->getProviderId() !== $accessToken->getProviderId()) {
+                continue;
+            }
+            if ($scope !== $accessToken->getScope()) {
+                continue;
+            }
+
+            return $accessToken;
+        }
+
+        return false;
     }
 }

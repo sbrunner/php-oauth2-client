@@ -31,39 +31,47 @@ class TestTokenStorage extends TestSession implements TokenStorageInterface
 {
     /**
      * @param string $userId
-     * @param string $providerId
-     * @param string $requestScope
      *
-     * @return AccessToken|false
+     * @return array
      */
-    public function getAccessToken($userId, $providerId, $requestScope)
+    public function getAccessToken($userId)
     {
-        if (!$this->has(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $requestScope))) {
-            return false;
+        $accessTokenList = [];
+        if ($this->has(sprintf('_oauth2_token_%s', $userId))) {
+            foreach ($this->get(sprintf('_oauth2_token_%s', $userId)) as $accessToken) {
+                $accessTokenList[] = AccessToken::fromStorage($accessToken);
+            }
         }
 
-        return AccessToken::fromStorage($this->get(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $requestScope)));
+        return $accessTokenList;
     }
 
     /**
      * @param string      $userId
-     * @param string      $providerId
      * @param AccessToken $accessToken
      */
-    public function setAccessToken($userId, $providerId, AccessToken $accessToken)
+    public function addAccessToken($userId, AccessToken $accessToken)
     {
-        $this->set(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()), $accessToken->toStorage());
+        $accessTokenList = $this->getAccessToken($userId);
+        $accessTokenList[] = $accessToken->toStorage();
+        $this->set(sprintf('_oauth2_token_%s', $userId), $accessTokenList);
     }
 
     /**
      * @param string      $userId
-     * @param string      $providerId
      * @param AccessToken $accessToken
      */
-    public function deleteAccessToken($userId, $providerId, AccessToken $accessToken)
+    public function deleteAccessToken($userId, AccessToken $accessToken)
     {
-        if ($this->has(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()))) {
-            $this->del(sprintf('_oauth2_token_%s_%s_%s', $userId, $providerId, $accessToken->getScope()));
+        $accessTokenList = $this->getAccessToken($userId);
+        foreach ($accessTokenList as $k => $v) {
+            if ($accessToken->getProviderId() === $v->getProviderId()) {
+                if ($accessToken->getToken() === $v->getToken()) {
+                    unset($accessTokenList[$k]);
+                }
+            }
         }
+
+        $this->set(sprintf('_oauth2_token_%s', $userId), array_values($accessTokenList));
     }
 }
