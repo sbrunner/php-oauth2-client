@@ -24,8 +24,21 @@
 
 namespace fkooman\OAuth\Client;
 
-class SessionTokenStorage extends Session implements TokenStorageInterface
+class SessionTokenStorage implements TokenStorageInterface
 {
+    /** @var SessionInterface */
+    private $session;
+
+    public function __construct()
+    {
+        $this->session = new Session();
+    }
+
+    public function setSession(SessionInterface $session)
+    {
+        $this->session = $session;
+    }
+
     /**
      * @param string $userId
      *
@@ -34,9 +47,9 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
     public function getAccessToken($userId)
     {
         $accessTokenList = [];
-        if ($this->has(sprintf('_oauth2_token_%s', $userId))) {
-            foreach ($this->get(sprintf('_oauth2_token_%s', $userId)) as $accessToken) {
-                $accessTokenList[] = AccessToken::fromStorage($accessToken);
+        if ($this->session->has(sprintf('_oauth2_token_%s', $userId))) {
+            foreach ($this->session->get(sprintf('_oauth2_token_%s', $userId)) as $accessToken) {
+                $accessTokenList[] = $accessToken;
             }
         }
 
@@ -50,8 +63,8 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
     public function addAccessToken($userId, AccessToken $accessToken)
     {
         $accessTokenList = $this->getAccessToken($userId);
-        $accessTokenList[] = $accessToken->toStorage();
-        $this->set(sprintf('_oauth2_token_%s', $userId), $accessTokenList);
+        $accessTokenList[] = $accessToken;
+        $this->session->set(sprintf('_oauth2_token_%s', $userId), $accessTokenList);
     }
 
     /**
@@ -69,6 +82,6 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
             }
         }
 
-        $this->set(sprintf('_oauth2_token_%s', $userId), array_values($accessTokenList));
+        $this->session->set(sprintf('_oauth2_token_%s', $userId), array_values($accessTokenList));
     }
 }

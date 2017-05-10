@@ -28,6 +28,7 @@ use DateTime;
 use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
+use fkooman\OAuth\Client\SessionTokenStorage;
 use PHPUnit_Framework_TestCase;
 
 class OAuthClientTest extends PHPUnit_Framework_TestCase
@@ -35,7 +36,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     /** @var \fkooman\OAuth\Client\OAuthClient */
     private $client;
 
-    /** @var \fkooman\OAuth\Client\TokenStorageInterface */
+    /** @var \fkooman\OAuth\Client\SessionTokenStorage */
     private $tokenStorage;
 
     /** @var \fkooman\OAuth\Client\SessionInterface */
@@ -43,7 +44,9 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->tokenStorage = new TestTokenStorage();
+        $this->session = new TestSession();
+        $this->tokenStorage = new SessionTokenStorage();
+        $this->tokenStorage->setSession($this->session);
         $this->tokenStorage->addAccessToken(
             'fooz',
             AccessToken::fromStorage(
@@ -74,7 +77,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
             new TestHttpClient()
         );
         $this->client->setProvider(new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'));
-        $this->session = new TestSession();
         $this->client->setSession($this->session);
         $this->client->setRandom(new TestRandom());
         $this->client->setDateTime(new DateTime('2016-01-01'));
