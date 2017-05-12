@@ -22,15 +22,19 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Client;
+namespace fkooman\OAuth\Client\Tests;
 
-class SessionTokenStorage implements TokenStorageInterface
+use fkooman\OAuth\Client\AccessToken;
+use fkooman\OAuth\Client\TokenStorageInterface;
+
+class TestTokenStorage implements TokenStorageInterface
 {
+    /** @var array */
+    private $data;
+
     public function __construct()
     {
-        if ('' === session_id()) {
-            session_start();
-        }
+        $this->data = [];
     }
 
     /**
@@ -40,11 +44,11 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function getAccessTokenList($userId)
     {
-        if (!array_key_exists(sprintf('_oauth2_token_%s', $userId), $_SESSION)) {
+        if (!array_key_exists(sprintf('_oauth2_token_%s', $userId), $this->data)) {
             return [];
         }
 
-        return $_SESSION[sprintf('_oauth2_token_%s', $userId)];
+        return $this->data[sprintf('_oauth2_token_%s', $userId)];
     }
 
     /**
@@ -53,7 +57,7 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
-        $_SESSION[sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
+        $this->data[sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
     }
 
     /**
@@ -65,7 +69,7 @@ class SessionTokenStorage implements TokenStorageInterface
         foreach ($this->getAccessTokenList($userId) as $k => $v) {
             if ($accessToken->getProviderId() === $v->getProviderId()) {
                 if ($accessToken->getToken() === $v->getToken()) {
-                    unset($_SESSION[$k]);
+                    unset($this->data[$k]);
                 }
             }
         }

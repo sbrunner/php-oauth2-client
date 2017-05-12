@@ -31,13 +31,13 @@ interface TokenStorageInterface
      *
      * @return array
      */
-    public function getAccessToken($userId);
+    public function getAccessTokenList($userId);
 
     /**
      * @param string      $userId
      * @param AccessToken $accessToken
      */
-    public function addAccessToken($userId, AccessToken $accessToken);
+    public function storeAccessToken($userId, AccessToken $accessToken);
 
     /**
      * @param string      $userId

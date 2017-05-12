@@ -307,7 +307,7 @@ class OAuthClient
             throw new OAuthServerException($response);
         }
 
-        $this->tokenStorage->addAccessToken(
+        $this->tokenStorage->storeAccessToken(
             $this->userId,
             AccessToken::fromCodeResponse(
                 $this->provider,
@@ -378,7 +378,7 @@ class OAuthClient
         );
 
         // store the refreshed AccessToken
-        $this->tokenStorage->addAccessToken($this->userId, $accessToken);
+        $this->tokenStorage->storeAccessToken($this->userId, $accessToken);
 
         return $accessToken;
     }
@@ -393,7 +393,7 @@ class OAuthClient
      */
     private function getAccessToken($scope)
     {
-        $accessTokenList = $this->tokenStorage->getAccessToken($this->userId);
+        $accessTokenList = $this->tokenStorage->getAccessTokenList($this->userId);
         foreach ($accessTokenList as $accessToken) {
             if ($this->provider->getProviderId() !== $accessToken->getProviderId()) {
                 continue;
