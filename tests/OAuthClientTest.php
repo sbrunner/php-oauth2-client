@@ -27,7 +27,9 @@ namespace fkooman\OAuth\Client\Tests;
 use DateTime;
 use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\OAuthClient;
+use fkooman\OAuth\Client\PdoTokenStorage;
 use fkooman\OAuth\Client\Provider;
+use PDO;
 use PHPUnit_Framework_TestCase;
 
 class OAuthClientTest extends PHPUnit_Framework_TestCase
@@ -35,7 +37,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     /** @var \fkooman\OAuth\Client\OAuthClient */
     private $client;
 
-    /** @var TestTokenStorage */
+    /** @var PdoTokenStorage */
     private $tokenStorage;
 
     /** @var \fkooman\OAuth\Client\SessionInterface */
@@ -44,29 +46,31 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->session = new TestSession();
-        $this->tokenStorage = new TestTokenStorage();
+//        $this->tokenStorage = new TestTokenStorage();
+        $this->tokenStorage = new PdoTokenStorage(new PDO('sqlite::memory:'));
+        $this->tokenStorage->init();
         $this->tokenStorage->storeAccessToken(
             'fooz',
-            AccessToken::fromStorage(
-                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            new AccessToken(
+                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
             )
         );
         $this->tokenStorage->storeAccessToken(
             'bar',
-            AccessToken::fromStorage(
-                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            new AccessToken(
+                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
             )
         );
         $this->tokenStorage->storeAccessToken(
             'baz',
-            AccessToken::fromStorage(
-                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            new AccessToken(
+                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
             )
         );
         $this->tokenStorage->storeAccessToken(
             'bazz',
-            AccessToken::fromStorage(
-                json_encode(['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:invalid', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00'])
+            new AccessToken(
+                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:invalid', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
             )
         );
 
@@ -144,7 +148,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->client->handleCallback('AC:abc', 'state12345abcde');
         $accessTokenList = $this->tokenStorage->getAccessTokenList('foo');
         $this->assertSame(1, count($accessTokenList));
-        $this->assertSame('AT:code12345', $accessTokenList[0]->getToken());
+        $this->assertSame('AT:code12345', reset($accessTokenList)->getToken());
     }
 
     // ???? what does this test?
@@ -166,7 +170,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
         $this->client->handleCallback('AC:abc', 'state12345abcde');
         $accessTokenList = $this->tokenStorage->getAccessTokenList('foo');
         $this->assertSame(1, count($accessTokenList));
-        $this->assertSame('AT:code12345', $accessTokenList[0]->getToken());
+        $this->assertSame('AT:code12345', reset($accessTokenList)->getToken());
     }
 
     /**

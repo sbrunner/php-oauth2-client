@@ -54,7 +54,7 @@ class AccessToken
     /**
      * @param array $tokenData
      */
-    private function __construct(array $tokenData)
+    public function __construct(array $tokenData)
     {
         $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type'];
         foreach ($requiredKeys as $requiredKey) {
@@ -132,43 +132,17 @@ class AccessToken
         return new self($tokenData);
     }
 
-    /**
-     * @param string $tokenString a JSON encoded AccessToken
-     *
-     * @return AccessToken
-     */
-    public static function fromStorage($tokenString)
-    {
-        $tokenData = json_decode($tokenString, true);
-        if (is_null($tokenData) && JSON_ERROR_NONE !== json_last_error()) {
-            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
-            throw new AccessTokenException(sprintf('unable to decode JSON from storage: %s', $errorMsg));
-        }
-
-        return new self($tokenData);
-    }
-
-    /**
-     * @return string a JSON encoded AccessToken
-     */
-    public function toStorage()
-    {
-        return json_encode(
-            [
-                'provider_id' => $this->getProviderId(),
-                'issued_at' => $this->issuedAt->format('Y-m-d H:i:s'),
-                'access_token' => $this->getToken(),
-                'token_type' => $this->getTokenType(),
-                'expires_in' => $this->getExpiresIn(),
-                'refresh_token' => $this->getRefreshToken(),
-                'scope' => $this->getScope(),
-            ]
-        );
-    }
-
     public function getProviderId()
     {
         return $this->providerId;
+    }
+
+    /**
+     * @return \DateTime
+     */
+    public function getIssuedAt()
+    {
+        return $this->issuedAt;
     }
 
     /**
@@ -238,6 +212,38 @@ class AccessToken
         $expiresAt = date_add($issuedAt, new DateInterval(sprintf('PT%dS', $this->getExpiresIn())));
 
         return $dateTime >= $expiresAt;
+    }
+
+    /**
+     * @param string $jsonString
+     */
+    public static function fromJson($jsonString)
+    {
+        $tokenData = json_decode($jsonString, true);
+        if (is_null($tokenData) && JSON_ERROR_NONE !== json_last_error()) {
+            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
+            throw new AccessTokenException(sprintf('unable to decode JSON from storage: %s', $errorMsg));
+        }
+
+        return new self($tokenData);
+    }
+
+    /**
+     * @return string
+     */
+    public function toJson()
+    {
+        return json_encode(
+            [
+                'provider_id' => $this->getProviderId(),
+                'issued_at' => $this->issuedAt->format('Y-m-d H:i:s'),
+                'access_token' => $this->getToken(),
+                'token_type' => $this->getTokenType(),
+                'expires_in' => $this->getExpiresIn(),
+                'refresh_token' => $this->getRefreshToken(),
+                'scope' => $this->getScope(),
+            ]
+        );
     }
 
     /**

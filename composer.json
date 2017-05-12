@@ -17,7 +17,10 @@
     "require": {
         "ext-curl": "*",
         "ext-date": "*",
+        "ext-hash": "*",
         "ext-json": "*",
+        "ext-pcre": "*",
+        "ext-pdo": "*",
         "ext-session": "*",
         "ext-spl": "*",
         "paragonie/constant_time_encoding": "^1|^2",
