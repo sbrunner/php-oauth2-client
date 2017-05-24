@@ -46,7 +46,6 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     public function setUp()
     {
         $this->session = new TestSession();
-//        $this->tokenStorage = new TestTokenStorage();
         $this->tokenStorage = new PdoTokenStorage(new PDO('sqlite::memory:'));
         $this->tokenStorage->init();
         $this->tokenStorage->storeAccessToken(
@@ -88,7 +87,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     {
         $this->client->setUserId('foo');
         $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
-        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $this->client->getAuthorizeUri('my_scope', 'https://example.org/callback'));
+        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_1&response_type=code&code_challenge_method=S256&code_challenge=elRpCEYh8XiYBhjcG1EBHe5qHscwyYvQC-xtVeca5jM', $this->client->getAuthorizeUri('my_scope', 'https://example.org/callback'));
     }
 
     public function testHasValidAccessToken()
@@ -142,6 +141,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
                 'scope' => 'my_scope',
                 'state' => 'state12345abcde',
                 'response_type' => 'code',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
             ]
         );
         $this->client->setUserId('foo');
@@ -164,6 +164,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
                 'scope' => 'my_scope',
                 'state' => 'state12345abcde',
                 'response_type' => 'code',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
             ]
         );
         $this->client->setUserId('foo');
@@ -212,6 +213,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
                 'scope' => 'my_scope',
                 'state' => 'state12345abcde',
                 'response_type' => 'code',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
             ]
         );
         $this->client->setUserId('foo');

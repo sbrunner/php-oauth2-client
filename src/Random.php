@@ -29,14 +29,15 @@ use ParagonIE\ConstantTime\Hex;
 class Random implements RandomInterface
 {
     /**
-     * @param int $length
+     * @param int  $length
+     * @param bool $rawBytes
      *
      * @return string
      */
-    public function get($length)
+    public function get($length, $rawBytes = false)
     {
-        return Hex::encode(
-            random_bytes($length)
-        );
+        $randomBytes = random_bytes($length);
+
+        return $rawBytes ? $randomBytes : Hex::encode($randomBytes);
     }
 }

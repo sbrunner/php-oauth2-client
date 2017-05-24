@@ -31,6 +31,7 @@ use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
 use ParagonIE\ConstantTime\Base64;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthClient
 {
@@ -207,12 +208,16 @@ class OAuthClient
             throw new OAuthException('userId not set');
         }
 
+        $codeVerifier = $this->generateCodeVerifier();
+
         $queryParameters = [
             'client_id' => $this->provider->getClientId(),
             'redirect_uri' => $redirectUri,
             'scope' => $scope,
             'state' => $this->random->get(16),
             'response_type' => 'code',
+            'code_challenge_method' => 'S256',
+            'code_challenge' => self::hashCodeVerifier($codeVerifier),
         ];
 
         $authorizeUri = sprintf(
@@ -226,6 +231,7 @@ class OAuthClient
             array_merge(
                 $queryParameters,
                 [
+                    'code_verifier' => $codeVerifier,
                     'user_id' => $this->userId,
                     'provider_id' => $this->provider->getProviderId(),
                 ]
@@ -274,20 +280,27 @@ class OAuthClient
             'grant_type' => 'authorization_code',
             'code' => $responseCode,
             'redirect_uri' => $sessionData['redirect_uri'],
+            'code_verifier' => $sessionData['code_verifier'],
         ];
+
+        $requestHeaders = [];
+        // if we have a secret registered for the client, use it
+        if (!is_null($this->provider->getSecret())) {
+            $requestHeaders = [
+                'Authorization' => sprintf(
+                    'Basic %s',
+                    Base64::encode(
+                        sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
+                    )
+                ),
+            ];
+        }
 
         $response = $this->httpClient->send(
             Request::post(
                 $this->provider->getTokenEndpoint(),
                 $tokenRequestData,
-                [
-                    'Authorization' => sprintf(
-                        'Basic %s',
-                        Base64::encode(
-                            sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
-                        )
-                    ),
-                ]
+                $requestHeaders
             )
         );
 
@@ -334,18 +347,24 @@ class OAuthClient
             'scope' => $accessToken->getScope(),
         ];
 
+        $requestHeaders = [];
+        // if we have a secret registered for the client, use it
+        if (!is_null($this->provider->getSecret())) {
+            $requestHeaders = [
+                'Authorization' => sprintf(
+                    'Basic %s',
+                    Base64::encode(
+                        sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
+                    )
+                ),
+            ];
+        }
+
         $response = $this->httpClient->send(
             Request::post(
                 $this->provider->getTokenEndpoint(),
                 $tokenRequestData,
-                [
-                    'Authorization' => sprintf(
-                        'Basic %s',
-                        Base64::encode(
-                            sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
-                        )
-                    ),
-                ]
+                $requestHeaders
             )
         );
 
@@ -406,5 +425,37 @@ class OAuthClient
         }
 
         return false;
+    }
+
+    /**
+     * @param string $codeVerifier
+     *
+     * @return string
+     */
+    private static function hashCodeVerifier($codeVerifier)
+    {
+        return rtrim(
+            Base64UrlSafe::encode(
+                hash(
+                    'sha256',
+                    $codeVerifier,
+                    true
+                )
+            ),
+            '='
+        );
+    }
+
+    /**
+     * @return string
+     */
+    private function generateCodeVerifier()
+    {
+        return rtrim(
+            Base64UrlSafe::encode(
+                $this->random->get(32, true)
+            ),
+            '='
+        );
     }
 }

@@ -27,9 +27,10 @@ namespace fkooman\OAuth\Client;
 interface RandomInterface
 {
     /**
-     * @param int $length
+     * @param int  $length
+     * @param bool $rawBytes
      *
      * @return string
      */
-    public function get($length);
+    public function get($length, $rawBytes = false);
 }
