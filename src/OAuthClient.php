@@ -334,6 +334,43 @@ class OAuthClient
     }
 
     /**
+     * Verify if an AccessToken in the list that matches this scope, bound to
+     * providerId and userId.
+     *
+     * This method has NO side effects, i.e. it will not try to use, refresh or
+     * delete AccessTokens. If a token is expired, but a refresh token is
+     * available it is assumed that an AccessToken is available.
+     *
+     * NOTE: this does not mean that the token will also be accepted by the
+     * resource server!
+     *
+     * @param string $scope
+     *
+     * @return bool
+     */
+    public function hasAccessToken($scope)
+    {
+        if (false === $accessToken = $this->getAccessToken($scope)) {
+            return false;
+        }
+
+        // is it expired? but do we have a refresh_token?
+        if ($accessToken->isExpired($this->dateTime)) {
+            // access_token is expired
+            if (!is_null($accessToken->getRefreshToken())) {
+                // but we have a refresh_token
+                return true;
+            }
+
+            // no refresh_token
+            return false;
+        }
+
+        // not expired
+        return true;
+    }
+
+    /**
      * @param AccessToken $accessToken
      *
      * @return AccessToken|false

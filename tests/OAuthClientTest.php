@@ -102,6 +102,7 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
     {
         // the access_token is deemed valid, but the resource does not accept it
         $this->client->setUserId('fooz');
+        $this->assertTrue($this->client->hasAccessToken('my_scope'));
         $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
     }
 
