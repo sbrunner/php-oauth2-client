@@ -27,27 +27,19 @@ namespace fkooman\OAuth\Client;
 interface SessionInterface
 {
     /**
-     * @param string $key
+     * Get value, delete key.
      *
-     * @return bool
-     */
-    public function has($key);
-
-    /**
      * @param string $key
      *
      * @return mixed
      */
-    public function get($key);
+    public function take($key);
 
     /**
+     * Set key to value.
+     *
      * @param string $key
      * @param mixed  $value
      */
     public function set($key, $value);
-
-    /**
-     * @param string $key
-     */
-    public function del($key);
 }

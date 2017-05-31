@@ -37,6 +37,11 @@ $indexUri = 'http://localhost:8081/index.php';
 $userId = 'foo';
 
 try {
+    // we assume your application has proper (SECURE!) session handling
+    if (PHP_SESSION_ACTIVE !== session_status()) {
+        session_start();
+    }
+
     $client = new OAuthClient(
         // for DEMO purposes we store the AccessToken in the user session
         // data...

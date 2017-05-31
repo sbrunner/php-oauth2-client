@@ -253,10 +253,8 @@ class OAuthClient
             throw new OAuthException('userId not set');
         }
 
-        $sessionData = $this->session->get('_oauth2_session');
-
-        // delete the session, we don't want it to be used multiple times...
-        $this->session->del('_oauth2_session');
+        // get and delete the OAuth session information
+        $sessionData = $this->session->take('_oauth2_session');
 
         if (!hash_equals($sessionData['state'], $responseState)) {
             // the OAuth state from the initial request MUST be the same as the

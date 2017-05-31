@@ -30,57 +30,40 @@ class Session implements SessionInterface
 {
     /**
      * @param string $key
-     *
-     * @return bool
-     */
-    public function has($key)
-    {
-        $this->startSession();
-
-        return array_key_exists($key, $_SESSION);
-    }
-
-    /**
-     * @param string $key
-     *
-     * @return mixed
-     */
-    public function get($key)
-    {
-        $this->startSession();
-        if (!$this->has($key)) {
-            throw new SessionException(sprintf('key "%s" not found in session', $key));
-        }
-
-        return $_SESSION[$key];
-    }
-
-    /**
-     * @param string $key
      * @param mixed  $value
      */
     public function set($key, $value)
     {
-        $this->startSession();
+        $this->verifySession();
         $_SESSION[$key] = $value;
     }
 
     /**
+     * Get value, delete key.
+     *
      * @param string $key
+     *
+     * @return mixed
      */
-    public function del($key)
+    public function take($key)
     {
-        $this->startSession();
+        $this->verifySession();
         if (!array_key_exists($key, $_SESSION)) {
             throw new SessionException(sprintf('key "%s" not found in session', $key));
         }
+        $value = $_SESSION[$key];
         unset($_SESSION[$key]);
+
+        return $value;
     }
 
-    private function startSession()
+    protected function verifySession()
     {
-        if ('' === session_id()) {
-            session_start();
+        if (PHP_SESSION_ACTIVE !== session_status()) {
+            // if we have no active session, bail, we expect an active session
+            // and will NOT fiddle with the application's existing session
+            // management
+            throw new SessionException('application must make sure a session exists');
         }
     }
 }
