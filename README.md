@@ -19,6 +19,8 @@ OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 * Only "authorization code" profile support, will not implement anything else;
 * Only conforming OAuth 2.0 servers will work, this library will not get out of 
   its way to deal with services that violate the OAuth 2.0 RFC;
+* Supports Proof Key for Code Exchange for public clients where no secret is
+  used;
 * There will be no toggles to shoot yourself in the foot;
 * Uses `paragonie/constant_time_encoding` for constant time encoding;
 * Uses `paragonie/random_compat` polyfill for CSPRNG;
@@ -42,6 +44,7 @@ As always, make sure you understand what you are doing! Some resources:
 * [The OAuth 2.0 Authorization Framework: Bearer Token Usage](https://tools.ietf.org/html/rfc6750)
 * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
 * [securityheaders.io](https://securityheaders.io/)
+* [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 
 # License
 
