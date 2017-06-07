@@ -75,12 +75,12 @@ class OAuthClientTest extends PHPUnit_Framework_TestCase
 
         $this->client = new OAuthClient(
             $this->tokenStorage,
-            new TestHttpClient()
+            new TestHttpClient(),
+            $this->session,
+            new TestRandom(),
+            new DateTime('2016-01-01')
         );
         $this->client->setProvider(new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'));
-        $this->client->setSession($this->session);
-        $this->client->setRandom(new TestRandom());
-        $this->client->setDateTime(new DateTime('2016-01-01'));
     }
 
     public function testHasNoAccessToken()

@@ -26,6 +26,11 @@ namespace fkooman\OAuth\Client;
 
 class SessionTokenStorage extends Session implements TokenStorageInterface
 {
+    public function __construct()
+    {
+        parent::__construct();
+    }
+
     /**
      * @param string $userId
      *
@@ -33,7 +38,6 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
      */
     public function getAccessTokenList($userId)
     {
-        $this->verifySession();
         if (!array_key_exists(sprintf('_oauth2_token_%s', $userId), $_SESSION)) {
             return [];
         }
@@ -47,7 +51,6 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
      */
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
-        $this->verifySession();
         $_SESSION[sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
     }
 
@@ -57,7 +60,6 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
      */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {
-        $this->verifySession();
         foreach ($this->getAccessTokenList($userId) as $k => $v) {
             if ($accessToken->getProviderId() === $v->getProviderId()) {
                 if ($accessToken->getToken() === $v->getToken()) {

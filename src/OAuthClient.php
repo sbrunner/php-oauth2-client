@@ -59,15 +59,39 @@ class OAuthClient
     /**
      * @param TokenStorageInterface    $tokenStorage
      * @param Http\HttpClientInterface $httpClient
+     * @param SessionInterface|null    $session
+     * @param RandomInterface|null     $random
+     * @param \DateTime|null           $dateTime
      */
-    public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
-    {
+    public function __construct(
+        TokenStorageInterface $tokenStorage,
+        HttpClientInterface $httpClient,
+        SessionInterface $session = null,
+        RandomInterface $random = null,
+        DateTime $dateTime = null
+    ) {
         $this->tokenStorage = $tokenStorage;
         $this->httpClient = $httpClient;
+        if (is_null($session)) {
+            $session = new Session();
+        }
+        $this->session = $session;
+        if (is_null($random)) {
+            $random = new Random();
+        }
+        $this->random = $random;
+        if (is_null($dateTime)) {
+            $dateTime = new DateTime();
+        }
+        $this->dateTime = $dateTime;
+    }
 
-        $this->session = new Session();
-        $this->random = new Random();
-        $this->dateTime = new DateTime();
+    /**
+     * @param \DateTime $dateTime
+     */
+    public function setDateTime(DateTime $dateTime)
+    {
+        $this->dateTime = $dateTime;
     }
 
     /**
@@ -76,30 +100,6 @@ class OAuthClient
     public function setProvider(Provider $provider)
     {
         $this->provider = $provider;
-    }
-
-    /**
-     * @param SessionInterface $session
-     */
-    public function setSession(SessionInterface $session)
-    {
-        $this->session = $session;
-    }
-
-    /**
-     * @param RandomInterface $random
-     */
-    public function setRandom(RandomInterface $random)
-    {
-        $this->random = $random;
-    }
-
-    /**
-     * @param DateTime $dateTime
-     */
-    public function setDateTime(DateTime $dateTime)
-    {
-        $this->dateTime = $dateTime;
     }
 
     /**
