@@ -1,7 +1,7 @@
 # Changes
 
-## 5.0.0 (...)
-- handle errors coming from the OAuth 2 server token endpoint
+## 5.0.0 (2017-07-06)
+- complete rewrite of the OAuth client, everything is different
 
 ## 4.0.1 (2017-01-19)
 - update `RandomInterface` a bit to allow specifying the length of the secret
