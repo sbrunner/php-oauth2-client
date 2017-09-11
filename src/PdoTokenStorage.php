@@ -41,6 +41,9 @@ class PdoTokenStorage implements TokenStorageInterface
         $this->db = $db;
     }
 
+    /**
+     * @return void
+     */
     public function init()
     {
         $this->db->query(
@@ -78,7 +81,7 @@ class PdoTokenStorage implements TokenStorageInterface
         $accessTokenList = [];
         foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
             // convert expires_in to int if it is not NULL
-            $row['expires_in'] = !is_null($row['expires_in']) ? (int) $row['expires_in'] : null;
+            $row['expires_in'] = null !== $row['expires_in'] ? (int) $row['expires_in'] : null;
             $accessTokenList[] = new AccessToken($row);
         }
 
@@ -88,6 +91,8 @@ class PdoTokenStorage implements TokenStorageInterface
     /**
      * @param string      $userId
      * @param AccessToken $accessToken
+     *
+     * @return void
      */
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
@@ -115,6 +120,8 @@ class PdoTokenStorage implements TokenStorageInterface
     /**
      * @param string      $userId
      * @param AccessToken $accessToken
+     *
+     * @return void
      */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {

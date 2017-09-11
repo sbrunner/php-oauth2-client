@@ -62,13 +62,16 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_URL => $request->getUri(),
         ];
 
-        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'])) {
+        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true)) {
             $curlOptions[CURLOPT_POSTFIELDS] = $request->getBody();
         }
 
         return $this->exec($curlOptions, $request->getHeaders());
     }
 
+    /**
+     * @return void
+     */
     private function curlInit()
     {
         if (false === $this->curlChannel = curl_init()) {
@@ -76,6 +79,9 @@ class CurlHttpClient implements HttpClientInterface
         }
     }
 
+    /**
+     * @return void
+     */
     private function curlReset()
     {
         if (function_exists('curl_reset')) {

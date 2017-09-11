@@ -55,6 +55,8 @@ class Request
     /**
      * @param string $requestUri
      * @param array  $requestHeaders
+     *
+     * @return Request
      */
     public static function get($requestUri, array $requestHeaders = [])
     {
@@ -65,6 +67,8 @@ class Request
      * @param string $requestUri
      * @param array  $postData
      * @param array  $requestHeaders
+     *
+     * @return Request
      */
     public static function post($requestUri, array $postData = [], array $requestHeaders = [])
     {
@@ -82,6 +86,8 @@ class Request
     /**
      * @param string $key
      * @param string $value
+     *
+     * @return void
      */
     public function setHeader($key, $value)
     {

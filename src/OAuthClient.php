@@ -72,15 +72,15 @@ class OAuthClient
     ) {
         $this->tokenStorage = $tokenStorage;
         $this->httpClient = $httpClient;
-        if (is_null($session)) {
+        if (null === $session) {
             $session = new Session();
         }
         $this->session = $session;
-        if (is_null($random)) {
+        if (null === $random) {
             $random = new Random();
         }
         $this->random = $random;
-        if (is_null($dateTime)) {
+        if (null === $dateTime) {
             $dateTime = new DateTime();
         }
         $this->dateTime = $dateTime;
@@ -88,6 +88,8 @@ class OAuthClient
 
     /**
      * @param \DateTime $dateTime
+     *
+     * @return void
      */
     public function setDateTime(DateTime $dateTime)
     {
@@ -96,6 +98,8 @@ class OAuthClient
 
     /**
      * @param Provider $provider
+     *
+     * @return void
      */
     public function setProvider(Provider $provider)
     {
@@ -104,6 +108,8 @@ class OAuthClient
 
     /**
      * @param string $userId
+     *
+     * @return void
      */
     public function setUserId($userId)
     {
@@ -149,7 +155,7 @@ class OAuthClient
      */
     public function send($requestScope, Request $request)
     {
-        if (is_null($this->userId)) {
+        if (null === $this->userId) {
             throw new OAuthException('userId not set');
         }
 
@@ -159,7 +165,7 @@ class OAuthClient
 
         if ($accessToken->isExpired($this->dateTime)) {
             // access_token is expired, try to refresh it
-            if (is_null($accessToken->getRefreshToken())) {
+            if (null === $accessToken->getRefreshToken()) {
                 // we do not have a refresh_token, delete this access token, it
                 // is useless now...
                 $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
@@ -204,7 +210,7 @@ class OAuthClient
      */
     public function getAuthorizeUri($scope, $redirectUri)
     {
-        if (is_null($this->userId)) {
+        if (null === $this->userId) {
             throw new OAuthException('userId not set');
         }
 
@@ -242,14 +248,14 @@ class OAuthClient
     }
 
     /**
-     * @param string $responseCode  the code passed to the "code"
-     *                              query parameter on the callback URL
-     * @param string $responseState the state passed to the "state"
-     *                              query parameter on the callback URL
+     * @param string $responseCode  the code passed to the "code" query parameter on the callback URL
+     * @param string $responseState the state passed to the "state" query parameter on the callback URL
+     *
+     * @return void
      */
     public function handleCallback($responseCode, $responseState)
     {
-        if (is_null($this->userId)) {
+        if (null === $this->userId) {
             throw new OAuthException('userId not set');
         }
 
@@ -283,7 +289,7 @@ class OAuthClient
 
         $requestHeaders = [];
         // if we have a secret registered for the client, use it
-        if (!is_null($this->provider->getSecret())) {
+        if (null !== $this->provider->getSecret()) {
             $requestHeaders = [
                 'Authorization' => sprintf(
                     'Basic %s',
@@ -355,7 +361,7 @@ class OAuthClient
         // is it expired? but do we have a refresh_token?
         if ($accessToken->isExpired($this->dateTime)) {
             // access_token is expired
-            if (!is_null($accessToken->getRefreshToken())) {
+            if (null !== $accessToken->getRefreshToken()) {
                 // but we have a refresh_token
                 return true;
             }
@@ -384,7 +390,7 @@ class OAuthClient
 
         $requestHeaders = [];
         // if we have a secret registered for the client, use it
-        if (!is_null($this->provider->getSecret())) {
+        if (null !== $this->provider->getSecret()) {
             $requestHeaders = [
                 'Authorization' => sprintf(
                     'Basic %s',

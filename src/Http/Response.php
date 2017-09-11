@@ -106,7 +106,7 @@ class Response
             throw new ResponseException(sprintf('response MUST have JSON content type'));
         }
         $decodedJson = json_decode($this->responseBody, true);
-        if (is_null($decodedJson) && JSON_ERROR_NONE !== json_last_error()) {
+        if (null === $decodedJson && JSON_ERROR_NONE !== json_last_error()) {
             $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
             throw new ResponseException(sprintf('unable to decode JSON: %s', $errorMsg));
         }

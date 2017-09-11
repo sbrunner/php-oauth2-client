@@ -52,6 +52,9 @@ class Provider
         $this->tokenEndpoint = $tokenEndpoint;
     }
 
+    /**
+     * @return string
+     */
     public function getProviderId()
     {
         return sprintf('%s|%s', $this->getAuthorizationEndpoint(), $this->getClientId());

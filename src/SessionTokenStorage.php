@@ -48,6 +48,8 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
     /**
      * @param string      $userId
      * @param AccessToken $accessToken
+     *
+     * @return void
      */
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
@@ -57,6 +59,8 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
     /**
      * @param string      $userId
      * @param AccessToken $accessToken
+     *
+     * @return void
      */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {

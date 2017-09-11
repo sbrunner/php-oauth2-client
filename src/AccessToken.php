@@ -86,6 +86,8 @@ class AccessToken
      * @param \DateTime $dateTime
      * @param array     $tokenData
      * @param string    $scope
+     *
+     * @return AccessToken
      */
     public static function fromCodeResponse(Provider $provider, DateTime $dateTime, array $tokenData, $scope)
     {
@@ -109,6 +111,8 @@ class AccessToken
      * @param \DateTime   $dateTime
      * @param array       $tokenData
      * @param AccessToken $accessToken to steal the old scope and refresh_token from!
+     *
+     * @return AccessToken
      */
     public static function fromRefreshResponse(Provider $provider, DateTime $dateTime, array $tokenData, AccessToken $accessToken)
     {
@@ -132,6 +136,9 @@ class AccessToken
         return new self($tokenData);
     }
 
+    /**
+     * @return string
+     */
     public function getProviderId()
     {
         return $this->providerId;
@@ -202,7 +209,7 @@ class AccessToken
      */
     public function isExpired(DateTime $dateTime)
     {
-        if (is_null($this->getExpiresIn())) {
+        if (null === $this->getExpiresIn()) {
             // if no expiry was indicated, assume it is valid
             return false;
         }
@@ -216,11 +223,13 @@ class AccessToken
 
     /**
      * @param string $jsonString
+     *
+     * @return AccessToken
      */
     public static function fromJson($jsonString)
     {
         $tokenData = json_decode($jsonString, true);
-        if (is_null($tokenData) && JSON_ERROR_NONE !== json_last_error()) {
+        if (null === $tokenData && JSON_ERROR_NONE !== json_last_error()) {
             $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
             throw new AccessTokenException(sprintf('unable to decode JSON from storage: %s', $errorMsg));
         }
@@ -248,6 +257,8 @@ class AccessToken
 
     /**
      * @param string $providerId
+     *
+     * @return void
      */
     private function setProviderId($providerId)
     {
@@ -256,6 +267,8 @@ class AccessToken
 
     /**
      * @param string $issuedAt
+     *
+     * @return void
      */
     private function setIssuedAt($issuedAt)
     {
@@ -268,6 +281,8 @@ class AccessToken
 
     /**
      * @param string $accessToken
+     *
+     * @return void
      */
     private function setAccessToken($accessToken)
     {
@@ -282,6 +297,8 @@ class AccessToken
 
     /**
      * @param string $tokenType
+     *
+     * @return void
      */
     private function setTokenType($tokenType)
     {
@@ -294,10 +311,12 @@ class AccessToken
 
     /**
      * @param int|null $expiresIn
+     *
+     * @return void
      */
     private function setExpiresIn($expiresIn)
     {
-        if (!is_null($expiresIn)) {
+        if (null !== $expiresIn) {
             self::requireInt('expires_in', $expiresIn);
             if (0 >= $expiresIn) {
                 throw new AccessTokenException('invalid "expires_in"');
@@ -308,10 +327,12 @@ class AccessToken
 
     /**
      * @param string|null $refreshToken
+     *
+     * @return void
      */
     private function setRefreshToken($refreshToken)
     {
-        if (!is_null($refreshToken)) {
+        if (null !== $refreshToken) {
             self::requireString('refresh_token', $refreshToken);
             // refresh-token = 1*VSCHAR
             // VSCHAR        = %x20-7E
@@ -324,10 +345,12 @@ class AccessToken
 
     /**
      * @param string|null $scope
+     *
+     * @return void
      */
     private function setScope($scope)
     {
-        if (!is_null($scope)) {
+        if (null !== $scope) {
             self::requireString('scope', $scope);
             // scope       = scope-token *( SP scope-token )
             // scope-token = 1*NQCHAR
@@ -344,6 +367,8 @@ class AccessToken
     /**
      * @param string $k
      * @param string $v
+     *
+     * @return void
      */
     private static function requireString($k, $v)
     {
@@ -355,6 +380,8 @@ class AccessToken
     /**
      * @param string $k
      * @param int    $v
+     *
+     * @return void
      */
     private static function requireInt($k, $v)
     {
