@@ -29,6 +29,9 @@ use fkooman\OAuth\Client\Http\Response;
 
 class OAuthServerException extends OAuthException
 {
+    /**
+     * @param int $code
+     */
     public function __construct(Response $response, $code = 0, Exception $previous = null)
     {
         $responseData = $response->json();

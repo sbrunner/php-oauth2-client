@@ -159,7 +159,8 @@ class OAuthClient
             throw new OAuthException('userId not set');
         }
 
-        if (false === $accessToken = $this->getAccessToken($requestScope)) {
+        $accessToken = $this->getAccessToken($requestScope);
+        if (!$accessToken) {
             return false;
         }
 
@@ -174,7 +175,8 @@ class OAuthClient
             }
 
             // try to refresh the AccessToken
-            if (false === $accessToken = $this->refreshAccessToken($accessToken)) {
+            $accessToken = $this->refreshAccessToken($accessToken);
+            if (!$accessToken) {
                 // didn't work
                 return false;
             }
