@@ -1,5 +1,11 @@
 # Changes
 
+## 5.0.1 (2017-09-18)
+- many small code style improvements
+- more complete phpdoc
+- fix issues found by [Psalm](https://getpsalm.org/) and 
+  [phpstan](https://github.com/phpstan/phpstan)
+ 
 ## 5.0.0 (2017-07-06)
 - complete rewrite of the OAuth client, everything is different
 
