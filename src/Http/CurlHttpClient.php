@@ -88,13 +88,13 @@ class CurlHttpClient implements HttpClientInterface
      */
     private function curlReset()
     {
-        $this->responseHeaderList = [];
         if (function_exists('curl_reset')) {
             curl_reset($this->curlChannel);
         } else {
             curl_close($this->curlChannel);
             $this->curlInit();
         }
+        $this->responseHeaderList = [];
     }
 
     /**
@@ -115,7 +115,7 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_HTTPHEADER => [],
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_PROTOCOLS => $this->allowHttp ? CURLPROTO_HTTPS | CURLPROTO_HTTP : CURLPROTO_HTTPS,
-            CURLOPT_HEADERFUNCTION => [$this, 'headerFunction'],
+            CURLOPT_HEADERFUNCTION => [$this, 'responseHeaderFunction'],
         ];
 
         if (0 !== count($requestHeaders)) {
@@ -153,7 +153,7 @@ class CurlHttpClient implements HttpClientInterface
      *
      * @return int
      */
-    private function headerFunction($curlChannel, $headerData)
+    private function responseHeaderFunction($curlChannel, $headerData)
     {
         if (false !== strpos($headerData, ':')) {
             list($key, $value) = explode(':', $headerData, 2);
