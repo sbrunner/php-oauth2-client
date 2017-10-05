@@ -29,7 +29,7 @@
         "symfony/polyfill-php56": "^1"
     },
     "require-dev": {
-        "phpunit/phpunit": "^5"
+        "phpunit/phpunit": "^4|^5"
     },
     "type": "library"
 }
