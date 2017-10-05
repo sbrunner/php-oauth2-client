@@ -142,6 +142,8 @@ class CurlHttpClient implements HttpClientInterface
 
         return new Response(
             curl_getinfo($this->curlChannel, CURLINFO_HTTP_CODE),
+            // Psalm false positive (bool) for $responseData as we use
+            // CURLOPT_RETURNTRANSFER
             $responseData,
             $this->responseHeaderList
         );
