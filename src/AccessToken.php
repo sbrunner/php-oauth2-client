@@ -27,6 +27,7 @@ namespace fkooman\OAuth\Client;
 use DateInterval;
 use DateTime;
 use fkooman\OAuth\Client\Exception\AccessTokenException;
+use RuntimeException;
 
 class AccessToken
 {
@@ -242,8 +243,7 @@ class AccessToken
      */
     public function toJson()
     {
-        return json_encode(
-            [
+        $jsonData = [
                 'provider_id' => $this->getProviderId(),
                 'issued_at' => $this->issuedAt->format('Y-m-d H:i:s'),
                 'access_token' => $this->getToken(),
@@ -251,8 +251,13 @@ class AccessToken
                 'expires_in' => $this->getExpiresIn(),
                 'refresh_token' => $this->getRefreshToken(),
                 'scope' => $this->getScope(),
-            ]
-        );
+        ];
+
+        if (false === $jsonString = json_encode($jsonData)) {
+            throw new RuntimeException('unable to encode JSON');
+        }
+
+        return $jsonString;
     }
 
     /**
