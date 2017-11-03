@@ -1,5 +1,3 @@
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/fkooman/php-oauth2-client/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/fkooman/php-oauth2-client/?branch=master)
-
 # Introduction
 This is a very simple to use OAuth 2.0 client. It has minimal dependencies.
 
