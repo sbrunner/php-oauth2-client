@@ -30,9 +30,9 @@ use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\PdoTokenStorage;
 use fkooman\OAuth\Client\Provider;
 use PDO;
-use PHPUnit_Framework_TestCase;
+use PHPUnit\Framework\TestCase;
 
-class OAuthClientTest extends PHPUnit_Framework_TestCase
+class OAuthClientTest extends TestCase
 {
     /** @var \fkooman\OAuth\Client\OAuthClient */
     private $client;
