@@ -1,6 +1,6 @@
 # Changes
 
-## 5.0.2 (...)
+## 5.0.2 (2017-11-08)
 - add support for PHPUnit 6
 - various fixes to solve token removal in case of expiry (issue #10)
 
