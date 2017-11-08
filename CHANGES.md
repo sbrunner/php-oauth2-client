@@ -2,6 +2,7 @@
 
 ## 5.0.2 (...)
 - add support for PHPUnit 6
+- various fixes to solve token removal in case of expiry (issue #10)
 
 ## 5.0.1 (2017-09-18)
 - many small code style improvements

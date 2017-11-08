@@ -67,7 +67,7 @@ class SessionTokenStorage extends Session implements TokenStorageInterface
         foreach ($this->getAccessTokenList($userId) as $k => $v) {
             if ($accessToken->getProviderId() === $v->getProviderId()) {
                 if ($accessToken->getToken() === $v->getToken()) {
-                    unset($_SESSION[$k]);
+                    unset($_SESSION[sprintf('_oauth2_token_%s', $userId)][$k]);
                 }
             }
         }

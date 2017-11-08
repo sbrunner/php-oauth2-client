@@ -430,6 +430,9 @@ class OAuthClient
             throw new OAuthServerException($response);
         }
 
+        // delete old AccessToken as we'll write a new one anyway...
+        $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+
         $accessToken = AccessToken::fromRefreshResponse(
             $this->provider,
             $this->dateTime,

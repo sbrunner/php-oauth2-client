@@ -216,8 +216,8 @@ class AccessToken
         }
 
         // check to see if issuedAt + expiresIn > provided DateTime
-        $issuedAt = clone $this->issuedAt; // XXX do we need to clone here?
-        $expiresAt = date_add($issuedAt, new DateInterval(sprintf('PT%dS', $this->getExpiresIn())));
+        $expiresAt = clone $this->issuedAt;
+        $expiresAt->add(new DateInterval(sprintf('PT%dS', $this->getExpiresIn())));
 
         return $dateTime >= $expiresAt;
     }

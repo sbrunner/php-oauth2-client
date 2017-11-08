@@ -69,7 +69,7 @@ class TestTokenStorage implements TokenStorageInterface
         foreach ($this->getAccessTokenList($userId) as $k => $v) {
             if ($accessToken->getProviderId() === $v->getProviderId()) {
                 if ($accessToken->getToken() === $v->getToken()) {
-                    unset($this->data[$k]);
+                    unset($this->data[sprintf('_oauth2_token_%s', $userId)][$k]);
                 }
             }
         }
