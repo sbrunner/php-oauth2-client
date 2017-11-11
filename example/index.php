@@ -28,7 +28,7 @@ use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
-$requestScope = 'demo_scope';
+$requestScope = 'foo bar';
 $resourceUri = 'http://localhost:8080/api.php';
 
 // absolute link to callback.php in this directory
