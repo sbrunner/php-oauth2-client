@@ -1,6 +1,6 @@
 # Changes
 
-## 5.0.3 (...)
+## 5.0.3 (2017-11-16)
 - also support `Bearer` as `token_type` in addition to `bearer` (issue #12)
 
 ## 5.0.2 (2017-11-08)
