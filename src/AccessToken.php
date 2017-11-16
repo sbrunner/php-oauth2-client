@@ -308,7 +308,7 @@ class AccessToken
     private function setTokenType($tokenType)
     {
         self::requireString('token_type', $tokenType);
-        if ('bearer' !== $tokenType) {
+        if ('bearer' !== $tokenType && 'Bearer' !== $tokenType) {
             throw new AccessTokenException('unsupported "token_type"');
         }
         $this->tokenType = $tokenType;
