@@ -81,8 +81,8 @@ try {
         echo sprintf('(%s)', $e->getDescription());
     }
 } catch (TokenException $e) {
-    // there was a problem obtaining an access_token through the token endpoint
-    // of the OAuth server... Show response to ease debugging...
+    // there was a problem obtaining an access_token, show response to ease
+    // debugging... (this does NOT happen in normal circumstances)
     echo sprintf('%s: %s', get_class($e), $e->getMessage());
     echo var_export($e->getResponse(), true);
 } catch (Exception $e) {

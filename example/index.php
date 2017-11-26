@@ -91,7 +91,9 @@ try {
     echo sprintf('<pre>%s</pre>', var_export($response, true));
 } catch (TokenException $e) {
     // there was a problem using a refresh_token to obtain a new access_token
-    // Show response to ease debugging...
+    // outside the accepted responses according to the OAuth specification,
+    // show response to ease debugging... (this does NOT happen in normal
+    // circumstances)
     echo sprintf('%s: %s', get_class($e), $e->getMessage());
     echo var_export($e->getResponse(), true);
 } catch (Exception $e) {
