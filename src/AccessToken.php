@@ -115,7 +115,7 @@ class AccessToken
      *
      * @return AccessToken
      */
-    public static function fromRefreshResponse(Provider $provider, DateTime $dateTime, array $tokenData, AccessToken $accessToken)
+    public static function fromRefreshResponse(Provider $provider, DateTime $dateTime, array $tokenData, self $accessToken)
     {
         $tokenData['provider_id'] = $provider->getProviderId();
 

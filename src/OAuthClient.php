@@ -499,7 +499,7 @@ class OAuthClient
     {
         return rtrim(
             Base64UrlSafe::encode(
-                $this->random->get(32, true)
+                $this->random->getRaw(32)
             ),
             '='
         );

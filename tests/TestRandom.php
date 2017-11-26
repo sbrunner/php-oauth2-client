@@ -32,12 +32,17 @@ class TestRandom implements RandomInterface
     private $counter = 0;
 
     /**
-     * @param int  $length
-     * @param bool $rawBytes
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function get($length, $rawBytes = false)
+    public function get($length)
+    {
+        return sprintf('random_%d', $this->counter++);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getRaw($length)
     {
         return sprintf('random_%d', $this->counter++);
     }

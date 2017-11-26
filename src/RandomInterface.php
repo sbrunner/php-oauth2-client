@@ -27,10 +27,20 @@ namespace fkooman\OAuth\Client;
 interface RandomInterface
 {
     /**
-     * @param int  $length
-     * @param bool $rawBytes
+     * Get the random data a hex encoded string.
+     *
+     * @param int $length
      *
      * @return string
      */
-    public function get($length, $rawBytes = false);
+    public function get($length);
+
+    /**
+     * Get the random data as raw binary string.
+     *
+     * @param int $length
+     *
+     * @return string
+     */
+    public function getRaw($length);
 }
