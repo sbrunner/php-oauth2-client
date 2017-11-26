@@ -7,7 +7,11 @@
     ],
     "autoload": {
         "psr-4": {
-            "fkooman\\OAuth\\Client\\": "src/",
+            "fkooman\\OAuth\\Client\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
             "fkooman\\OAuth\\Client\\Tests\\": "tests/"
         }
     },
