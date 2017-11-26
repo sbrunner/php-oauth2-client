@@ -1,12 +1,14 @@
 # Changes
 
-## 5.1.0 (...)
-- add `OAuthClient::handleAuthorizeCallback(array $getData)` to also handle 
-  error responses from the Authorization Server
-- introduce `OAuthAuthorizationException` for 
-  `OAuthClient::handleAuthorizeCallback`
-- deprecate `OAuthClient::handleCallback()`
+## 6.0.0 (...)
+- simplify error handling when obtaining `access_token` and `refresh_token`
+- modify `OAuthClient::handleCallback` to take array with query parameters, 
+  i.e. `$_GET` to also handle error responses from the AS
+- introduce `AuthorizationException` for when OAuth server refuses to grant 
+  the authorization, e.g. the user does not allow it
 - make all exceptions extend `OAuthException`
+- introduce `TokenException` that contains a message and the `Response` object
+  to ease debugging in case the access_token is not granted
 - internal `Random` cleanup, introduce `getRaw` and `get` instead of boolean 
   argument
 

@@ -23,6 +23,7 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
+use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
@@ -88,7 +89,11 @@ try {
     // getting the resource succeeded!
     // print the Response object
     echo sprintf('<pre>%s</pre>', var_export($response, true));
+} catch (TokenException $e) {
+    // there was a problem using a refresh_token to obtain a new access_token
+    // Show response to ease debugging...
+    echo sprintf('%s: %s', get_class($e), $e->getMessage());
+    echo var_export($e->getResponse(), true);
 } catch (Exception $e) {
-    echo sprintf('ERROR: %s', $e->getMessage());
-    exit(1);
+    echo sprintf('%s: %s', get_class($e), $e->getMessage());
 }

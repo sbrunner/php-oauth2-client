@@ -146,7 +146,12 @@ class OAuthClientTest extends TestCase
             ]
         );
         $this->client->setUserId('foo');
-        $this->client->handleCallback('AC:abc', 'state12345abcde');
+        $this->client->handleCallback(
+            [
+                'code' => 'AC:abc',
+                'state' => 'state12345abcde',
+            ]
+        );
         $accessTokenList = $this->tokenStorage->getAccessTokenList('foo');
         $this->assertSame(1, count($accessTokenList));
         $this->assertSame('AT:code12345', reset($accessTokenList)->getToken());
@@ -169,7 +174,12 @@ class OAuthClientTest extends TestCase
             ]
         );
         $this->client->setUserId('foo');
-        $this->client->handleCallback('AC:abc', 'state12345abcde');
+        $this->client->handleCallback(
+            [
+                'code' => 'AC:abc',
+                'state' => 'state12345abcde',
+            ]
+        );
         $accessTokenList = $this->tokenStorage->getAccessTokenList('foo');
         $this->assertSame(1, count($accessTokenList));
         $this->assertSame('AT:code12345', reset($accessTokenList)->getToken());
@@ -194,7 +204,12 @@ class OAuthClientTest extends TestCase
             ]
         );
         $this->client->setUserId('foo');
-        $this->client->handleCallback('AC:abc', 'non-matching-state');
+        $this->client->handleCallback(
+            [
+                'code' => 'AC:abc',
+                'state' => 'non-matching-state',
+            ]
+        );
     }
 
     /**
@@ -218,16 +233,34 @@ class OAuthClientTest extends TestCase
             ]
         );
         $this->client->setUserId('foo');
-        $this->client->handleCallback('AC:broken', 'state12345abcde');
+        $this->client->handleCallback(
+            [
+                'code' => 'AC:broken',
+                'state' => 'state12345abcde',
+            ]
+        );
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Client\Exception\OAuthAuthorizeException
+     * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
      * @expectedExceptionMessage missing "state" query parameter from server response
      */
     public function testCallbackMissingState()
     {
-        $this->client->handleAuthorizeCallback(
+        $this->session->set(
+            '_oauth2_session',
+            [
+                'user_id' => 'foo',
+                'provider_id' => 'http://localhost/authorize|foo',
+                'client_id' => 'foo',
+                'redirect_uri' => 'https://example.org/callback',
+                'scope' => 'my_scope',
+                'state' => 'state12345abcde',
+                'response_type' => 'code',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+            ]
+        );
+        $this->client->handleCallback(
             [
                 'code' => 'foo',
             ]
@@ -235,15 +268,27 @@ class OAuthClientTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Client\Exception\OAuthAuthorizeException
-     * @expectedExceptionMessage foo (bar)
+     * @expectedException \fkooman\OAuth\Client\Exception\AuthorizeException
+     * @expectedExceptionMessage access_denied
      */
     public function testCallbackError()
     {
-        $this->client->handleAuthorizeCallback(
+        $this->session->set(
+            '_oauth2_session',
             [
-                'error' => 'foo',
-                'error_description' => 'bar',
+                'user_id' => 'foo',
+                'provider_id' => 'http://localhost/authorize|foo',
+                'client_id' => 'foo',
+                'redirect_uri' => 'https://example.org/callback',
+                'scope' => 'my_scope',
+                'state' => 'state12345abcde',
+                'response_type' => 'code',
+                'code_verifier' => 'dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk',
+            ]
+        );
+        $this->client->handleCallback(
+            [
+                'error' => 'access_denied',
             ]
         );
     }

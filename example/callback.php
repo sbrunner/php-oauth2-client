@@ -23,6 +23,8 @@
  */
 require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
 
+use fkooman\OAuth\Client\Exception\AuthorizeException;
+use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
@@ -65,13 +67,25 @@ try {
     $client->setUserId($userId);
 
     // handle the callback from the OAuth server
-    $client->handleAuthorizeCallback($_GET);
+    $client->handleCallback($_GET);
 
     // redirect the browser back to the index
     http_response_code(302);
     header(sprintf('Location: %s', $indexUri));
-    exit(0);
+} catch (AuthorizeException $e) {
+    // in case the "Authorization Server" refuses our request, e.g. the user
+    // denied the authorization, we may ask the user again in case they want
+    // to reconsider giving authorization...
+    echo sprintf('%s: %s', get_class($e), $e->getMessage());
+    if (null !== $e->getDescription()) {
+        echo sprintf('(%s)', $e->getDescription());
+    }
+} catch (TokenException $e) {
+    // there was a problem obtaining an access_token through the token endpoint
+    // of the OAuth server... Show response to ease debugging...
+    echo sprintf('%s: %s', get_class($e), $e->getMessage());
+    echo var_export($e->getResponse(), true);
 } catch (Exception $e) {
-    echo sprintf('ERROR: %s', $e->getMessage());
-    exit(1);
+    // for all other errors, there is nothing we can do...
+    echo sprintf('%s: %s', get_class($e), $e->getMessage());
 }

@@ -27,24 +27,31 @@ namespace fkooman\OAuth\Client\Exception;
 use Exception;
 use fkooman\OAuth\Client\Http\Response;
 
-class OAuthServerException extends OAuthException
+/**
+ * Problem obtaining access_token from token endpoint. This exception also
+ * stores the Response object from the Authorization Server token endpoint,
+ * to ease debugging.
+ */
+class TokenException extends OAuthException
 {
+    /** @var \fkooman\OAuth\Client\Http\Response */
+    private $response;
+
     /**
-     * @param int $code
+     * @param string $message
+     * @param int    $code
      */
-    public function __construct(Response $response, $code = 0, Exception $previous = null)
+    public function __construct($message, Response $response, $code = 0, Exception $previous = null)
     {
-        $responseData = $response->json();
-        $statusCode = $response->getStatusCode();
+        $this->response = $response;
+        parent::__construct($message, $code, $previous);
+    }
 
-        $errorMsg = sprintf('[%d] error', $statusCode);
-        if (array_key_exists('error', $responseData)) {
-            $errorMsg = sprintf('[%d] %s', $statusCode, $responseData['error']);
-            if (array_key_exists('error_description', $responseData)) {
-                $errorMsg = sprintf('[%d] %s (%s)', $statusCode, $responseData['error'], $responseData['error_description']);
-            }
-        }
-
-        parent::__construct($errorMsg, $code, $previous);
+    /**
+     * @return \fkooman\OAuth\Client\Http\Response
+     */
+    public function getResponse()
+    {
+        return $this->response;
     }
 }

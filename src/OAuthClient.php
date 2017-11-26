@@ -25,9 +25,9 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
-use fkooman\OAuth\Client\Exception\OAuthAuthorizeException;
+use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\OAuthException;
-use fkooman\OAuth\Client\Exception\OAuthServerException;
+use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
@@ -251,54 +251,81 @@ class OAuthClient
     }
 
     /**
-     * Handle the response from the Authorization Server.
-     *
      * @param array $getData
      *
      * @return void
      */
-    public function handleAuthorizeCallback(array $getData)
+    public function handleCallback(array $getData)
     {
         if (array_key_exists('error', $getData)) {
             // remove the session
             $this->session->take('_oauth2_session');
 
-            if (array_key_exists('error_description', $getData)) {
-                throw new OAuthAuthorizeException(
-                    sprintf('%s (%s)', $getData['error'], $getData['error_description'])
-                );
-            }
-
-            throw new OAuthAuthorizeException($getData['error']);
+            throw new AuthorizeException(
+                $getData['error'],
+                array_key_exists('error_description', $getData) ? $getData['error_description'] : null
+            );
         }
 
         if (!array_key_exists('code', $getData)) {
-            throw new OAuthAuthorizeException(
+            throw new OAuthException(
                 'missing "code" query parameter from server response'
             );
         }
 
         if (!array_key_exists('state', $getData)) {
-            throw new OAuthAuthorizeException(
+            throw new OAuthException(
                 'missing "state" query parameter from server response'
             );
         }
 
-        $this->handleCallback($getData['code'], $getData['state']);
+        $this->doHandleCallback($getData['code'], $getData['state']);
     }
 
     /**
-     * Handle the response from the Authorization Server. Only the "successful"
-     * case.
+     * Verify if an AccessToken in the list that matches this scope, bound to
+     * providerId and userId.
      *
-     * @deprecated use handleAuthorizeCallback
+     * This method has NO side effects, i.e. it will not try to use, refresh or
+     * delete AccessTokens. If a token is expired, but a refresh token is
+     * available it is assumed that an AccessToken is available.
      *
+     * NOTE: this does not mean that the token will also be accepted by the
+     * resource server!
+     *
+     * @param string $scope
+     *
+     * @return bool
+     */
+    public function hasAccessToken($scope)
+    {
+        if (false === $accessToken = $this->getAccessToken($scope)) {
+            return false;
+        }
+
+        // is it expired? but do we have a refresh_token?
+        if ($accessToken->isExpired($this->dateTime)) {
+            // access_token is expired
+            if (null !== $accessToken->getRefreshToken()) {
+                // but we have a refresh_token
+                return true;
+            }
+
+            // no refresh_token
+            return false;
+        }
+
+        // not expired
+        return true;
+    }
+
+    /**
      * @param string $responseCode  the code passed to the "code" query parameter on the callback URL
      * @param string $responseState the state passed to the "state" query parameter on the callback URL
      *
      * @return void
      */
-    public function handleCallback($responseCode, $responseState)
+    private function doHandleCallback($responseCode, $responseState)
     {
         if (null === $this->userId) {
             throw new OAuthException('userId not set');
@@ -353,20 +380,8 @@ class OAuthClient
             )
         );
 
-        if (400 === $response->getStatusCode()) {
-            // check for "invalid_grant"
-            $responseData = $response->json();
-            if (!array_key_exists('error', $responseData) || 'invalid_grant' !== $responseData['error']) {
-                // not an "invalid_grant", we can't deal with this here...
-                throw new OAuthServerException($response);
-            }
-
-            throw new OAuthException('authorization_code was not accepted by the server');
-        }
-
         if (!$response->isOkay()) {
-            // if there is any other error, we can't deal with this here...
-            throw new OAuthServerException($response);
+            throw new TokenException('unable to obtain access_token', $response);
         }
 
         $this->tokenStorage->storeAccessToken(
@@ -376,47 +391,10 @@ class OAuthClient
                 $this->dateTime,
                 $response->json(),
                 // in case server does not return a scope, we know it granted
-                // our requested scope
+                // our requested scope (according to OAuth specification)
                 $sessionData['scope']
             )
         );
-    }
-
-    /**
-     * Verify if an AccessToken in the list that matches this scope, bound to
-     * providerId and userId.
-     *
-     * This method has NO side effects, i.e. it will not try to use, refresh or
-     * delete AccessTokens. If a token is expired, but a refresh token is
-     * available it is assumed that an AccessToken is available.
-     *
-     * NOTE: this does not mean that the token will also be accepted by the
-     * resource server!
-     *
-     * @param string $scope
-     *
-     * @return bool
-     */
-    public function hasAccessToken($scope)
-    {
-        if (false === $accessToken = $this->getAccessToken($scope)) {
-            return false;
-        }
-
-        // is it expired? but do we have a refresh_token?
-        if ($accessToken->isExpired($this->dateTime)) {
-            // access_token is expired
-            if (null !== $accessToken->getRefreshToken()) {
-                // but we have a refresh_token
-                return true;
-            }
-
-            // no refresh_token
-            return false;
-        }
-
-        // not expired
-        return true;
     }
 
     /**
@@ -454,23 +432,17 @@ class OAuthClient
             )
         );
 
-        if (400 === $response->getStatusCode()) {
-            // check for "invalid_grant"
+        if (!$response->isOkay()) {
             $responseData = $response->json();
-            if (!array_key_exists('error', $responseData) || 'invalid_grant' !== $responseData['error']) {
-                // not an "invalid_grant", we can't deal with this here...
-                throw new OAuthServerException($response);
+            if (array_key_exists('error', $responseData) && 'invalid_grant' === $responseData['error']) {
+                // delete the access_token, we assume the user revoked it, that
+                // is why we get "invalid_grant"
+                $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
+
+                return false;
             }
 
-            // delete the access_token, we assume the user revoked it
-            $this->tokenStorage->deleteAccessToken($this->userId, $accessToken);
-
-            return false;
-        }
-
-        if (!$response->isOkay()) {
-            // if there is any other error, we can't deal with this here...
-            throw new OAuthServerException($response);
+            throw new TokenException('unable to refresh access_token', $response);
         }
 
         // delete old AccessToken as we'll write a new one anyway...
