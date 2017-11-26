@@ -31,7 +31,7 @@ class Random implements RandomInterface
     /**
      * {@inheritdoc}
      */
-    public function get($length)
+    public function getRaw($length)
     {
         return random_bytes($length);
     }
@@ -39,8 +39,8 @@ class Random implements RandomInterface
     /**
      * {@inheritdoc}
      */
-    public function getRaw($length)
+    public function get($length)
     {
-        return Hex::encode($this->get($length));
+        return Hex::encode($this->getRaw($length));
     }
 }
