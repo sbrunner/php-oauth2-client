@@ -105,6 +105,9 @@ class CurlHttpClient implements HttpClientInterface
      */
     private function exec(array $curlOptions, array $requestHeaders)
     {
+        // make sure we always start with a clean slate, we do this here
+        // and not after curl_exec because when calling CurlHttpClient::exec
+        // again after a caught exception may result in unexpected weirdness
         $this->curlReset();
 
         $defaultCurlOptions = [
@@ -112,7 +115,6 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => 10,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HTTPHEADER => [],
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_PROTOCOLS => $this->allowHttp ? CURLPROTO_HTTPS | CURLPROTO_HTTP : CURLPROTO_HTTPS,
             CURLOPT_HEADERFUNCTION => [$this, 'responseHeaderFunction'],
@@ -157,6 +159,8 @@ class CurlHttpClient implements HttpClientInterface
      */
     private function responseHeaderFunction($curlChannel, $headerData)
     {
+        // we do NOT support multiple response headers with the same key, the
+        // later one(s) will overwrite the earlier one
         if (false !== strpos($headerData, ':')) {
             list($key, $value) = explode(':', $headerData, 2);
             $this->responseHeaderList[trim($key)] = trim($value);

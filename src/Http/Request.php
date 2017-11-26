@@ -39,10 +39,10 @@ class Request
     private $requestHeaders;
 
     /**
-     * @param string $requestMethod
-     * @param string $requestUri
-     * @param array  $requestHeaders
-     * @param string $requestBody
+     * @param string      $requestMethod
+     * @param string      $requestUri
+     * @param array       $requestHeaders
+     * @param string|null $requestBody
      */
     public function __construct($requestMethod, $requestUri, array $requestHeaders = [], $requestBody = null)
     {
