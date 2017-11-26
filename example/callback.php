@@ -64,16 +64,8 @@ try {
     // set the userId to bind the access token to
     $client->setUserId($userId);
 
-    if (array_key_exists('error', $_GET)) {
-        echo sprintf('ERROR from OAuth server: %s', $_GET['error']);
-        die();
-    }
-
     // handle the callback from the OAuth server
-    $client->handleCallback(
-        $_GET['code'], // the authorization_code
-        $_GET['state'] // the state
-    );
+    $client->handleAuthorizeCallback($_GET);
 
     // redirect the browser back to the index
     http_response_code(302);
