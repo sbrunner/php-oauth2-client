@@ -260,13 +260,16 @@ class OAuthClient
     public function handleAuthorizeCallback(array $getData)
     {
         if (array_key_exists('error', $getData)) {
+            // remove the session
+            $this->session->take('_oauth2_session');
+
             if (array_key_exists('error_description', $getData)) {
                 throw new OAuthAuthorizeException(
                     sprintf('%s (%s)', $getData['error'], $getData['error_description'])
                 );
             }
 
-            throw new OAuthAuthorizeException($getData['error_description']);
+            throw new OAuthAuthorizeException($getData['error']);
         }
 
         if (!array_key_exists('code', $getData)) {
