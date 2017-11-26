@@ -24,6 +24,6 @@
 
 namespace fkooman\OAuth\Client\Exception;
 
-class SessionException extends OAuthException
+class OAuthAuthorizeException extends OAuthException
 {
 }

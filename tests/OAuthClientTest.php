@@ -220,4 +220,31 @@ class OAuthClientTest extends TestCase
         $this->client->setUserId('foo');
         $this->client->handleCallback('AC:broken', 'state12345abcde');
     }
+
+    /**
+     * @expectedException \fkooman\OAuth\Client\Exception\OAuthAuthorizeException
+     * @expectedExceptionMessage missing "state" query parameter from server response
+     */
+    public function testCallbackMissingState()
+    {
+        $this->client->handleAuthorizeCallback(
+            [
+                'code' => 'foo',
+            ]
+        );
+    }
+
+    /**
+     * @expectedException \fkooman\OAuth\Client\Exception\OAuthAuthorizeException
+     * @expectedExceptionMessage foo (bar)
+     */
+    public function testCallbackError()
+    {
+        $this->client->handleAuthorizeCallback(
+            [
+                'error' => 'foo',
+                'error_description' => 'bar',
+            ]
+        );
+    }
 }

@@ -1,5 +1,15 @@
 # Changes
 
+## 5.1.0 (...)
+- add `OAuthClient::handleAuthorizeCallback(array $getData)` to also handle 
+  error responses from the Authorization Server
+- introduce `OAuthAuthorizationException` for 
+  `OAuthClient::handleAuthorizeCallback`
+- deprecate `OAuthClient::handleCallback()`
+- make all exceptions extend `OAuthException`
+- internal `Random` cleanup, introduce `getRaw` and `get` instead of boolean 
+  argument
+
 ## 5.0.3 (2017-11-16)
 - also support `Bearer` as `token_type` in addition to `bearer` (issue #12)
 

@@ -24,8 +24,6 @@
 
 namespace fkooman\OAuth\Client\Exception;
 
-use RuntimeException;
-
-class AccessTokenException extends RuntimeException
+class AccessTokenException extends OAuthException
 {
 }

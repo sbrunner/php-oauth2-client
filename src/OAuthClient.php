@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
+use fkooman\OAuth\Client\Exception\OAuthAuthorizeException;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
@@ -250,6 +251,45 @@ class OAuthClient
     }
 
     /**
+     * Handle the response from the Authorization Server.
+     *
+     * @param array $getData
+     *
+     * @return void
+     */
+    public function handleAuthorizeCallback(array $getData)
+    {
+        if (array_key_exists('error', $getData)) {
+            if (array_key_exists('error_description', $getData)) {
+                throw new OAuthAuthorizeException(
+                    sprintf('%s (%s)', $getData['error'], $getData['error_description'])
+                );
+            }
+
+            throw new OAuthAuthorizeException($getData['error_description']);
+        }
+
+        if (!array_key_exists('code', $getData)) {
+            throw new OAuthAuthorizeException(
+                'missing "code" query parameter from server response'
+            );
+        }
+
+        if (!array_key_exists('state', $getData)) {
+            throw new OAuthAuthorizeException(
+                'missing "state" query parameter from server response'
+            );
+        }
+
+        $this->handleCallback($getData['code'], $getData['state']);
+    }
+
+    /**
+     * Handle the response from the Authorization Server. Only the "successful"
+     * case.
+     *
+     * @deprecated use handleAuthorizeCallback
+     *
      * @param string $responseCode  the code passed to the "code" query parameter on the callback URL
      * @param string $responseState the state passed to the "state" query parameter on the callback URL
      *
