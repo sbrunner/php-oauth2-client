@@ -4,13 +4,14 @@
 - simplify error handling when obtaining `access_token` and `refresh_token`
 - modify `OAuthClient::handleCallback` to take array with query parameters, 
   i.e. `$_GET` to also handle error responses from the AS
-- introduce `AuthorizationException` for when OAuth server refuses to grant 
+- introduce `AuthorizeException` for when OAuth server refuses to grant 
   the authorization, e.g. the user does not allow it
 - make all exceptions extend `OAuthException`
 - introduce `TokenException` that contains a message and the `Response` object
-  to ease debugging in case the access_token is not granted
-- internal `Random` cleanup, introduce `getRaw` and `get` instead of boolean 
-  argument
+  to ease debugging in case the `access_token` is not granted due to server 
+  or configuration error
+- Have `Random::getHex` and `Random::getRaw` instead of one method with boolean 
+  parameter
 
 ## 5.0.3 (2017-11-16)
 - also support `Bearer` as `token_type` in addition to `bearer` (issue #12)

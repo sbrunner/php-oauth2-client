@@ -34,7 +34,7 @@ class TestRandom implements RandomInterface
     /**
      * {@inheritdoc}
      */
-    public function get($length)
+    public function getHex($length)
     {
         return sprintf('random_%d', $this->counter++);
     }

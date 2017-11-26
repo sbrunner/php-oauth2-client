@@ -39,7 +39,7 @@ class Random implements RandomInterface
     /**
      * {@inheritdoc}
      */
-    public function get($length)
+    public function getHex($length)
     {
         return Hex::encode($this->getRaw($length));
     }

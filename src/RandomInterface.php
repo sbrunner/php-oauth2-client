@@ -33,7 +33,7 @@ interface RandomInterface
      *
      * @return string
      */
-    public function get($length);
+    public function getHex($length);
 
     /**
      * Get the random data as raw binary string.

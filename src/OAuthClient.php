@@ -223,7 +223,7 @@ class OAuthClient
             'client_id' => $this->provider->getClientId(),
             'redirect_uri' => $redirectUri,
             'scope' => $scope,
-            'state' => $this->random->get(16),
+            'state' => $this->random->getHex(16),
             'response_type' => 'code',
             'code_challenge_method' => 'S256',
             'code_challenge' => self::hashCodeVerifier($codeVerifier),
