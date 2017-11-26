@@ -29,7 +29,7 @@ class Provider
     /** @var string */
     private $clientId;
 
-    /** @var string|null */
+    /** @var string */
     private $clientSecret;
 
     /** @var string */
@@ -39,10 +39,10 @@ class Provider
     private $tokenEndpoint;
 
     /**
-     * @param string      $clientId
-     * @param string|null $clientSecret
-     * @param string      $authorizationEndpoint
-     * @param string      $tokenEndpoint
+     * @param string $clientId
+     * @param string $clientSecret
+     * @param string $authorizationEndpoint
+     * @param string $tokenEndpoint
      */
     public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint)
     {
@@ -71,7 +71,7 @@ class Provider
     }
 
     /**
-     * @return string|null
+     * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-2.3.1
      */

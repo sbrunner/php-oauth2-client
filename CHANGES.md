@@ -12,6 +12,8 @@
   or configuration error
 - Have `Random::getHex` and `Random::getRaw` instead of one method with boolean 
   parameter
+- remove PKCE, it is only useful on OAuth clients where leaking the 
+  authorization code is a risk (when not using client credentials)
 
 ## 5.0.3 (2017-11-16)
 - also support `Bearer` as `token_type` in addition to `bearer` (issue #12)

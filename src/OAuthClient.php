@@ -352,24 +352,11 @@ class OAuthClient
             'redirect_uri' => $sessionData['redirect_uri'],
         ];
 
-        $requestHeaders = [];
-        // if we have a secret registered for the client, use it
-        if (null !== $this->provider->getSecret()) {
-            $requestHeaders = [
-                'Authorization' => sprintf(
-                    'Basic %s',
-                    Base64::encode(
-                        sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
-                    )
-                ),
-            ];
-        }
-
         $response = $this->httpClient->send(
             Request::post(
                 $this->provider->getTokenEndpoint(),
                 $tokenRequestData,
-                $requestHeaders
+                self::getAuthorizationHeader($this->provider)
             )
         );
 
@@ -404,24 +391,11 @@ class OAuthClient
             'scope' => $accessToken->getScope(),
         ];
 
-        $requestHeaders = [];
-        // if we have a secret registered for the client, use it
-        if (null !== $this->provider->getSecret()) {
-            $requestHeaders = [
-                'Authorization' => sprintf(
-                    'Basic %s',
-                    Base64::encode(
-                        sprintf('%s:%s', $this->provider->getClientId(), $this->provider->getSecret())
-                    )
-                ),
-            ];
-        }
-
         $response = $this->httpClient->send(
             Request::post(
                 $this->provider->getTokenEndpoint(),
                 $tokenRequestData,
-                $requestHeaders
+                self::getAuthorizationHeader($this->provider)
             )
         );
 
@@ -479,5 +453,22 @@ class OAuthClient
         }
 
         return false;
+    }
+
+    /**
+     * @param Provider $provider
+     *
+     * @return array
+     */
+    private static function getAuthorizationHeader(Provider $provider)
+    {
+        return [
+            'Authorization' => sprintf(
+                'Basic %s',
+                Base64::encode(
+                    sprintf('%s:%s', $provider->getClientId(), $provider->getSecret())
+                )
+            ),
+        ];
     }
 }
