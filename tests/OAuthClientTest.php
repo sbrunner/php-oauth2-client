@@ -216,7 +216,6 @@ class OAuthClientTest extends TestCase
      */
     public function testCallbackMalformedAccessTokenResponse()
     {
-        // XXX we should probably wrap this in an OAuthException as well!
         $this->session->set(
             '_oauth2_session',
             [
