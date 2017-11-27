@@ -26,6 +26,7 @@ namespace fkooman\OAuth\Client;
 
 use DateInterval;
 use DateTime;
+use Exception;
 use fkooman\OAuth\Client\Exception\AccessTokenException;
 use RuntimeException;
 
@@ -279,9 +280,17 @@ class AccessToken
     {
         self::requireString('expires_at', $issuedAt);
         if (1 !== preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $issuedAt)) {
-            throw new AccessTokenException('invalid "expires_at"');
+            throw new AccessTokenException('invalid "expires_at" (syntax)');
         }
-        $this->issuedAt = new DateTime($issuedAt);
+
+        // make sure it is actually a valid date
+        try {
+            $this->issuedAt = new DateTime($issuedAt);
+        } catch (Exception $e) {
+            throw new AccessTokenException(
+                sprintf('invalid "expires_at": %s', $e->getMessage())
+            );
+        }
     }
 
     /**
