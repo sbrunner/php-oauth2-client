@@ -1,6 +1,6 @@
 # Changes
 
-## 6.0.0 (...)
+## 6.0.0 (2017-11-27)
 - simplify error handling when obtaining `access_token` and `refresh_token`
 - modify `OAuthClient::handleCallback` to take array with query parameters, 
   i.e. `$_GET` to also handle error responses from the AS
