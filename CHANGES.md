@@ -1,5 +1,8 @@
 # Changes
 
+## 6.0.1 (2017-11-28)
+- include `Accept` header in token requests
+
 ## 6.0.0 (2017-11-27)
 - simplify error handling when obtaining `access_token` and `refresh_token`
 - modify `OAuthClient::handleCallback` to take array with query parameters, 
