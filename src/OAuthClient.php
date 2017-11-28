@@ -463,6 +463,7 @@ class OAuthClient
     private static function getAuthorizationHeader(Provider $provider)
     {
         return [
+            'Accept' => 'application/json',
             'Authorization' => sprintf(
                 'Basic %s',
                 Base64::encode(
