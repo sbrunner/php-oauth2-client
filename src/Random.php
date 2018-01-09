@@ -29,7 +29,11 @@ use ParagonIE\ConstantTime\Hex;
 class Random implements RandomInterface
 {
     /**
-     * {@inheritdoc}
+     * Get the random data as raw binary string.
+     *
+     * @param int $length
+     *
+     * @return string
      */
     public function getRaw($length)
     {
@@ -37,7 +41,11 @@ class Random implements RandomInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Get the random data a hex encoded string.
+     *
+     * @param int $length
+     *
+     * @return string
      */
     public function getHex($length)
     {
