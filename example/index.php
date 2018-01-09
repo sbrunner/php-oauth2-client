@@ -22,7 +22,9 @@
  * SOFTWARE.
  */
 
-require_once sprintf('%s/vendor/autoload.php', dirname(__DIR__));
+$baseDir = dirname(__DIR__);
+/** @psalm-suppress UnresolvableInclude */
+require_once sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
