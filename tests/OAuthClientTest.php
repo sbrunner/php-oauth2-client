@@ -1,7 +1,7 @@
 <?php
 
-/**
- * Copyright (c) 2016, 2017 François Kooman <fkooman@tuxed.net>.
+/*
+ * Copyright (c) 2017, 2018 François Kooman <fkooman@tuxed.net>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -103,14 +103,14 @@ class OAuthClientTest extends TestCase
         // the access_token is deemed valid, but the resource does not accept it
         $this->client->setUserId('fooz');
         $this->assertTrue($this->client->hasAccessToken('my_scope'));
-        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
     }
 
     public function testHasExpiredAccessTokenNoRefreshToken()
     {
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
         $this->client->setUserId('bar');
-        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
     }
 
     public function testHasExpiredAccessTokenRefreshToken()
@@ -127,7 +127,7 @@ class OAuthClientTest extends TestCase
         // the refresh_token is not accepted to obtain a new access_token
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
         $this->client->setUserId('bazz');
-        $this->assertSame(false, $this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
     }
 
     public function testCallback()
