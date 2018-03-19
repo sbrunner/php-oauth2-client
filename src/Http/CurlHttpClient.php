@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client\Http;
 
 use fkooman\OAuth\Client\Http\Exception\CurlException;
+use ParagonIE\ConstantTime\Binary;
 
 class CurlHttpClient implements HttpClientInterface
 {
@@ -166,6 +167,6 @@ class CurlHttpClient implements HttpClientInterface
             $this->responseHeaderList[trim($key)] = trim($value);
         }
 
-        return strlen($headerData);
+        return Binary::safeStrlen($headerData);
     }
 }
