@@ -1,6 +1,6 @@
 # Changes
 
-## 6.0.2 (...)
+## 6.0.2 (2018-03-21)
 - use safe `strlen` from `paragonie/constant_time_encoding`
 - fix `vimeo/psalm` and `phpstan/phpstan` errors and warnings
 
