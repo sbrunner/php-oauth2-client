@@ -50,18 +50,18 @@ class OAuthClient
     /** @var \DateTime */
     private $dateTime;
 
-    /** @var Provider */
+    /** @var null|Provider */
     private $provider = null;
 
-    /** @var string */
+    /** @var null|string */
     private $userId = null;
 
     /**
      * @param TokenStorageInterface    $tokenStorage
      * @param Http\HttpClientInterface $httpClient
-     * @param SessionInterface|null    $session
-     * @param RandomInterface|null     $random
-     * @param \DateTime|null           $dateTime
+     * @param null|SessionInterface    $session
+     * @param null|RandomInterface     $random
+     * @param null|\DateTime           $dateTime
      */
     public function __construct(
         TokenStorageInterface $tokenStorage,
@@ -123,7 +123,7 @@ class OAuthClient
      * @param string $requestUri
      * @param array  $requestHeaders
      *
-     * @return Http\Response|false
+     * @return false|Http\Response
      */
     public function get($requestScope, $requestUri, array $requestHeaders = [])
     {
@@ -138,7 +138,7 @@ class OAuthClient
      * @param array  $postBody
      * @param array  $requestHeaders
      *
-     * @return Http\Response|false
+     * @return false|Http\Response
      */
     public function post($requestScope, $requestUri, array $postBody, array $requestHeaders = [])
     {
@@ -151,7 +151,7 @@ class OAuthClient
      * @param string       $requestScope
      * @param Http\Request $request
      *
-     * @return Response|false
+     * @return false|Http\Response
      */
     public function send($requestScope, Request $request)
     {
@@ -214,6 +214,9 @@ class OAuthClient
     {
         if (null === $this->userId) {
             throw new OAuthException('userId not set');
+        }
+        if (null === $this->provider) {
+            throw new OAuthException('provider not set');
         }
 
         $queryParameters = [
@@ -293,7 +296,8 @@ class OAuthClient
      */
     public function hasAccessToken($scope)
     {
-        if (false === $accessToken = $this->getAccessToken($scope)) {
+        $accessToken = $this->getAccessToken($scope);
+        if (false === $accessToken) {
             return false;
         }
 
@@ -323,6 +327,9 @@ class OAuthClient
     {
         if (null === $this->userId) {
             throw new OAuthException('userId not set');
+        }
+        if (null === $this->provider) {
+            throw new OAuthException('provider not set');
         }
 
         // get and delete the OAuth session information
@@ -380,10 +387,17 @@ class OAuthClient
     /**
      * @param AccessToken $accessToken
      *
-     * @return AccessToken|false
+     * @return false|AccessToken
      */
     private function refreshAccessToken(AccessToken $accessToken)
     {
+        if (null === $this->userId) {
+            throw new OAuthException('userId not set');
+        }
+        if (null === $this->provider) {
+            throw new OAuthException('provider not set');
+        }
+
         // prepare access_token request
         $tokenRequestData = [
             'grant_type' => 'refresh_token',
@@ -436,10 +450,17 @@ class OAuthClient
      *
      * @param string $scope
      *
-     * @return AccessToken|false
+     * @return false|AccessToken
      */
     private function getAccessToken($scope)
     {
+        if (null === $this->userId) {
+            throw new OAuthException('userId not set');
+        }
+        if (null === $this->provider) {
+            throw new OAuthException('provider not set');
+        }
+
         $accessTokenList = $this->tokenStorage->getAccessTokenList($this->userId);
         foreach ($accessTokenList as $accessToken) {
             if ($this->provider->getProviderId() !== $accessToken->getProviderId()) {

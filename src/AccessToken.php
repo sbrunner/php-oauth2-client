@@ -44,13 +44,13 @@ class AccessToken
     /** @var string */
     private $tokenType;
 
-    /** @var int|null */
+    /** @var null|int */
     private $expiresIn = null;
 
-    /** @var string|null */
+    /** @var null|string */
     private $refreshToken = null;
 
-    /** @var string|null */
+    /** @var null|string */
     private $scope = null;
 
     /**
@@ -175,7 +175,7 @@ class AccessToken
     }
 
     /**
-     * @return int|null
+     * @return null|int
      *
      * @see https://tools.ietf.org/html/rfc6749#section-5.1
      */
@@ -185,7 +185,7 @@ class AccessToken
     }
 
     /**
-     * @return string|null the refresh token
+     * @return null|string the refresh token
      *
      * @see https://tools.ietf.org/html/rfc6749#section-1.5
      */
@@ -195,7 +195,7 @@ class AccessToken
     }
 
     /**
-     * @return string|null
+     * @return null|string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-3.3
      */
@@ -278,7 +278,6 @@ class AccessToken
      */
     private function setIssuedAt($issuedAt)
     {
-        self::requireString('expires_at', $issuedAt);
         if (1 !== preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $issuedAt)) {
             throw new AccessTokenException('invalid "expires_at" (syntax)');
         }
@@ -300,7 +299,6 @@ class AccessToken
      */
     private function setAccessToken($accessToken)
     {
-        self::requireString('access_token', $accessToken);
         // access-token = 1*VSCHAR
         // VSCHAR       = %x20-7E
         if (1 !== preg_match('/^[\x20-\x7E]+$/', $accessToken)) {
@@ -316,7 +314,6 @@ class AccessToken
      */
     private function setTokenType($tokenType)
     {
-        self::requireString('token_type', $tokenType);
         if ('bearer' !== $tokenType && 'Bearer' !== $tokenType) {
             throw new AccessTokenException('unsupported "token_type"');
         }
@@ -324,30 +321,31 @@ class AccessToken
     }
 
     /**
-     * @param int|null $expiresIn
+     * @param mixed|null $expiresIn
      *
      * @return void
      */
     private function setExpiresIn($expiresIn)
     {
         if (null !== $expiresIn) {
-            self::requireInt('expires_in', $expiresIn);
+            if (!is_int($expiresIn)) {
+                throw new AccessTokenException('"expires_in" must be int');
+            }
             if (0 >= $expiresIn) {
                 throw new AccessTokenException('invalid "expires_in"');
             }
         }
-        $this->expiresIn = $expiresIn;
+        $this->expiresIn = (int) $expiresIn;
     }
 
     /**
-     * @param string|null $refreshToken
+     * @param null|string $refreshToken
      *
      * @return void
      */
     private function setRefreshToken($refreshToken)
     {
         if (null !== $refreshToken) {
-            self::requireString('refresh_token', $refreshToken);
             // refresh-token = 1*VSCHAR
             // VSCHAR        = %x20-7E
             if (1 !== preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
@@ -358,14 +356,13 @@ class AccessToken
     }
 
     /**
-     * @param string|null $scope
+     * @param null|string $scope
      *
      * @return void
      */
     private function setScope($scope)
     {
         if (null !== $scope) {
-            self::requireString('scope', $scope);
             // scope       = scope-token *( SP scope-token )
             // scope-token = 1*NQCHAR
             // NQCHAR      = %x21 / %x23-5B / %x5D-7E
@@ -376,31 +373,5 @@ class AccessToken
             }
         }
         $this->scope = $scope;
-    }
-
-    /**
-     * @param string $k
-     * @param string $v
-     *
-     * @return void
-     */
-    private static function requireString($k, $v)
-    {
-        if (!is_string($v)) {
-            throw new AccessTokenException(sprintf('"%s" must be string', $k));
-        }
-    }
-
-    /**
-     * @param string $k
-     * @param int    $v
-     *
-     * @return void
-     */
-    private static function requireInt($k, $v)
-    {
-        if (!is_int($v)) {
-            throw new AccessTokenException(sprintf('"%s" must be int', $k));
-        }
     }
 }

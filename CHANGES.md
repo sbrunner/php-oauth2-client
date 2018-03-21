@@ -2,6 +2,7 @@
 
 ## 6.0.2 (...)
 - use safe `strlen` from `paragonie/constant_time_encoding`
+- fix `vimeo/psalm` and `phpstan/phpstan` errors and warnings
 
 ## 6.0.1 (2017-11-28)
 - include `Accept` header in token requests
