@@ -321,7 +321,7 @@ class AccessToken
     }
 
     /**
-     * @param mixed|null $expiresIn
+     * @param null|mixed $expiresIn
      *
      * @return void
      */
@@ -335,7 +335,7 @@ class AccessToken
                 throw new AccessTokenException('invalid "expires_in"');
             }
         }
-        $this->expiresIn = (int) $expiresIn;
+        $this->expiresIn = $expiresIn;
     }
 
     /**
