@@ -36,7 +36,7 @@ class SessionTokenStorage implements TokenStorageInterface
     public function getAccessTokenList($userId)
     {
         self::requireSession();
-        if (!array_key_exists(sprintf('_oauth2_token_%s', $userId), $_SESSION)) {
+        if (false === array_key_exists(sprintf('_oauth2_token_%s', $userId), $_SESSION)) {
             return [];
         }
 

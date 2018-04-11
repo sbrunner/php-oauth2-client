@@ -139,7 +139,7 @@ class OAuthClient
     public function send(Provider $provider, $userId, $requestScope, Request $request)
     {
         $accessToken = $this->getAccessToken($provider, $userId, $requestScope);
-        if (!$accessToken) {
+        if (false === $accessToken) {
             return false;
         }
 
@@ -155,7 +155,7 @@ class OAuthClient
 
             // try to refresh the AccessToken
             $accessToken = $this->refreshAccessToken($provider, $userId, $accessToken);
-            if (!$accessToken) {
+            if (false === $accessToken) {
                 // didn't work
                 return false;
             }
@@ -240,13 +240,13 @@ class OAuthClient
             );
         }
 
-        if (!array_key_exists('code', $getData)) {
+        if (false === array_key_exists('code', $getData)) {
             throw new OAuthException(
                 'missing "code" query parameter from server response'
             );
         }
 
-        if (!array_key_exists('state', $getData)) {
+        if (false === array_key_exists('state', $getData)) {
             throw new OAuthException(
                 'missing "state" query parameter from server response'
             );
@@ -308,7 +308,7 @@ class OAuthClient
         // get and delete the OAuth session information
         $sessionData = $this->session->take('_oauth2_session');
 
-        if (!hash_equals($sessionData['state'], $responseState)) {
+        if (false === hash_equals($sessionData['state'], $responseState)) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
             throw new OAuthException('invalid session (state)');
@@ -343,7 +343,7 @@ class OAuthClient
             )
         );
 
-        if (!$response->isOkay()) {
+        if (false === $response->isOkay()) {
             throw new TokenException('unable to obtain access_token', $response);
         }
 
@@ -387,7 +387,7 @@ class OAuthClient
             )
         );
 
-        if (!$response->isOkay()) {
+        if (false === $response->isOkay()) {
             $responseData = $response->json();
             if (array_key_exists('error', $responseData) && 'invalid_grant' === $responseData['error']) {
                 // delete the access_token, we assume the user revoked it, that

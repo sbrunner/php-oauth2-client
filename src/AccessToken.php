@@ -60,7 +60,7 @@ class AccessToken
     {
         $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type'];
         foreach ($requiredKeys as $requiredKey) {
-            if (!array_key_exists($requiredKey, $tokenData)) {
+            if (false === array_key_exists($requiredKey, $tokenData)) {
                 throw new AccessTokenException(sprintf('missing key "%s"', $requiredKey));
             }
         }
@@ -98,7 +98,7 @@ class AccessToken
         // if the scope was not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
-        if (!array_key_exists('scope', $tokenData)) {
+        if (false === array_key_exists('scope', $tokenData)) {
             $tokenData['scope'] = $scope;
         }
         // add the current DateTime as well to be able to figure out if the
@@ -123,12 +123,12 @@ class AccessToken
         // if the scope is not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
-        if (!array_key_exists('scope', $tokenData)) {
+        if (false === array_key_exists('scope', $tokenData)) {
             $tokenData['scope'] = $accessToken->getScope();
         }
         // if the refresh_token is not part of the response, we wil reuse the
         // existing refresh_token for future refresh_token requests
-        if (!array_key_exists('refresh_token', $tokenData)) {
+        if (false === array_key_exists('refresh_token', $tokenData)) {
             $tokenData['refresh_token'] = $accessToken->getRefreshToken();
         }
         // add the current DateTime as well to be able to figure out if the
@@ -328,7 +328,7 @@ class AccessToken
     private function setExpiresIn($expiresIn)
     {
         if (null !== $expiresIn) {
-            if (!is_int($expiresIn)) {
+            if (false === is_int($expiresIn)) {
                 throw new AccessTokenException('"expires_in" must be int');
             }
             if (0 >= $expiresIn) {

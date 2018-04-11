@@ -50,7 +50,7 @@ class Session implements SessionInterface
     public function take($key)
     {
         self::requireSession();
-        if (!array_key_exists($key, $_SESSION)) {
+        if (false === array_key_exists($key, $_SESSION)) {
             throw new SessionException(sprintf('key "%s" not found in session', $key));
         }
         $value = $_SESSION[$key];
