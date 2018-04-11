@@ -118,6 +118,8 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_PROTOCOLS => $this->allowHttp ? CURLPROTO_HTTPS | CURLPROTO_HTTP : CURLPROTO_HTTPS,
+            CURLOPT_SSL_VERIFYHOST => 2,    // default, but just to make sure
+            CURLOPT_SSL_VERIFYPEER => true, // default, but just to make sure
             CURLOPT_HEADERFUNCTION => [$this, 'responseHeaderFunction'],
         ];
 
