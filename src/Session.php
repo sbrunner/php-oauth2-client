@@ -59,6 +59,9 @@ class Session implements SessionInterface
         return $value;
     }
 
+    /**
+     * @return void
+     */
     private static function requireSession()
     {
         if (PHP_SESSION_ACTIVE !== session_status()) {

@@ -336,7 +336,10 @@ class OAuthClient
             Request::post(
                 $provider->getTokenEndpoint(),
                 $tokenRequestData,
-                self::getAuthorizationHeader($provider)
+                self::getAuthorizationHeader(
+                    $provider->getClientId(),
+                    $provider->getSecret()
+                )
             )
         );
 
@@ -377,7 +380,10 @@ class OAuthClient
             Request::post(
                 $provider->getTokenEndpoint(),
                 $tokenRequestData,
-                self::getAuthorizationHeader($provider)
+                self::getAuthorizationHeader(
+                    $provider->getClientId(),
+                    $provider->getSecret()
+                )
             )
         );
 
@@ -440,18 +446,19 @@ class OAuthClient
     }
 
     /**
-     * @param Provider $provider
+     * @param string $authUser
+     * @param string $authPass
      *
      * @return array
      */
-    private static function getAuthorizationHeader(Provider $provider)
+    private static function getAuthorizationHeader($authUser, $authPass)
     {
         return [
             'Accept' => 'application/json',
             'Authorization' => sprintf(
                 'Basic %s',
                 Base64::encode(
-                    sprintf('%s:%s', $provider->getClientId(), $provider->getSecret())
+                    sprintf('%s:%s', $authUser, $authPass)
                 )
             ),
         ];
