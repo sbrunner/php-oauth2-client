@@ -43,8 +43,12 @@ class OAuthClientTest extends TestCase
     /** @var \fkooman\OAuth\Client\SessionInterface */
     private $session;
 
+    /** @var \fkooman\OAuth\Client\Provider */
+    private $provider;
+
     public function setUp()
     {
+        $this->provider = new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token');
         $this->session = new TestSession();
         $this->tokenStorage = new PdoTokenStorage(new PDO('sqlite::memory:'));
         $this->tokenStorage->init();
@@ -75,25 +79,22 @@ class OAuthClientTest extends TestCase
 
         $this->client = new OAuthClient(
             $this->tokenStorage,
-            new TestHttpClient(),
-            $this->session,
-            new TestRandom(),
-            new DateTime('2016-01-01')
+            new TestHttpClient()
         );
-        $this->client->setProvider(new Provider('foo', 'bar', 'http://localhost/authorize', 'http://localhost/token'));
+        $this->client->setSession($this->session);
+        $this->client->setRandom(new TestRandom());
+        $this->client->setDateTime(new DateTime('2016-01-01'));
     }
 
     public function testHasNoAccessToken()
     {
-        $this->client->setUserId('foo');
-        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
-        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $this->client->getAuthorizeUri('my_scope', 'https://example.org/callback'));
+        $this->assertFalse($this->client->get($this->provider, 'foo', 'my_scope', 'https://example.org/resource'));
+        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $this->client->getAuthorizeUri($this->provider, 'foo', 'my_scope', 'https://example.org/callback'));
     }
 
     public function testHasValidAccessToken()
     {
-        $this->client->setUserId('bar');
-        $response = $this->client->get('my_scope', 'https://example.org/resource');
+        $response = $this->client->get($this->provider, 'bar', 'my_scope', 'https://example.org/resource');
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue($response->json()['ok']);
     }
@@ -101,23 +102,20 @@ class OAuthClientTest extends TestCase
     public function testHasValidAccessTokenNotAccepted()
     {
         // the access_token is deemed valid, but the resource does not accept it
-        $this->client->setUserId('fooz');
-        $this->assertTrue($this->client->hasAccessToken('my_scope'));
-        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertTrue($this->client->hasAccessToken($this->provider, 'fooz', 'my_scope'));
+        $this->assertFalse($this->client->get($this->provider, 'fooz', 'my_scope', 'https://example.org/resource'));
     }
 
     public function testHasExpiredAccessTokenNoRefreshToken()
     {
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
-        $this->client->setUserId('bar');
-        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertFalse($this->client->get($this->provider, 'bar', 'my_scope', 'https://example.org/resource'));
     }
 
     public function testHasExpiredAccessTokenRefreshToken()
     {
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
-        $this->client->setUserId('baz');
-        $response = $this->client->get('my_scope', 'https://example.org/resource');
+        $response = $this->client->get($this->provider, 'baz', 'my_scope', 'https://example.org/resource');
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue($response->json()['refreshed']);
     }
@@ -126,8 +124,7 @@ class OAuthClientTest extends TestCase
     {
         // the refresh_token is not accepted to obtain a new access_token
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
-        $this->client->setUserId('bazz');
-        $this->assertFalse($this->client->get('my_scope', 'https://example.org/resource'));
+        $this->assertFalse($this->client->get($this->provider, 'bazz', 'my_scope', 'https://example.org/resource'));
     }
 
     public function testCallback()
@@ -144,8 +141,9 @@ class OAuthClientTest extends TestCase
                 'response_type' => 'code',
             ]
         );
-        $this->client->setUserId('foo');
         $this->client->handleCallback(
+            $this->provider,
+            'foo',
             [
                 'code' => 'AC:abc',
                 'state' => 'state12345abcde',
@@ -171,8 +169,9 @@ class OAuthClientTest extends TestCase
                 'response_type' => 'code',
             ]
         );
-        $this->client->setUserId('foo');
         $this->client->handleCallback(
+            $this->provider,
+            'foo',
             [
                 'code' => 'AC:abc',
                 'state' => 'state12345abcde',
@@ -201,8 +200,9 @@ class OAuthClientTest extends TestCase
                 'response_type' => 'code',
             ]
         );
-        $this->client->setUserId('foo');
         $this->client->handleCallback(
+            $this->provider,
+            'foo',
             [
                 'code' => 'AC:abc',
                 'state' => 'non-matching-state',
@@ -228,8 +228,9 @@ class OAuthClientTest extends TestCase
                 'response_type' => 'code',
             ]
         );
-        $this->client->setUserId('foo');
         $this->client->handleCallback(
+            $this->provider,
+            'foo',
             [
                 'code' => 'AC:broken',
                 'state' => 'state12345abcde',
@@ -256,6 +257,8 @@ class OAuthClientTest extends TestCase
             ]
         );
         $this->client->handleCallback(
+            $this->provider,
+            'foo',
             [
                 'code' => 'foo',
             ]
@@ -281,6 +284,8 @@ class OAuthClientTest extends TestCase
             ]
         );
         $this->client->handleCallback(
+            $this->provider,
+            'foo',
             [
                 'error' => 'access_denied',
             ]

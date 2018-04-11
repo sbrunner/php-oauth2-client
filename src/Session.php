@@ -28,16 +28,6 @@ use fkooman\OAuth\Client\Exception\SessionException;
 
 class Session implements SessionInterface
 {
-    public function __construct()
-    {
-        if (PHP_SESSION_ACTIVE !== session_status()) {
-            // if we have no active session, bail, we expect an active session
-            // and will NOT fiddle with the application's existing session
-            // management
-            throw new SessionException('no active session');
-        }
-    }
-
     /**
      * @param string $key
      * @param mixed  $value
@@ -46,6 +36,7 @@ class Session implements SessionInterface
      */
     public function set($key, $value)
     {
+        self::requireSession();
         $_SESSION[$key] = $value;
     }
 
@@ -58,6 +49,7 @@ class Session implements SessionInterface
      */
     public function take($key)
     {
+        self::requireSession();
         if (!array_key_exists($key, $_SESSION)) {
             throw new SessionException(sprintf('key "%s" not found in session', $key));
         }
@@ -65,5 +57,15 @@ class Session implements SessionInterface
         unset($_SESSION[$key]);
 
         return $value;
+    }
+
+    private static function requireSession()
+    {
+        if (PHP_SESSION_ACTIVE !== session_status()) {
+            // if we have no active session, bail, we expect an active session
+            // and will NOT fiddle with the application's existing session
+            // management
+            throw new SessionException('no active session');
+        }
     }
 }
