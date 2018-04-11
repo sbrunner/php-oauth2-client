@@ -1,5 +1,16 @@
 # Changes
 
+## 7.0.0 (...)
+- update API
+  - `OAuthClient` methods `get`, `post`, `send`, `getAuthorizeUri`, 
+    `handleCallback`, `hasAccessToken` require `Provider` and `userId` 
+    parameters now
+  - remove `OAuthClient::setUserId` and `OAuthClient::setProvider` as they are 
+    now parameters to above mentioned methods
+  - reduce signature of `OAuthClient` constructor, introduce `setSession`, 
+    `setRandom` and `setDateTime`. Note that these are only for testing or 
+   very special use cases, so most likely not for normal API users!
+
 ## 6.0.2 (2018-03-21)
 - use safe `strlen` from `paragonie/constant_time_encoding`
 - fix `vimeo/psalm` and `phpstan/phpstan` errors and warnings
