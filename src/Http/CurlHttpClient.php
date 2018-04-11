@@ -135,7 +135,12 @@ class CurlHttpClient implements HttpClientInterface
             throw new CurlException('unable to set cURL options');
         }
 
-        if (false === $responseData = curl_exec($this->curlChannel)) {
+        $responseData = curl_exec($this->curlChannel);
+        if (false === is_string($responseData)) {
+            // curl_exec returns true/false when CURLOPT_RETURNTRANSFER is not
+            // set, but false|string when CURLOPT_RETURNTRANSFER _IS_ set, but
+            // Psalm is not clever enough to distinguish this, so if the
+            // response is NOT a string it MUST be false
             throw new CurlException(
                 sprintf(
                     '[%d] %s',
@@ -147,8 +152,6 @@ class CurlHttpClient implements HttpClientInterface
 
         return new Response(
             curl_getinfo($this->curlChannel, CURLINFO_HTTP_CODE),
-            // Psalm false positive (bool) for $responseData as we use
-            // CURLOPT_RETURNTRANSFER
             $responseData,
             $this->responseHeaderList
         );
