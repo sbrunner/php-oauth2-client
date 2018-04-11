@@ -11,6 +11,7 @@
     `setRandom` and `setDateTime`. Note that these are only for testing or 
    very special use cases, so most likely not for normal API users!
 - remove `OAuthClient::hasAccessToken` as no code actually uses it
+- fix some `vimeo/psalm` warnings/errors
 
 ## 6.0.2 (2018-03-21)
 - use safe `strlen` from `paragonie/constant_time_encoding`
