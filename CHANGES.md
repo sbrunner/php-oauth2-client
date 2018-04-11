@@ -3,13 +3,12 @@
 ## 7.0.0 (...)
 - update API
   - `OAuthClient` methods `get`, `post`, `send`, `getAuthorizeUri`, 
-    `handleCallback`, `hasAccessToken` require `Provider` and `userId` 
-    parameters now
+    `handleCallback` require `Provider` and `userId` parameters now
   - remove `OAuthClient::setUserId` and `OAuthClient::setProvider` as they are 
     now parameters to above mentioned methods
   - reduce signature of `OAuthClient` constructor, introduce `setSession`, 
-    `setRandom` and `setDateTime`. Note that these are only for testing or 
-   very special use cases, so most likely not for normal API users!
+    `setRandom` and `setDateTime`. **NOTE** that these are only for testing or 
+    very special use cases, so most likely not for normal API users!
 - remove `OAuthClient::hasAccessToken` as no code actually uses it
 - fix some `vimeo/psalm` warnings/errors
 
