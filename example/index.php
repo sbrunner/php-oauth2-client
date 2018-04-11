@@ -57,20 +57,21 @@ try {
         new CurlHttpClient(['allowHttp' => true])
     );
 
-    // the OAuth provider configuration
-    $client->setProvider(
-        new Provider(
-            'demo_client',                          // client_id
-            'demo_secret',                          // client_secret
-            'http://localhost:8080/authorize.php',  // authorization_uri
-            'http://localhost:8080/token.php'       // token_uri
-        )
+    $provider = new Provider(
+        'demo_client',                          // client_id
+        'demo_secret',                          // client_secret
+        'http://localhost:8080/authorize.php',  // authorization_uri
+        'http://localhost:8080/token.php'       // token_uri
     );
 
-    // set the userId to bind the access token to
-    $client->setUserId($userId);
+    $response = $client->get(
+        $provider,
+        $userId, // the userId to bind the access token to
+        $requestScope,
+        $resourceUri
+    );
 
-    if (false === $response = $client->get($requestScope, $resourceUri)) {
+    if (false === $response) {
         // "false" is returned for a number of reasons:
         // * no access_token yet for this user ID / scope
         // * access_token expired (and no refresh_token available)
@@ -83,7 +84,7 @@ try {
         header(
             sprintf(
                 'Location: %s',
-                $client->getAuthorizeUri($requestScope, $callbackUri)
+                $client->getAuthorizeUri($provider, $userId, $requestScope, $callbackUri)
             )
         );
         exit(0);

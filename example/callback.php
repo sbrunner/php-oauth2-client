@@ -56,21 +56,17 @@ try {
         new CurlHttpClient(['allowHttp' => true])
     );
 
-    // the OAuth provider configuration
-    $client->setProvider(
+    // handle the callback from the OAuth server
+    $client->handleCallback(
         new Provider(
             'demo_client',                          // client_id
             'demo_secret',                          // client_secret
             'http://localhost:8080/authorize.php',  // authorization_uri
             'http://localhost:8080/token.php'       // token_uri
-        )
+        ),
+        $userId, // the userId to bind the access token to
+        $_GET
     );
-
-    // set the userId to bind the access token to
-    $client->setUserId($userId);
-
-    // handle the callback from the OAuth server
-    $client->handleCallback($_GET);
 
     // redirect the browser back to the index
     http_response_code(302);
