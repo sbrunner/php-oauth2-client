@@ -99,13 +99,6 @@ class OAuthClientTest extends TestCase
         $this->assertTrue($response->json()['ok']);
     }
 
-    public function testHasValidAccessTokenNotAccepted()
-    {
-        // the access_token is deemed valid, but the resource does not accept it
-        $this->assertTrue($this->client->hasAccessToken($this->provider, 'fooz', 'my_scope'));
-        $this->assertFalse($this->client->get($this->provider, 'fooz', 'my_scope', 'https://example.org/resource'));
-    }
-
     public function testHasExpiredAccessTokenNoRefreshToken()
     {
         $this->client->setDateTime(new DateTime('2016-01-01 02:00:00'));
