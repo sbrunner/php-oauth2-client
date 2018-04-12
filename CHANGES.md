@@ -1,6 +1,6 @@
 # Changes
 
-## 7.0.0 (...)
+## 7.0.0 (2018-04-12)
 - update API
   - `OAuthClient` methods `get`, `post`, `send`, `getAuthorizeUri`, 
     `handleCallback` require `Provider` and `userId` parameters now
