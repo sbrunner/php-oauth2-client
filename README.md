@@ -1,8 +1,8 @@
 # Introduction
 This is a very simple to use OAuth 2.0 client. It has minimal dependencies.
 
-**NOTE**: if you are not bound to PHP 5.4, you are probably better of using the 
-OAuth 2.0 client of the League of Extraordinary Packages! It can be found 
+**NOTE**: if you are not bound to PHP 5.4, you are probably better off using 
+the OAuth 2.0 client of the League of Extraordinary Packages! It can be found 
 [here](http://oauth2-client.thephpleague.com/).
 
 # Features
