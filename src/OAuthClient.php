@@ -162,7 +162,7 @@ class OAuthClient
         }
 
         // add Authorization header to the request headers
-        $request->setHeader('Authorization', sprintf('Bearer %s', $accessToken->getToken()));
+        $request->setHeader('Authorization', \sprintf('Bearer %s', $accessToken->getToken()));
 
         $response = $this->httpClient->send($request);
         if (401 === $response->getStatusCode()) {
@@ -201,15 +201,15 @@ class OAuthClient
             'response_type' => 'code',
         ];
 
-        $authorizeUri = sprintf(
+        $authorizeUri = \sprintf(
             '%s%s%s',
             $provider->getAuthorizationEndpoint(),
-            false === strpos($provider->getAuthorizationEndpoint(), '?') ? '?' : '&',
-            http_build_query($queryParameters, '&')
+            false === \strpos($provider->getAuthorizationEndpoint(), '?') ? '?' : '&',
+            \http_build_query($queryParameters, '&')
         );
         $this->session->set(
             '_oauth2_session',
-            array_merge(
+            \array_merge(
                 $queryParameters,
                 [
                     'user_id' => $userId,
@@ -230,23 +230,23 @@ class OAuthClient
      */
     public function handleCallback(Provider $provider, $userId, array $getData)
     {
-        if (array_key_exists('error', $getData)) {
+        if (\array_key_exists('error', $getData)) {
             // remove the session
             $this->session->take('_oauth2_session');
 
             throw new AuthorizeException(
                 $getData['error'],
-                array_key_exists('error_description', $getData) ? $getData['error_description'] : null
+                \array_key_exists('error_description', $getData) ? $getData['error_description'] : null
             );
         }
 
-        if (false === array_key_exists('code', $getData)) {
+        if (false === \array_key_exists('code', $getData)) {
             throw new OAuthException(
                 'missing "code" query parameter from server response'
             );
         }
 
-        if (false === array_key_exists('state', $getData)) {
+        if (false === \array_key_exists('state', $getData)) {
             throw new OAuthException(
                 'missing "state" query parameter from server response'
             );
@@ -268,7 +268,7 @@ class OAuthClient
         // get and delete the OAuth session information
         $sessionData = $this->session->take('_oauth2_session');
 
-        if (false === hash_equals($sessionData['state'], $responseState)) {
+        if (false === \hash_equals($sessionData['state'], $responseState)) {
             // the OAuth state from the initial request MUST be the same as the
             // state used by the response
             throw new OAuthException('invalid session (state)');
@@ -349,7 +349,7 @@ class OAuthClient
 
         if (false === $response->isOkay()) {
             $responseData = $response->json();
-            if (array_key_exists('error', $responseData) && 'invalid_grant' === $responseData['error']) {
+            if (\array_key_exists('error', $responseData) && 'invalid_grant' === $responseData['error']) {
                 // delete the access_token, we assume the user revoked it, that
                 // is why we get "invalid_grant"
                 $this->tokenStorage->deleteAccessToken($userId, $accessToken);
@@ -415,10 +415,10 @@ class OAuthClient
     {
         return [
             'Accept' => 'application/json',
-            'Authorization' => sprintf(
+            'Authorization' => \sprintf(
                 'Basic %s',
                 Base64::encode(
-                    sprintf('%s:%s', $authUser, $authPass)
+                    \sprintf('%s:%s', $authUser, $authPass)
                 )
             ),
         ];

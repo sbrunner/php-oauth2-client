@@ -43,7 +43,7 @@ class CurlHttpClient implements HttpClientInterface
      */
     public function __construct(array $configData = [])
     {
-        if (array_key_exists('allowHttp', $configData)) {
+        if (\array_key_exists('allowHttp', $configData)) {
             $this->allowHttp = (bool) $configData['allowHttp'];
         }
         $this->curlInit();
@@ -51,7 +51,7 @@ class CurlHttpClient implements HttpClientInterface
 
     public function __destruct()
     {
-        curl_close($this->curlChannel);
+        \curl_close($this->curlChannel);
     }
 
     /**
@@ -66,7 +66,7 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_URL => $request->getUri(),
         ];
 
-        if (in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true)) {
+        if (\in_array($request->getMethod(), ['POST', 'PUT', 'PATCH'], true)) {
             $curlOptions[CURLOPT_POSTFIELDS] = $request->getBody();
         }
 
@@ -78,7 +78,7 @@ class CurlHttpClient implements HttpClientInterface
      */
     private function curlInit()
     {
-        if (false === $curlChannel = curl_init()) {
+        if (false === $curlChannel = \curl_init()) {
             throw new CurlException('unable to create cURL channel');
         }
         $this->curlChannel = $curlChannel;
@@ -89,10 +89,10 @@ class CurlHttpClient implements HttpClientInterface
      */
     private function curlReset()
     {
-        if (function_exists('curl_reset')) {
-            curl_reset($this->curlChannel);
+        if (\function_exists('curl_reset')) {
+            \curl_reset($this->curlChannel);
         } else {
-            curl_close($this->curlChannel);
+            \curl_close($this->curlChannel);
             $this->curlInit();
         }
         $this->responseHeaderList = [];
@@ -123,35 +123,35 @@ class CurlHttpClient implements HttpClientInterface
             CURLOPT_HEADERFUNCTION => [$this, 'responseHeaderFunction'],
         ];
 
-        if (0 !== count($requestHeaders)) {
+        if (0 !== \count($requestHeaders)) {
             $curlRequestHeaders = [];
             foreach ($requestHeaders as $k => $v) {
-                $curlRequestHeaders[] = sprintf('%s: %s', $k, $v);
+                $curlRequestHeaders[] = \sprintf('%s: %s', $k, $v);
             }
             $defaultCurlOptions[CURLOPT_HTTPHEADER] = $curlRequestHeaders;
         }
 
-        if (false === curl_setopt_array($this->curlChannel, $curlOptions + $defaultCurlOptions)) {
+        if (false === \curl_setopt_array($this->curlChannel, $curlOptions + $defaultCurlOptions)) {
             throw new CurlException('unable to set cURL options');
         }
 
-        $responseData = curl_exec($this->curlChannel);
-        if (false === is_string($responseData)) {
+        $responseData = \curl_exec($this->curlChannel);
+        if (false === \is_string($responseData)) {
             // curl_exec returns true/false when CURLOPT_RETURNTRANSFER is not
             // set, but false|string when CURLOPT_RETURNTRANSFER _IS_ set, but
             // Psalm is not clever enough to distinguish this, so if the
             // response is NOT a string it MUST be false
             throw new CurlException(
-                sprintf(
+                \sprintf(
                     '[%d] %s',
-                    curl_errno($this->curlChannel),
-                    curl_error($this->curlChannel)
+                    \curl_errno($this->curlChannel),
+                    \curl_error($this->curlChannel)
                 )
             );
         }
 
         return new Response(
-            curl_getinfo($this->curlChannel, CURLINFO_HTTP_CODE),
+            \curl_getinfo($this->curlChannel, CURLINFO_HTTP_CODE),
             $responseData,
             $this->responseHeaderList
         );
@@ -167,9 +167,9 @@ class CurlHttpClient implements HttpClientInterface
     {
         // we do NOT support multiple response headers with the same key, the
         // later one(s) will overwrite the earlier one
-        if (false !== strpos($headerData, ':')) {
-            list($key, $value) = explode(':', $headerData, 2);
-            $this->responseHeaderList[trim($key)] = trim($value);
+        if (false !== \strpos($headerData, ':')) {
+            list($key, $value) = \explode(':', $headerData, 2);
+            $this->responseHeaderList[\trim($key)] = \trim($value);
         }
 
         return Binary::safeStrlen($headerData);

@@ -37,7 +37,7 @@ class Random implements RandomInterface
      */
     public function getRaw($length)
     {
-        return random_bytes($length);
+        return \random_bytes($length);
     }
 
     /**

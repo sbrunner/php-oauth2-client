@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-$baseDir = dirname(__DIR__);
+$baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
-require_once sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\TokenException;
@@ -43,8 +43,8 @@ $userId = 'foo';
 
 try {
     // we assume your application has proper (SECURE!) session handling
-    if (PHP_SESSION_ACTIVE !== session_status()) {
-        session_start();
+    if (PHP_SESSION_ACTIVE !== \session_status()) {
+        \session_start();
     }
 
     $client = new OAuthClient(
@@ -69,22 +69,22 @@ try {
     );
 
     // redirect the browser back to the index
-    http_response_code(302);
-    header(sprintf('Location: %s', $indexUri));
+    \http_response_code(302);
+    \header(\sprintf('Location: %s', $indexUri));
 } catch (AuthorizeException $e) {
     // in case the "Authorization Server" refuses our request, e.g. the user
     // denied the authorization, we may ask the user again in case they want
     // to reconsider giving authorization...
-    echo sprintf('%s: %s', get_class($e), $e->getMessage());
+    echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
     if (null !== $e->getDescription()) {
-        echo sprintf('(%s)', $e->getDescription());
+        echo \sprintf('(%s)', $e->getDescription());
     }
 } catch (TokenException $e) {
     // there was a problem obtaining an access_token, show response to ease
     // debugging... (this does NOT happen in normal circumstances)
-    echo sprintf('%s: %s', get_class($e), $e->getMessage());
-    echo var_export($e->getResponse(), true);
+    echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
+    echo \var_export($e->getResponse(), true);
 } catch (Exception $e) {
     // for all other errors, there is nothing we can do...
-    echo sprintf('%s: %s', get_class($e), $e->getMessage());
+    echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
 }

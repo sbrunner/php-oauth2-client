@@ -36,11 +36,11 @@ class SessionTokenStorage implements TokenStorageInterface
     public function getAccessTokenList($userId)
     {
         self::requireSession();
-        if (false === array_key_exists(sprintf('_oauth2_token_%s', $userId), $_SESSION)) {
+        if (false === \array_key_exists(\sprintf('_oauth2_token_%s', $userId), $_SESSION)) {
             return [];
         }
 
-        return $_SESSION[sprintf('_oauth2_token_%s', $userId)];
+        return $_SESSION[\sprintf('_oauth2_token_%s', $userId)];
     }
 
     /**
@@ -52,7 +52,7 @@ class SessionTokenStorage implements TokenStorageInterface
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
         self::requireSession();
-        $_SESSION[sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
+        $_SESSION[\sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
     }
 
     /**
@@ -67,7 +67,7 @@ class SessionTokenStorage implements TokenStorageInterface
         foreach ($this->getAccessTokenList($userId) as $k => $v) {
             if ($accessToken->getProviderId() === $v->getProviderId()) {
                 if ($accessToken->getToken() === $v->getToken()) {
-                    unset($_SESSION[sprintf('_oauth2_token_%s', $userId)][$k]);
+                    unset($_SESSION[\sprintf('_oauth2_token_%s', $userId)][$k]);
                 }
             }
         }
@@ -78,7 +78,7 @@ class SessionTokenStorage implements TokenStorageInterface
      */
     private static function requireSession()
     {
-        if (PHP_SESSION_ACTIVE !== session_status()) {
+        if (PHP_SESSION_ACTIVE !== \session_status()) {
             // if we have no active session, bail, we expect an active session
             // and will NOT fiddle with the application's existing session
             // management

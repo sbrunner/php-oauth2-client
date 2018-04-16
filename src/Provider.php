@@ -57,7 +57,7 @@ class Provider
      */
     public function getProviderId()
     {
-        return sprintf('%s|%s', $this->getAuthorizationEndpoint(), $this->getClientId());
+        return \sprintf('%s|%s', $this->getAuthorizationEndpoint(), $this->getClientId());
     }
 
     /**

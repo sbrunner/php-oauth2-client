@@ -75,11 +75,11 @@ class Request
         return new self(
             'POST',
             $requestUri,
-            array_merge(
+            \array_merge(
                 $requestHeaders,
                 ['Content-Type' => 'application/x-www-form-urlencoded']
             ),
-            http_build_query($postData, '&')
+            \http_build_query($postData, '&')
         );
     }
 

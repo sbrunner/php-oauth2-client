@@ -41,8 +41,8 @@ class TestSession implements SessionInterface
      */
     public function take($key)
     {
-        if (!array_key_exists($key, $this->data)) {
-            throw new SessionException(sprintf('key "%s" not found in session', $key));
+        if (!\array_key_exists($key, $this->data)) {
+            throw new SessionException(\sprintf('key "%s" not found in session', $key));
         }
         $value = $this->data[$key];
         unset($this->data[$key]);

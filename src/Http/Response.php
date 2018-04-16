@@ -73,7 +73,7 @@ class Response
     public function hasHeader($key)
     {
         foreach ($this->responseHeaders as $k => $v) {
-            if (strtoupper($key) === strtoupper($k)) {
+            if (\strtoupper($key) === \strtoupper($k)) {
                 return true;
             }
         }
@@ -89,12 +89,12 @@ class Response
     public function getHeader($key)
     {
         foreach ($this->responseHeaders as $k => $v) {
-            if (strtoupper($key) === strtoupper($k)) {
+            if (\strtoupper($key) === \strtoupper($k)) {
                 return $v;
             }
         }
 
-        throw new ResponseException(sprintf('header "%s" not set', $key));
+        throw new ResponseException(\sprintf('header "%s" not set', $key));
     }
 
     /**
@@ -102,13 +102,13 @@ class Response
      */
     public function json()
     {
-        if (false === strpos($this->getHeader('Content-Type'), 'application/json')) {
-            throw new ResponseException(sprintf('response MUST have JSON content type'));
+        if (false === \strpos($this->getHeader('Content-Type'), 'application/json')) {
+            throw new ResponseException(\sprintf('response MUST have JSON content type'));
         }
-        $decodedJson = json_decode($this->responseBody, true);
-        if (null === $decodedJson && JSON_ERROR_NONE !== json_last_error()) {
-            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
-            throw new ResponseException(sprintf('unable to decode JSON: %s', $errorMsg));
+        $decodedJson = \json_decode($this->responseBody, true);
+        if (null === $decodedJson && JSON_ERROR_NONE !== \json_last_error()) {
+            $errorMsg = \function_exists('json_last_error_msg') ? \json_last_error_msg() : \json_last_error();
+            throw new ResponseException(\sprintf('unable to decode JSON: %s', $errorMsg));
         }
 
         return $decodedJson;

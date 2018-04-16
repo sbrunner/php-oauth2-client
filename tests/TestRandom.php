@@ -36,7 +36,7 @@ class TestRandom implements RandomInterface
      */
     public function getHex($length)
     {
-        return sprintf('random_%d', $this->counter++);
+        return \sprintf('random_%d', $this->counter++);
     }
 
     /**
@@ -44,6 +44,6 @@ class TestRandom implements RandomInterface
      */
     public function getRaw($length)
     {
-        return sprintf('random_%d', $this->counter++);
+        return \sprintf('random_%d', $this->counter++);
     }
 }

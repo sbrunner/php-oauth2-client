@@ -44,11 +44,11 @@ class TestTokenStorage implements TokenStorageInterface
      */
     public function getAccessTokenList($userId)
     {
-        if (!array_key_exists(sprintf('_oauth2_token_%s', $userId), $this->data)) {
+        if (!\array_key_exists(\sprintf('_oauth2_token_%s', $userId), $this->data)) {
             return [];
         }
 
-        return $this->data[sprintf('_oauth2_token_%s', $userId)];
+        return $this->data[\sprintf('_oauth2_token_%s', $userId)];
     }
 
     /**
@@ -57,7 +57,7 @@ class TestTokenStorage implements TokenStorageInterface
      */
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
-        $this->data[sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
+        $this->data[\sprintf('_oauth2_token_%s', $userId)][] = $accessToken;
     }
 
     /**
@@ -69,7 +69,7 @@ class TestTokenStorage implements TokenStorageInterface
         foreach ($this->getAccessTokenList($userId) as $k => $v) {
             if ($accessToken->getProviderId() === $v->getProviderId()) {
                 if ($accessToken->getToken() === $v->getToken()) {
-                    unset($this->data[sprintf('_oauth2_token_%s', $userId)][$k]);
+                    unset($this->data[\sprintf('_oauth2_token_%s', $userId)][$k]);
                 }
             }
         }

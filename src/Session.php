@@ -50,8 +50,8 @@ class Session implements SessionInterface
     public function take($key)
     {
         self::requireSession();
-        if (false === array_key_exists($key, $_SESSION)) {
-            throw new SessionException(sprintf('key "%s" not found in session', $key));
+        if (false === \array_key_exists($key, $_SESSION)) {
+            throw new SessionException(\sprintf('key "%s" not found in session', $key));
         }
         $value = $_SESSION[$key];
         unset($_SESSION[$key]);
@@ -64,7 +64,7 @@ class Session implements SessionInterface
      */
     private static function requireSession()
     {
-        if (PHP_SESSION_ACTIVE !== session_status()) {
+        if (PHP_SESSION_ACTIVE !== \session_status()) {
             // if we have no active session, bail, we expect an active session
             // and will NOT fiddle with the application's existing session
             // management

@@ -37,7 +37,7 @@ class TestHttpClient implements HttpClientInterface
         }
 
         if ('POST' === $request->getMethod()) {
-            parse_str($request->getBody(), $postData);
+            \parse_str($request->getBody(), $postData);
 
             return $this->post($request->getUri(), $postData, $request->getHeaders());
         }
@@ -53,31 +53,31 @@ class TestHttpClient implements HttpClientInterface
         if ('https://example.org/unprotected_resource' === $requestUri) {
             return new Response(
                 200,
-                json_encode(['has_bearer_token' => array_key_exists('Authorization', $requestHeaders)]),
+                \json_encode(['has_bearer_token' => \array_key_exists('Authorization', $requestHeaders)]),
                 ['Content-Type' => 'application/json']
             );
         }
 
         if ('https://example.org/resource' === $requestUri) {
-            if (array_key_exists('Authorization', $requestHeaders)) {
+            if (\array_key_exists('Authorization', $requestHeaders)) {
                 if ('Bearer AT:xyz' === $requestHeaders['Authorization']) {
                     return new Response(
                         200,
-                        json_encode(['ok' => true]),
+                        \json_encode(['ok' => true]),
                         ['Content-Type' => 'application/json']
                     );
                 }
                 if ('Bearer AT:refreshed' === $requestHeaders['Authorization']) {
                     return new Response(
                         200,
-                        json_encode(['refreshed' => true]),
+                        \json_encode(['refreshed' => true]),
                         ['Content-Type' => 'application/json']
                     );
                 }
 
                 return new Response(
                     401,
-                    json_encode(['error' => 'invalid_token']),
+                    \json_encode(['error' => 'invalid_token']),
                     [
                         'Content-Type' => 'application/json',
                         'WWW-Authentication' => 'Bearer realm="foo",error="invalid_token"',
@@ -87,7 +87,7 @@ class TestHttpClient implements HttpClientInterface
 
             return new Response(
                 401,
-                json_encode(['error' => 'no_token']),
+                \json_encode(['error' => 'no_token']),
                 [
                     'Content-Type' => 'application/json',
                     'WWW-Authentication' => 'Bearer realm="foo"',
@@ -112,7 +112,7 @@ class TestHttpClient implements HttpClientInterface
                 if ('RT:abc' === $postData['refresh_token']) {
                     return new Response(
                         200,
-                        json_encode(
+                        \json_encode(
                             [
                                 'access_token' => 'AT:refreshed',
                                 'token_type' => 'bearer',
@@ -125,7 +125,7 @@ class TestHttpClient implements HttpClientInterface
 
                 return new Response(
                     400,
-                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid refresh_token']),
+                    \json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid refresh_token']),
                     ['Content-Type' => 'application/json']
                 );
             }
@@ -135,7 +135,7 @@ class TestHttpClient implements HttpClientInterface
                     // emulate wrong credentials
                     return new Response(
                         401,
-                        json_encode(['error' => 'foo', 'error_description' => 'bar']),
+                        \json_encode(['error' => 'foo', 'error_description' => 'bar']),
                         [
                             'Content-Type' => 'application/json',
                             'Cache-Control' => 'no-store',
@@ -148,7 +148,7 @@ class TestHttpClient implements HttpClientInterface
                 if ('AC:broken' === $postData['code']) {
                     return new Response(
                         200,
-                        json_encode(
+                        \json_encode(
                             [
                                 'access_token' => 'AT:code12345',
                                 'token_type' => 'bearer',
@@ -163,7 +163,7 @@ class TestHttpClient implements HttpClientInterface
                 if ('AC:abc' === $postData['code']) {
                     return new Response(
                         200,
-                        json_encode(
+                        \json_encode(
                             [
                                 'access_token' => 'AT:code12345',
                                 'token_type' => 'bearer',
@@ -176,14 +176,14 @@ class TestHttpClient implements HttpClientInterface
 
                 return new Response(
                     400,
-                    json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid authorization_code']),
+                    \json_encode(['error' => 'invalid_grant', 'error_description' => 'invalid authorization_code']),
                     ['Content-Type' => 'application/json']
                 );
             }
 
             return new Response(
                 400,
-                json_encode(['error' => 'unsupported_grant_type']),
+                \json_encode(['error' => 'unsupported_grant_type']),
                 ['Content-Type' => 'application/json']
             );
         }

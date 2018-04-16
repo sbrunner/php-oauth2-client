@@ -60,8 +60,8 @@ class AccessToken
     {
         $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type'];
         foreach ($requiredKeys as $requiredKey) {
-            if (false === array_key_exists($requiredKey, $tokenData)) {
-                throw new AccessTokenException(sprintf('missing key "%s"', $requiredKey));
+            if (false === \array_key_exists($requiredKey, $tokenData)) {
+                throw new AccessTokenException(\sprintf('missing key "%s"', $requiredKey));
             }
         }
 
@@ -72,13 +72,13 @@ class AccessToken
         $this->setTokenType($tokenData['token_type']);
 
         // set optional keys
-        if (array_key_exists('expires_in', $tokenData)) {
+        if (\array_key_exists('expires_in', $tokenData)) {
             $this->setExpiresIn($tokenData['expires_in']);
         }
-        if (array_key_exists('refresh_token', $tokenData)) {
+        if (\array_key_exists('refresh_token', $tokenData)) {
             $this->setRefreshToken($tokenData['refresh_token']);
         }
-        if (array_key_exists('scope', $tokenData)) {
+        if (\array_key_exists('scope', $tokenData)) {
             $this->setScope($tokenData['scope']);
         }
     }
@@ -98,7 +98,7 @@ class AccessToken
         // if the scope was not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
-        if (false === array_key_exists('scope', $tokenData)) {
+        if (false === \array_key_exists('scope', $tokenData)) {
             $tokenData['scope'] = $scope;
         }
         // add the current DateTime as well to be able to figure out if the
@@ -123,12 +123,12 @@ class AccessToken
         // if the scope is not part of the response, add the request scope,
         // because according to the RFC, if the scope is ommitted the requested
         // scope was granted!
-        if (false === array_key_exists('scope', $tokenData)) {
+        if (false === \array_key_exists('scope', $tokenData)) {
             $tokenData['scope'] = $accessToken->getScope();
         }
         // if the refresh_token is not part of the response, we wil reuse the
         // existing refresh_token for future refresh_token requests
-        if (false === array_key_exists('refresh_token', $tokenData)) {
+        if (false === \array_key_exists('refresh_token', $tokenData)) {
             $tokenData['refresh_token'] = $accessToken->getRefreshToken();
         }
         // add the current DateTime as well to be able to figure out if the
@@ -218,7 +218,7 @@ class AccessToken
 
         // check to see if issuedAt + expiresIn > provided DateTime
         $expiresAt = clone $this->issuedAt;
-        $expiresAt->add(new DateInterval(sprintf('PT%dS', $this->getExpiresIn())));
+        $expiresAt->add(new DateInterval(\sprintf('PT%dS', $this->getExpiresIn())));
 
         return $dateTime >= $expiresAt;
     }
@@ -230,10 +230,10 @@ class AccessToken
      */
     public static function fromJson($jsonString)
     {
-        $tokenData = json_decode($jsonString, true);
-        if (null === $tokenData && JSON_ERROR_NONE !== json_last_error()) {
-            $errorMsg = function_exists('json_last_error_msg') ? json_last_error_msg() : json_last_error();
-            throw new AccessTokenException(sprintf('unable to decode JSON from storage: %s', $errorMsg));
+        $tokenData = \json_decode($jsonString, true);
+        if (null === $tokenData && JSON_ERROR_NONE !== \json_last_error()) {
+            $errorMsg = \function_exists('json_last_error_msg') ? \json_last_error_msg() : \json_last_error();
+            throw new AccessTokenException(\sprintf('unable to decode JSON from storage: %s', $errorMsg));
         }
 
         return new self($tokenData);
@@ -254,7 +254,7 @@ class AccessToken
                 'scope' => $this->getScope(),
         ];
 
-        if (false === $jsonString = json_encode($jsonData)) {
+        if (false === $jsonString = \json_encode($jsonData)) {
             throw new RuntimeException('unable to encode JSON');
         }
 
@@ -278,7 +278,7 @@ class AccessToken
      */
     private function setIssuedAt($issuedAt)
     {
-        if (1 !== preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $issuedAt)) {
+        if (1 !== \preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $issuedAt)) {
             throw new AccessTokenException('invalid "expires_at" (syntax)');
         }
 
@@ -287,7 +287,7 @@ class AccessToken
             $this->issuedAt = new DateTime($issuedAt);
         } catch (Exception $e) {
             throw new AccessTokenException(
-                sprintf('invalid "expires_at": %s', $e->getMessage())
+                \sprintf('invalid "expires_at": %s', $e->getMessage())
             );
         }
     }
@@ -301,7 +301,7 @@ class AccessToken
     {
         // access-token = 1*VSCHAR
         // VSCHAR       = %x20-7E
-        if (1 !== preg_match('/^[\x20-\x7E]+$/', $accessToken)) {
+        if (1 !== \preg_match('/^[\x20-\x7E]+$/', $accessToken)) {
             throw new AccessTokenException('invalid "access_token"');
         }
         $this->accessToken = $accessToken;
@@ -328,7 +328,7 @@ class AccessToken
     private function setExpiresIn($expiresIn)
     {
         if (null !== $expiresIn) {
-            if (false === is_int($expiresIn)) {
+            if (false === \is_int($expiresIn)) {
                 throw new AccessTokenException('"expires_in" must be int');
             }
             if (0 >= $expiresIn) {
@@ -348,7 +348,7 @@ class AccessToken
         if (null !== $refreshToken) {
             // refresh-token = 1*VSCHAR
             // VSCHAR        = %x20-7E
-            if (1 !== preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
+            if (1 !== \preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
                 throw new AccessTokenException('invalid "refresh_token"');
             }
         }
@@ -366,8 +366,8 @@ class AccessToken
             // scope       = scope-token *( SP scope-token )
             // scope-token = 1*NQCHAR
             // NQCHAR      = %x21 / %x23-5B / %x5D-7E
-            foreach (explode(' ', $scope) as $scopeToken) {
-                if (1 !== preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
+            foreach (\explode(' ', $scope) as $scopeToken) {
+                if (1 !== \preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
                     throw new AccessTokenException('invalid "scope"');
                 }
             }

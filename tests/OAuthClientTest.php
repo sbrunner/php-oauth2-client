@@ -143,8 +143,8 @@ class OAuthClientTest extends TestCase
             ]
         );
         $accessTokenList = $this->tokenStorage->getAccessTokenList('foo');
-        $this->assertSame(1, count($accessTokenList));
-        $this->assertSame('AT:code12345', reset($accessTokenList)->getToken());
+        $this->assertSame(1, \count($accessTokenList));
+        $this->assertSame('AT:code12345', \reset($accessTokenList)->getToken());
     }
 
     // ???? what does this test?
@@ -171,8 +171,8 @@ class OAuthClientTest extends TestCase
             ]
         );
         $accessTokenList = $this->tokenStorage->getAccessTokenList('foo');
-        $this->assertSame(1, count($accessTokenList));
-        $this->assertSame('AT:code12345', reset($accessTokenList)->getToken());
+        $this->assertSame(1, \count($accessTokenList));
+        $this->assertSame('AT:code12345', \reset($accessTokenList)->getToken());
     }
 
     /**

@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-$baseDir = dirname(__DIR__);
+$baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
-require_once sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
@@ -44,8 +44,8 @@ $userId = 'foo';
 
 try {
     // we assume your application has proper (SECURE!) session handling
-    if (PHP_SESSION_ACTIVE !== session_status()) {
-        session_start();
+    if (PHP_SESSION_ACTIVE !== \session_status()) {
+        \session_start();
     }
 
     $client = new OAuthClient(
@@ -80,9 +80,9 @@ try {
         //
         // we need to re-request authorization at the OAuth server, redirect
         // the browser to the authorization endpoint (with a 302)
-        http_response_code(302);
-        header(
-            sprintf(
+        \http_response_code(302);
+        \header(
+            \sprintf(
                 'Location: %s',
                 $client->getAuthorizeUri($provider, $userId, $requestScope, $callbackUri)
             )
@@ -92,14 +92,14 @@ try {
 
     // getting the resource succeeded!
     // print the Response object
-    echo sprintf('<pre>%s</pre>', var_export($response, true));
+    echo \sprintf('<pre>%s</pre>', \var_export($response, true));
 } catch (TokenException $e) {
     // there was a problem using a refresh_token to obtain a new access_token
     // outside the accepted responses according to the OAuth specification,
     // show response to ease debugging... (this does NOT happen in normal
     // circumstances)
-    echo sprintf('%s: %s', get_class($e), $e->getMessage());
-    echo var_export($e->getResponse(), true);
+    echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
+    echo \var_export($e->getResponse(), true);
 } catch (Exception $e) {
-    echo sprintf('%s: %s', get_class($e), $e->getMessage());
+    echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
 }
