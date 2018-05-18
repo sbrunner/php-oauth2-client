@@ -66,7 +66,7 @@ class Request
             '[requestMethod=%s, requestUri=%s, requestHeaders=[%s], requestBody=%s]',
             $this->requestMethod,
             $this->requestUri,
-            \implode(', ', $this->requestHeaders),
+            \implode(', ', $requestHeaders),
             $this->requestBody
         );
     }

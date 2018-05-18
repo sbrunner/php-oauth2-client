@@ -62,7 +62,7 @@ class Response
         return \sprintf(
             '[statusCode=%d, responseHeaders=[%s], responseBody=%s]',
             $this->statusCode,
-            \implode(', ', $this->responseHeaders),
+            \implode(', ', $responseHeaders),
             $this->responseBody
         );
     }
