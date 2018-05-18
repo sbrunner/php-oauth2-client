@@ -78,7 +78,8 @@ class CurlHttpClient implements HttpClientInterface
      */
     private function curlInit()
     {
-        if (false === $curlChannel = \curl_init()) {
+        $curlChannel = \curl_init();
+        if (false === $curlChannel) {
             throw new CurlException('unable to create cURL channel');
         }
         $this->curlChannel = $curlChannel;

@@ -254,7 +254,8 @@ class AccessToken
                 'scope' => $this->getScope(),
         ];
 
-        if (false === $jsonString = \json_encode($jsonData)) {
+        $jsonString = \json_encode($jsonData);
+        if (false === $jsonString) {
             throw new RuntimeException('unable to encode JSON');
         }
 
