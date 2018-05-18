@@ -32,6 +32,7 @@ use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
+use Psr\Log\NullLogger;
 
 // absolute link to index.php in this directory
 // after handling the callback, we redirect back to this URL...
@@ -53,7 +54,7 @@ try {
         new SessionTokenStorage(),
         // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
         // do this in production
-        new CurlHttpClient(['allowHttp' => true])
+        new CurlHttpClient(['allowHttp' => true], new NullLogger())
     );
 
     // handle the callback from the OAuth server

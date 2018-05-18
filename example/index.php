@@ -31,6 +31,7 @@ use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
+use Psr\Log\NullLogger;
 
 $requestScope = 'foo bar';
 $resourceUri = 'http://localhost:8080/api.php';
@@ -54,7 +55,7 @@ try {
         new SessionTokenStorage(),
         // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
         // do this in production
-        new CurlHttpClient(['allowHttp' => true])
+        new CurlHttpClient(['allowHttp' => true], new NullLogger())
     );
 
     $provider = new Provider(

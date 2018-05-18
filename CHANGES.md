@@ -1,8 +1,8 @@
 # Changes
 
-## 7.0.1 (2018-05-18)
-- implement support for logging HTTP request and response when interacting
-  with OAuth server and resource server
+## 7.1.0 (2018-05-18)
+- implement support for PSR logging HTTP request and response when interacting
+  with OAuth servers and resource servers
  
 ## 7.0.0 (2018-04-12)
 - update API
