@@ -26,6 +26,8 @@ namespace fkooman\OAuth\Client\Http;
 
 use fkooman\OAuth\Client\Http\Exception\CurlException;
 use ParagonIE\ConstantTime\Binary;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class CurlHttpClient implements HttpClientInterface
 {
@@ -38,14 +40,22 @@ class CurlHttpClient implements HttpClientInterface
     /** @var array */
     private $responseHeaderList = [];
 
+    /** @var \Psr\Log\LoggerInterface */
+    private $logger;
+
     /**
-     * @param array $configData
+     * @param array                         $configData
+     * @param null|\Psr\Log\LoggerInterface $logger
      */
-    public function __construct(array $configData = [])
+    public function __construct(array $configData = [], LoggerInterface $logger = null)
     {
         if (\array_key_exists('allowHttp', $configData)) {
             $this->allowHttp = (bool) $configData['allowHttp'];
         }
+        if (null === $logger) {
+            $logger = new NullLogger();
+        }
+        $this->logger = $logger;
         $this->curlInit();
     }
 
@@ -70,7 +80,14 @@ class CurlHttpClient implements HttpClientInterface
             $curlOptions[CURLOPT_POSTFIELDS] = $request->getBody();
         }
 
-        return $this->exec($curlOptions, $request->getHeaders());
+        $response = $this->exec($curlOptions, $request->getHeaders());
+        if (!$response->isOkay()) {
+            $this->logger->warning(
+                \sprintf('REQUEST=%s, RESPONSE=%s', $request, $response)
+            );
+        }
+
+        return $response;
     }
 
     /**
