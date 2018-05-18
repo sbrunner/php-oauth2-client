@@ -53,6 +53,25 @@ class Request
     }
 
     /**
+     * @return string
+     */
+    public function __toString()
+    {
+        $requestHeaders = [];
+        foreach ($this->requestHeaders as $k => $v) {
+            $requestHeaders[] = \sprintf('%s: %s', $k, $v);
+        }
+
+        return \sprintf(
+            '[requestMethod=%s, requestUri=%s, requestHeaders=[%s], requestBody=%s]',
+            $this->requestMethod,
+            $this->requestUri,
+            \implode(', ', $this->requestHeaders),
+            $this->requestBody
+        );
+    }
+
+    /**
      * @param string $requestUri
      * @param array  $requestHeaders
      *

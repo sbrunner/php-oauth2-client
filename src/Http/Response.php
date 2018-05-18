@@ -34,19 +34,37 @@ class Response
     /** @var string */
     private $responseBody;
 
-    /** @var array */
+    /** @var array <string,string> */
     private $responseHeaders;
 
     /**
-     * @param int    $statusCode
-     * @param string $responseBody
-     * @param array  $responseHeaders
+     * @param int                  $statusCode
+     * @param string               $responseBody
+     * @param array<string,string> $responseHeaders
      */
     public function __construct($statusCode, $responseBody, array $responseHeaders = [])
     {
         $this->statusCode = $statusCode;
         $this->responseBody = $responseBody;
         $this->responseHeaders = $responseHeaders;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        $responseHeaders = [];
+        foreach ($this->responseHeaders as $k => $v) {
+            $responseHeaders[] = \sprintf('%s: %s', $k, $v);
+        }
+
+        return \sprintf(
+            '[statusCode=%d, responseHeaders=[%s], responseBody=%s]',
+            $this->statusCode,
+            \implode(', ', $this->responseHeaders),
+            $this->responseBody
+        );
     }
 
     /**
