@@ -52,7 +52,7 @@ class RequestTest extends TestCase
             'Hello World!'
         );
         $this->assertSame(
-            '[requestMethod=GET, requestUri=http://example.org/foo, requestHeaders=[Authorization: XXX-REPLACED-XXX], requestBody=Hello World!]',
+            '[requestMethod=GET, requestUri=http://example.org/foo, requestHeaders=[Authorization: XXX-REPLACED-FOR-LOG-XXX], requestBody=Hello World!]',
             (string) $request
         );
     }
