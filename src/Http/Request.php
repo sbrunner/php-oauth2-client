@@ -35,7 +35,7 @@ class Request
     /** @var string|null */
     private $requestBody;
 
-    /** @var array */
+    /** @var array<string,string> */
     private $requestHeaders;
 
     /**
@@ -59,6 +59,12 @@ class Request
     {
         $requestHeaders = [];
         foreach ($this->requestHeaders as $k => $v) {
+            // we do NOT want to log HTTP Basic credentials
+            if (0 === \strcasecmp('Authorization', $k)) {
+                if (0 === \strpos($v, 'Basic ')) {
+                    $v = 'XXX-REPLACED-XXX';
+                }
+            }
             $requestHeaders[] = \sprintf('%s: %s', $k, $v);
         }
 

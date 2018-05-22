@@ -1,5 +1,8 @@
 # Changes
 
+## 7.1.2 (2018-05-22)
+- do NOT log `Authorization: Basic` request header
+
 ## 7.1.1 (2018-05-22)
 - include a very simple `psr/log` logger `ErrorLogger`
 - mention `psr/log` support in the README.md

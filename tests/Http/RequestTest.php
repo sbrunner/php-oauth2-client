@@ -42,4 +42,18 @@ class RequestTest extends TestCase
             (string) $request
         );
     }
+
+    public function testReplacedBasicAuth()
+    {
+        $request = new Request(
+            'GET',
+            'http://example.org/foo',
+            ['Authorization' => 'Basic Zm9vOmJhcg=='],
+            'Hello World!'
+        );
+        $this->assertSame(
+            '[requestMethod=GET, requestUri=http://example.org/foo, requestHeaders=[Authorization: XXX-REPLACED-XXX], requestBody=Hello World!]',
+            (string) $request
+        );
+    }
 }
