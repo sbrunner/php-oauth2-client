@@ -62,7 +62,7 @@ class Request
             // we do NOT want to log HTTP Basic credentials
             if (0 === \strcasecmp('Authorization', $k)) {
                 if (0 === \strpos($v, 'Basic ')) {
-                    $v = 'XXX-REPLACED-XXX';
+                    $v = 'XXX-REPLACED-FOR-LOG-XXX';
                 }
             }
             $requestHeaders[] = \sprintf('%s: %s', $k, $v);
