@@ -20,6 +20,8 @@ the OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 * Uses `paragonie/constant_time_encoding` for constant time encoding;
 * Uses `paragonie/random_compat` polyfill for CSPRNG;
 * Uses `symfony/polyfill-php56` polyfill for `hash_equals`;
+* Uses `psr/log` to provide an interface to log HTTP requests between OAuth
+  client and server; usually very hard to debug "in the field";
 
 You **MUST** configure PHP in such a way that it enforces secure cookies! 
 See 

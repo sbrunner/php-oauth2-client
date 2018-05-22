@@ -1,5 +1,9 @@
 # Changes
 
+## 7.1.1 (2018-05-22)
+- include a very simple `psr/log` logger `ErrorLogger`
+- mention `psr/log` support in the README.md
+
 ## 7.1.0 (2018-05-18)
 - implement support for PSR logging HTTP request and response when interacting
   with OAuth servers and resource servers

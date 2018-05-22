@@ -26,13 +26,13 @@ $baseDir = \dirname(__DIR__);
 /** @psalm-suppress UnresolvableInclude */
 require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
+use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
-use Psr\Log\NullLogger;
 
 // absolute link to index.php in this directory
 // after handling the callback, we redirect back to this URL...
@@ -54,7 +54,7 @@ try {
         new SessionTokenStorage(),
         // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
         // do this in production
-        new CurlHttpClient(['allowHttp' => true], new NullLogger())
+        new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
     // handle the callback from the OAuth server
