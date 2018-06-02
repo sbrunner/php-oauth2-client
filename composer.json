@@ -38,8 +38,7 @@
     },
     "support": {
         "email": "fkooman@tuxed.net",
-        "rss": "https://git.tuxed.net/fkooman/php-oauth2-client/atom/",
-        "source": "https://git.tuxed.net/fkooman/php-oauth2-client/"
+        "source": "https://git.tuxed.net/fkooman/php-oauth2-client"
     },
     "type": "library"
 }
