@@ -1,5 +1,8 @@
 # Changes
 
+## 7.1.3 (2018-06-02)
+- no need to use `strcasecmp` 
+
 ## 7.1.2 (2018-05-22)
 - do NOT log `Authorization: Basic` request header
 
