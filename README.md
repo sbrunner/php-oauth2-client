@@ -46,3 +46,7 @@ As always, make sure you understand what you are doing! Some resources:
 # License
 
 [MIT](LICENSE).
+
+# Contact
+
+Contact me at [fkooman@tuxed.net](mailto:fkooman@tuxed.net).
