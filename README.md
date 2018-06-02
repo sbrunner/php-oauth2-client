@@ -49,4 +49,5 @@ As always, make sure you understand what you are doing! Some resources:
 
 # Contact
 
-Contact me at [fkooman@tuxed.net](mailto:fkooman@tuxed.net).
+Contact me at [fkooman@tuxed.net](mailto:fkooman@tuxed.net) if you have any
+questions or problems.
