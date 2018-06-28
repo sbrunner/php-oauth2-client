@@ -1,4 +1,3 @@
-# Introduction
 This is a very simple to use OAuth 2.0 client. It has minimal dependencies.
 
 **NOTE**: if you are not bound to PHP 5.4, you are probably better off using 
