@@ -312,7 +312,7 @@ class OAuthClient
             AccessToken::fromCodeResponse(
                 $provider,
                 $this->dateTime,
-                $response->json(),
+                TokenResponse::fromResponse($response),
                 // in case server does not return a scope, we know it granted
                 // our requested scope (according to OAuth specification)
                 $sessionData['scope']
@@ -366,7 +366,7 @@ class OAuthClient
         $accessToken = AccessToken::fromRefreshResponse(
             $provider,
             $this->dateTime,
-            $response->json(),
+            TokenResponse::fromResponse($response),
             // provide the old AccessToken to borrow some fields if the server
             // does not provide them on "refresh"
             $accessToken

@@ -24,19 +24,11 @@
 
 namespace fkooman\OAuth\Client;
 
-use DateInterval;
-use DateTime;
-use Exception;
-use fkooman\OAuth\Client\Exception\AccessTokenException;
+use fkooman\OAuth\Client\Exception\TokenResponseException;
+use fkooman\OAuth\Client\Http\Response;
 
-class AccessToken
+class TokenResponse
 {
-    /** @var string */
-    private $providerId;
-
-    /** @var \DateTime */
-    private $issuedAt;
-
     /** @var string */
     private $accessToken;
 
@@ -53,18 +45,14 @@ class AccessToken
     private $scope;
 
     /**
-     * @param string      $providerId
-     * @param string      $issuedAt
      * @param string      $accessToken
      * @param string      $tokenType
      * @param null|int    $expiresIn
      * @param null|string $refreshToken
      * @param null|string $scope
      */
-    public function __construct($providerId, $issuedAt, $accessToken, $tokenType, $expiresIn = null, $refreshToken = null, $scope = null)
+    private function __construct($accessToken, $tokenType, $expiresIn, $refreshToken, $scope)
     {
-        $this->setProviderId($providerId);
-        $this->setIssuedAt($issuedAt);
         $this->setAccessToken($accessToken);
         $this->setTokenType($tokenType);
         $this->setExpiresIn($expiresIn);
@@ -73,77 +61,11 @@ class AccessToken
     }
 
     /**
-     * @param Provider      $provider
-     * @param \DateTime     $dateTime
-     * @param TokenResponse $tokenResponse
-     * @param string        $scope
-     *
-     * @return AccessToken
-     */
-    public static function fromCodeResponse(Provider $provider, DateTime $dateTime, TokenResponse $tokenResponse, $scope)
-    {
-        return new self(
-            $provider->getProviderId(),
-            $dateTime->format('Y-m-d H:i:s'),
-            $tokenResponse->getAccessToken(),
-            $tokenResponse->getTokenType(),
-            $tokenResponse->getExpiresIn(),
-            $tokenResponse->getRefreshToken(),
-            // if the scope was not part of the response, add the request scope,
-            // because according to the RFC, if the scope is ommitted the requested
-            // scope was granted!
-            null !== $tokenResponse->getScope() ? $tokenResponse->getScope() : $scope
-        );
-    }
-
-    /**
-     * @param Provider      $provider
-     * @param \DateTime     $dateTime
-     * @param TokenResponse $tokenResponse
-     * @param AccessToken   $accessToken   to steal the old scope and refresh_token from!
-     *
-     * @return AccessToken
-     */
-    public static function fromRefreshResponse(Provider $provider, DateTime $dateTime, TokenResponse $tokenResponse, self $accessToken)
-    {
-        return new self(
-            $provider->getProviderId(),
-            $dateTime->format('Y-m-d H:i:s'),
-            $tokenResponse->getAccessToken(),
-            $tokenResponse->getTokenType(),
-            $tokenResponse->getExpiresIn(),
-            // if the refresh_token is not part of the response, we wil reuse the
-            // existing refresh_token for future refresh_token requests
-            null !== $tokenResponse->getRefreshToken() ? $tokenResponse->getRefreshToken() : $accessToken->getRefreshToken(),
-            // if the scope is not part of the response, add the request scope,
-            // because according to the RFC, if the scope is ommitted the requested
-            // scope was granted!
-            null !== $tokenResponse->getScope() ? $tokenResponse->getScope() : $accessToken->getScope()
-        );
-    }
-
-    /**
-     * @return string
-     */
-    public function getProviderId()
-    {
-        return $this->providerId;
-    }
-
-    /**
-     * @return \DateTime
-     */
-    public function getIssuedAt()
-    {
-        return $this->issuedAt;
-    }
-
-    /**
      * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-5.1
      */
-    public function getToken()
+    public function getAccessToken()
     {
         return $this->accessToken;
     }
@@ -189,53 +111,29 @@ class AccessToken
     }
 
     /**
-     * @param \DateTime $dateTime
+     * @param \fkooman\OAuth\Client\Http\Response $response
      *
-     * @return bool
+     * @return TokenResponse
      */
-    public function isExpired(DateTime $dateTime)
+    public static function fromResponse(Response $response)
     {
-        if (null === $this->getExpiresIn()) {
-            // if no expiry was indicated, assume it is valid
-            return false;
+        $tokenData = $response->json();
+        if (!\is_array($tokenData)) {
+            throw new TokenResponseException('response MUST be array');
         }
+        $accessToken = self::requireString($tokenData, 'access_token');
+        $tokenType = self::requireString($tokenData, 'token_type');
+        $expiresIn = self::optionalInt($tokenData, 'expires_in');
+        $refreshToken = self::optionalString($tokenData, 'refresh_token');
+        $scope = self::optionalString($tokenData, 'scope');
 
-        // check to see if issuedAt + expiresIn > provided DateTime
-        $expiresAt = clone $this->issuedAt;
-        $expiresAt->add(new DateInterval(\sprintf('PT%dS', $this->getExpiresIn())));
-
-        return $dateTime >= $expiresAt;
-    }
-
-    /**
-     * @param string $providerId
-     *
-     * @return void
-     */
-    private function setProviderId($providerId)
-    {
-        $this->providerId = $providerId;
-    }
-
-    /**
-     * @param string $issuedAt
-     *
-     * @return void
-     */
-    private function setIssuedAt($issuedAt)
-    {
-        if (1 !== \preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/', $issuedAt)) {
-            throw new AccessTokenException('invalid "expires_at" (syntax)');
-        }
-
-        // make sure it is actually a valid date
-        try {
-            $this->issuedAt = new DateTime($issuedAt);
-        } catch (Exception $e) {
-            throw new AccessTokenException(
-                \sprintf('invalid "expires_at": %s', $e->getMessage())
-            );
-        }
+        return new self(
+            $accessToken,
+            $tokenType,
+            $expiresIn,
+            $refreshToken,
+            $scope
+        );
     }
 
     /**
@@ -248,7 +146,7 @@ class AccessToken
         // access-token = 1*VSCHAR
         // VSCHAR       = %x20-7E
         if (1 !== \preg_match('/^[\x20-\x7E]+$/', $accessToken)) {
-            throw new AccessTokenException('invalid "access_token"');
+            throw new TokenResponseException('invalid "access_token"');
         }
         $this->accessToken = $accessToken;
     }
@@ -261,7 +159,7 @@ class AccessToken
     private function setTokenType($tokenType)
     {
         if ('bearer' !== $tokenType && 'Bearer' !== $tokenType) {
-            throw new AccessTokenException('unsupported "token_type"');
+            throw new TokenResponseException('unsupported "token_type"');
         }
         $this->tokenType = $tokenType;
     }
@@ -275,7 +173,7 @@ class AccessToken
     {
         if (null !== $expiresIn) {
             if (0 >= $expiresIn) {
-                throw new AccessTokenException('invalid "expires_in"');
+                throw new TokenResponseException('invalid "expires_in"');
             }
         }
         $this->expiresIn = $expiresIn;
@@ -292,7 +190,7 @@ class AccessToken
             // refresh-token = 1*VSCHAR
             // VSCHAR        = %x20-7E
             if (1 !== \preg_match('/^[\x20-\x7E]+$/', $refreshToken)) {
-                throw new AccessTokenException('invalid "refresh_token"');
+                throw new TokenResponseException('invalid "refresh_token"');
             }
         }
         $this->refreshToken = $refreshToken;
@@ -311,10 +209,78 @@ class AccessToken
             // NQCHAR      = %x21 / %x23-5B / %x5D-7E
             foreach (\explode(' ', $scope) as $scopeToken) {
                 if (1 !== \preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
-                    throw new AccessTokenException('invalid "scope"');
+                    throw new TokenResponseException('invalid "scope"');
                 }
             }
         }
         $this->scope = $scope;
+    }
+
+    /**
+     * @param array  $keyValue
+     * @param string $keyName
+     *
+     * @return string
+     */
+    private static function requireString(array $keyValueList, $keyName)
+    {
+        if (!\array_key_exists($keyName, $keyValueList)) {
+            throw new TokenResponseException(\sprintf('missing key "%s"', $keyName));
+        }
+        $keyValue = $keyValueList[$keyName];
+        if (!\is_string($keyValue)) {
+            throw new TokenResponseException(\sprintf('key "%s" not of type "string"', $keyName));
+        }
+
+        return $keyValue;
+    }
+
+    /**
+     * @param array  $keyValue
+     * @param string $keyName
+     *
+     * @return null|string
+     */
+    private static function optionalString(array $keyValueList, $keyName)
+    {
+        if (!\array_key_exists($keyName, $keyValueList)) {
+            return null;
+        }
+
+        return self::requireString($keyValueList, $keyName);
+    }
+
+    /**
+     * @param array  $keyValue
+     * @param string $keyName
+     *
+     * @return null|int
+     */
+    private static function optionalInt(array $keyValueList, $keyName)
+    {
+        if (!\array_key_exists($keyName, $keyValueList)) {
+            return null;
+        }
+
+        return self::requireInt($keyValueList, $keyName);
+    }
+
+    /**
+     * @param array  $keyValue
+     * @param string $keyName
+     *
+     * @return int
+     */
+    private static function requireInt(array $keyValueList, $keyName)
+    {
+        if (!\array_key_exists($keyName, $keyValueList)) {
+            throw new TokenResponseException(\sprintf('missing key "%s"', $keyName));
+        }
+        $keyValue = $keyValueList[$keyName];
+        if (!\is_int($keyValue)) {
+            throw new TokenResponseException(\sprintf('key "%s" not of type "int"', $keyName));
+        }
+
+        return $keyValue;
     }
 }

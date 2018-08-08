@@ -55,25 +55,49 @@ class OAuthClientTest extends TestCase
         $this->tokenStorage->storeAccessToken(
             'fooz',
             new AccessToken(
-                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:abc', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
+                'http://localhost/authorize|foo',
+                '2016-01-01 01:00:00',
+                'AT:abc',
+                'bearer',
+                3600,
+                null,
+                'my_scope'
             )
         );
         $this->tokenStorage->storeAccessToken(
             'bar',
             new AccessToken(
-                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:xyz', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => null, 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
+                'http://localhost/authorize|foo',
+                '2016-01-01 01:00:00',
+                'AT:xyz',
+                'bearer',
+                3600,
+                null,
+                'my_scope'
             )
         );
         $this->tokenStorage->storeAccessToken(
             'baz',
             new AccessToken(
-                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:abc', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
+                'http://localhost/authorize|foo',
+                '2016-01-01 01:00:00',
+                'AT:expired',
+                'bearer',
+                3600,
+                'RT:abc',
+                'my_scope'
             )
         );
         $this->tokenStorage->storeAccessToken(
             'bazz',
             new AccessToken(
-                ['provider_id' => 'http://localhost/authorize|foo', 'access_token' => 'AT:expired', 'token_type' => 'bearer', 'scope' => 'my_scope', 'refresh_token' => 'RT:invalid', 'expires_in' => 3600, 'issued_at' => '2016-01-01 01:00:00']
+                'http://localhost/authorize|foo',
+                '2016-01-01 01:00:00',
+                'AT:expired',
+                'bearer',
+                3600,
+                'RT:invalid',
+                'my_scope'
             )
         );
 
@@ -204,8 +228,8 @@ class OAuthClientTest extends TestCase
     }
 
     /**
-     * @expectedException \fkooman\OAuth\Client\Exception\AccessTokenException
-     * @expectedExceptionMessage "expires_in" must be int
+     * @expectedException \fkooman\OAuth\Client\Exception\TokenResponseException
+     * @expectedExceptionMessage key "expires_in" not of type "int"
      */
     public function testCallbackMalformedAccessTokenResponse()
     {
