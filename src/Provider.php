@@ -24,6 +24,8 @@
 
 namespace fkooman\OAuth\Client;
 
+use fkooman\Jwt\RS256;
+
 class Provider
 {
     /** @var string */
@@ -38,18 +40,23 @@ class Provider
     /** @var string */
     private $tokenEndpoint;
 
+    /** @var null|\fkooman\Jwt\RS256 */
+    private $idTokenDecoder;
+
     /**
-     * @param string $clientId
-     * @param string $clientSecret
-     * @param string $authorizationEndpoint
-     * @param string $tokenEndpoint
+     * @param string                  $clientId
+     * @param string                  $clientSecret
+     * @param string                  $authorizationEndpoint
+     * @param string                  $tokenEndpoint
+     * @param null|\fkooman\Jwt\RS256 $idTokenDecoder
      */
-    public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint)
+    public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint, RS256 $idTokenDecoder = null)
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->authorizationEndpoint = $authorizationEndpoint;
         $this->tokenEndpoint = $tokenEndpoint;
+        $this->idTokenDecoder = $idTokenDecoder;
     }
 
     /**
@@ -98,5 +105,13 @@ class Provider
     public function getTokenEndpoint()
     {
         return $this->tokenEndpoint;
+    }
+
+    /**
+     * @return null|\fkooman\Jwt\RS256
+     */
+    public function getIdTokenDecoder()
+    {
+        return $this->idTokenDecoder;
     }
 }

@@ -22,10 +22,11 @@
  * SOFTWARE.
  */
 
+require_once \dirname(__DIR__).'/vendor/autoload.php';
 $baseDir = \dirname(__DIR__);
-/** @psalm-suppress UnresolvableInclude */
-require_once \sprintf('%s/vendor/autoload.php', $baseDir);
 
+use fkooman\Jwt\Keys\PublicKey;
+use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
@@ -33,15 +34,15 @@ use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
-$requestScope = 'foo bar';
-$resourceUri = 'http://localhost:8080/api.php';
+$requestScope = 'openid';
+$resourceUri = 'https://auth.dataporten.no/openid/userinfo';
 
 // absolute link to callback.php in this directory
 $callbackUri = 'http://localhost:8081/callback.php';
 
 // the user ID to bind to, typically the currently logged in user on the
 // _CLIENT_ service...
-$userId = 'foo';
+$userId = null;
 
 try {
     // we assume your application has proper (SECURE!) session handling
@@ -58,12 +59,29 @@ try {
         new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
+    $client->setJwtDecoder(new RS256(PublicKey::load(__DIR__.'/auth.dataporten.no.pub')));
+
     $provider = new Provider(
-        'demo_client',                          // client_id
-        'demo_secret',                          // client_secret
-        'http://localhost:8080/authorize.php',  // authorization_uri
-        'http://localhost:8080/token.php'       // token_uri
+        '65e0a609-770d-4899-9a16-c50091542e16',            // client_id
+        \trim(\file_get_contents(__DIR__.'/client.secret')), // client_secret
+        'https://auth.dataporten.no/oauth/authorization',  // authorization_uri
+        'https://auth.dataporten.no/oauth/token'           // token_uri
     );
+
+    if (!\array_key_exists('_oauth2_sub', $_SESSION)) {
+        // we don't know the user, so we MUST request authorization/authentication
+        \http_response_code(302);
+        \header(
+            \sprintf(
+                'Location: %s',
+                $client->getAuthorizeUri($provider, $userId, $requestScope, $callbackUri)
+            )
+        );
+        exit(0);
+    }
+
+    // we know the user (already)
+    $userId = $_SESSION['_oauth2_sub'];
 
     $response = $client->get(
         $provider,
@@ -90,6 +108,8 @@ try {
         );
         exit(0);
     }
+
+    echo $_SESSION['_oauth2_sub'];
 
     // getting the resource succeeded!
     // print the Response object

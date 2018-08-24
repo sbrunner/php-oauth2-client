@@ -53,6 +53,9 @@ class AccessToken
     /** @var null|string */
     private $scope = null;
 
+    /** @var null|string */
+    private $idToken = null;
+
     /**
      * @param array $tokenData
      */
@@ -80,6 +83,9 @@ class AccessToken
         }
         if (\array_key_exists('scope', $tokenData)) {
             $this->setScope($tokenData['scope']);
+        }
+        if (\array_key_exists('id_token', $tokenData)) {
+            $this->setIdToken($tokenData['id_token']);
         }
     }
 
@@ -263,6 +269,14 @@ class AccessToken
     }
 
     /**
+     * @return null|string
+     */
+    public function getIdToken()
+    {
+        return $this->idToken;
+    }
+
+    /**
      * @param string $providerId
      *
      * @return void
@@ -374,5 +388,15 @@ class AccessToken
             }
         }
         $this->scope = $scope;
+    }
+
+    /**
+     * @param null|string $idToken
+     *
+     * @return void
+     */
+    private function setIdToken($idToken)
+    {
+        $this->idToken = $idToken;
     }
 }

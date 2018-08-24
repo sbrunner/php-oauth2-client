@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
+use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\TokenException;
@@ -49,6 +50,9 @@ class OAuthClient
 
     /** @var \DateTime */
     private $dateTime;
+
+    /** @var null|\fkooman\Jwt\RS256 */
+    private $jwtDecoder = null;
 
     /**
      * @param TokenStorageInterface    $tokenStorage
@@ -91,6 +95,16 @@ class OAuthClient
     public function setDateTime(DateTime $dateTime)
     {
         $this->dateTime = $dateTime;
+    }
+
+    /**
+     * @param \fkooman\Jwt\RS256 $jwtDecoder
+     *
+     * @return void
+     */
+    public function setJwtDecoder(RS256 $jwtDecoder)
+    {
+        $this->jwtDecoder = $jwtDecoder;
     }
 
     /**
@@ -180,11 +194,11 @@ class OAuthClient
      * Obtain an authorization request URL to start the authorization process
      * at the OAuth provider.
      *
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $scope       the space separated scope tokens
-     * @param string   $redirectUri the URL registered at the OAuth provider, to
-     *                              be redirected back to
+     * @param Provider    $provider
+     * @param null|string $userId
+     * @param string      $scope       the space separated scope tokens
+     * @param string      $redirectUri the URL registered at the OAuth provider, to
+     *                                 be redirected back to
      *
      * @return string the authorization request URL
      *
@@ -222,9 +236,9 @@ class OAuthClient
     }
 
     /**
-     * @param Provider $provider
-     * @param string   $userId
-     * @param array    $getData
+     * @param Provider    $provider
+     * @param null|string $userId
+     * @param array       $getData
      *
      * @return void
      */
@@ -256,10 +270,10 @@ class OAuthClient
     }
 
     /**
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $responseCode  the code passed to the "code" query parameter on the callback URL
-     * @param string   $responseState the state passed to the "state" query parameter on the callback URL
+     * @param Provider    $provider
+     * @param null|string $userId
+     * @param string      $responseCode  the code passed to the "code" query parameter on the callback URL
+     * @param string      $responseState the state passed to the "state" query parameter on the callback URL
      *
      * @return void
      */
@@ -307,16 +321,32 @@ class OAuthClient
             throw new TokenException('unable to obtain access_token', $response);
         }
 
+        $accessToken = AccessToken::fromCodeResponse(
+            $provider,
+            $this->dateTime,
+            $response->json(),
+            // in case server does not return a scope, we know it granted
+            // our requested scope (according to OAuth specification)
+            $sessionData['scope']
+        );
+
+        if (null !== $idTokenStr = $accessToken->getIdToken()) {
+            // OpenID Connect
+            if (null === $this->jwtDecoder) {
+                throw new OAuthException('no JWT decoder set');
+            }
+
+            $idToken = $this->jwtDecoder->decode($idTokenStr);
+            // XXX error checking!
+            $userId = $idToken['sub'];
+            $this->session->set('_oauth2_sub', $userId);
+        }
+
+        // XXX make sure userId is no longer null!
+
         $this->tokenStorage->storeAccessToken(
             $userId,
-            AccessToken::fromCodeResponse(
-                $provider,
-                $this->dateTime,
-                $response->json(),
-                // in case server does not return a scope, we know it granted
-                // our requested scope (according to OAuth specification)
-                $sessionData['scope']
-            )
+            $accessToken
         );
     }
 
