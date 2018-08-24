@@ -339,7 +339,7 @@ class OAuthClient
             $idToken = $this->jwtDecoder->decode($idTokenStr);
             // XXX error checking!
             $userId = $idToken['sub'];
-            $this->session->set('_oauth2_sub', $userId);
+            $this->session->set('_oauth2_id_token', $idToken);
         }
 
         // XXX make sure userId is no longer null!

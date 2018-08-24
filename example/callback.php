@@ -58,15 +58,15 @@ try {
         new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
-    $client->setJwtDecoder(new RS256(PublicKey::load(__DIR__.'/auth.dataporten.no.pub')));
+    $client->setJwtDecoder(new RS256(PublicKey::load(__DIR__.'/rsa.pub')));
 
     // handle the callback from the OAuth server
     $client->handleCallback(
-            new Provider(
-            '65e0a609-770d-4899-9a16-c50091542e16',            // client_id
-            \trim(\file_get_contents(__DIR__.'/client.secret')), // client_secret
-            'https://auth.dataporten.no/oauth/authorization',  // authorization_uri
-            'https://auth.dataporten.no/oauth/token'           // token_uri
+        new Provider(
+            'demo_client',                          // client_id
+            'demo_secret',                          // client_secret
+            'http://localhost:8080/authorize.php',  // authorization_uri
+            'http://localhost:8080/token.php'       // token_uri
         ),
         $userId, // the userId to bind the access token to
         $_GET
