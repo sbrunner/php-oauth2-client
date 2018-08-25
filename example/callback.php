@@ -31,7 +31,7 @@ use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
-use fkooman\OAuth\Client\OAuthClient;
+use fkooman\OAuth\Client\OpenIdClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
@@ -39,17 +39,13 @@ use fkooman\OAuth\Client\SessionTokenStorage;
 // after handling the callback, we redirect back to this URL...
 $indexUri = 'http://localhost:8081/index.php';
 
-// the user ID to bind to, typically the currently logged in user on the
-// _CLIENT_ service...
-$userId = null;
-
 try {
     // we assume your application has proper (SECURE!) session handling
     if (PHP_SESSION_ACTIVE !== \session_status()) {
         \session_start();
     }
 
-    $client = new OAuthClient(
+    $client = new OpenIdClient(
         // for DEMO purposes we store the AccessToken in the user session
         // data...
         new SessionTokenStorage(),
@@ -61,14 +57,13 @@ try {
     $client->setJwtDecoder(new RS256(PublicKey::load(__DIR__.'/rsa.pub')));
 
     // handle the callback from the OAuth server
-    $client->handleCallback(
+    $client->handleAuthenticateCallback(
         new Provider(
             'demo_client',                          // client_id
             'demo_secret',                          // client_secret
             'http://localhost:8080/authorize.php',  // authorization_uri
             'http://localhost:8080/token.php'       // token_uri
         ),
-        $userId, // the userId to bind the access token to
         $_GET
     );
 

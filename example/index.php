@@ -30,19 +30,14 @@ use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
-use fkooman\OAuth\Client\OAuthClient;
+use fkooman\OAuth\Client\OpenIdClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
-$requestScope = 'openid foo bar';
-$resourceUri = 'http://localhost:8080/api.php';
+$requestScope = 'openid';
 
 // absolute link to callback.php in this directory
 $callbackUri = 'http://localhost:8081/callback.php';
-
-// the user ID to bind to, typically the currently logged in user on the
-// _CLIENT_ service...
-$userId = null;
 
 try {
     // we assume your application has proper (SECURE!) session handling
@@ -50,7 +45,7 @@ try {
         \session_start();
     }
 
-    $client = new OAuthClient(
+    $client = new OpenIdClient(
         // for DEMO purposes we store the AccessToken in the user session
         // data...
         new SessionTokenStorage(),
@@ -68,52 +63,19 @@ try {
         'http://localhost:8080/token.php'       // token_uri
     );
 
-    if (!\array_key_exists('_oauth2_id_token', $_SESSION)) {
+    if (false === $idToken = $client->getIdToken($provider, $requestScope)) {
         // we don't know the user, so we MUST request authorization/authentication
         \http_response_code(302);
         \header(
             \sprintf(
                 'Location: %s',
-                $client->getAuthorizeUri($provider, $userId, $requestScope, $callbackUri)
+                $client->getAuthenticateUri($provider, $requestScope, $callbackUri)
             )
         );
         exit(0);
     }
 
-    // we know the user (already)
-    $idToken = $_SESSION['_oauth2_id_token'];
-
-    $response = $client->get(
-        $provider,
-        $idToken->getSub(), // the "sub" to bind the access token to
-        $requestScope,
-        $resourceUri
-    );
-
-    if (false === $response) {
-        // "false" is returned for a number of reasons:
-        // * no access_token yet for this user ID / scope
-        // * access_token expired (and no refresh_token available)
-        // * access_token was not accepted (revoked?)
-        // * refresh_token was rejected (revoked?)
-        //
-        // we need to re-request authorization at the OAuth server, redirect
-        // the browser to the authorization endpoint (with a 302)
-        \http_response_code(302);
-        \header(
-            \sprintf(
-                'Location: %s',
-                $client->getAuthorizeUri($provider, $userId, $requestScope, $callbackUri)
-            )
-        );
-        exit(0);
-    }
-
-    echo \sprintf('<pre>%s</pre>', \var_export($_SESSION['_oauth2_id_token'], true));
-
-    // getting the resource succeeded!
-    // print the Response object
-    echo \sprintf('<pre>%s</pre>', \var_export($response, true));
+    echo \sprintf('<pre>%s</pre>', \var_export($idToken, true));
 } catch (TokenException $e) {
     // there was a problem using a refresh_token to obtain a new access_token
     // outside the accepted responses according to the OAuth specification,

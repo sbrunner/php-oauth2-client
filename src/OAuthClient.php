@@ -37,14 +37,13 @@ use ParagonIE\ConstantTime\Base64;
 
 class OAuthClient
 {
+    /** @var SessionInterface */
+    protected $session;
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
     /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
     private $httpClient;
-
-    /** @var SessionInterface */
-    private $session;
 
     /** @var RandomInterface */
     private $random;
@@ -338,7 +337,7 @@ class OAuthClient
                     throw new OAuthException('no JWT decoder set');
                 }
                 $idToken = IdToken::decode($this->jwtDecoder->decode($idTokenStr));
-                $this->session->set('_oauth2_id_token', $idToken);
+                $this->session->set('_oidc_id_token', $idToken);
                 $userId = $idToken->getSub();
             }
         } catch (IdTokenException $e) {
