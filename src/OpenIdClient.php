@@ -92,12 +92,13 @@ class OpenIdClient extends OAuthClient
     }
 
     /**
+     * @param Provider      $provider
      * @param AccessToken   $accessToken
      * @param Http\Response $response
      *
      * @return string
      */
-    public function handleTokenId(AccessToken $accessToken, Response $response)
+    public function handleTokenId(Provider $provider, AccessToken $accessToken, Response $response)
     {
         if (null === $idTokenStr = $accessToken->getIdToken()) {
             throw new TokenException('no "token_id"', $response);
@@ -105,11 +106,31 @@ class OpenIdClient extends OAuthClient
 
         try {
             $idToken = IdToken::decode($this->jwtDecoder->decode($idTokenStr));
+
+            if (self::getIssFromUrl($provider->getAuthorizationEndpoint()) !== $idToken->getIss()) {
+                throw new TokenException('unexpected iss', $response);
+            }
+            if ($provider->getClientId() !== $idToken->getAud()) {
+                throw new TokenException('unexpected audience', $response);
+            }
+
             $this->session->set('_oidc_id_token', $idToken);
 
             return $idToken->getSub();
         } catch (IdTokenException $e) {
             throw new TokenException($e->getMessage(), $response);
         }
+    }
+
+    /**
+     * @param string $url
+     *
+     * @return string
+     */
+    public static function getIssFromUrl($url)
+    {
+        $urlParts = \parse_url($url);
+
+        return $urlParts['scheme'].'://'.$urlParts['host'].':'.$urlParts['port'];
     }
 }

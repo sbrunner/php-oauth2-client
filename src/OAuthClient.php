@@ -322,7 +322,7 @@ class OAuthClient
                 throw new OAuthException('no method available to determine user from access token');
             }
 
-            $userId = static::handleTokenId($accessToken, $response);
+            $userId = static::handleTokenId($provider, $accessToken, $response);
         }
 
         $this->tokenStorage->storeAccessToken(
