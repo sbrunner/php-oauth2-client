@@ -25,9 +25,7 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
-use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
-use fkooman\OAuth\Client\Exception\IdTokenException;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
@@ -50,9 +48,6 @@ class OAuthClient
 
     /** @var \DateTime */
     private $dateTime;
-
-    /** @var null|\fkooman\Jwt\RS256 */
-    private $jwtDecoder = null;
 
     /**
      * @param TokenStorageInterface    $tokenStorage
@@ -95,16 +90,6 @@ class OAuthClient
     public function setDateTime(DateTime $dateTime)
     {
         $this->dateTime = $dateTime;
-    }
-
-    /**
-     * @param \fkooman\Jwt\RS256 $jwtDecoder
-     *
-     * @return void
-     */
-    public function setJwtDecoder(RS256 $jwtDecoder)
-    {
-        $this->jwtDecoder = $jwtDecoder;
     }
 
     /**
@@ -330,22 +315,14 @@ class OAuthClient
             $sessionData['scope']
         );
 
-        try {
-            if (null !== $idTokenStr = $accessToken->getIdToken()) {
-                // OpenID Connect
-                if (null === $this->jwtDecoder) {
-                    throw new OAuthException('no JWT decoder set');
-                }
-                $idToken = IdToken::decode($this->jwtDecoder->decode($idTokenStr));
-                $this->session->set('_oidc_id_token', $idToken);
-                $userId = $idToken->getSub();
-            }
-        } catch (IdTokenException $e) {
-            throw new TokenException($e->getMessage(), $response);
-        }
-
         if (null === $userId) {
-            throw new OAuthException('"user_id" must be set');
+            // we do not have a user ID yet, we MUST be able to extract it from
+            // the "id_token" provided by the OIDC Provider
+            if (!\method_exists(\get_called_class(), 'handleTokenId')) {
+                throw new OAuthException('no method available to determine user from access token');
+            }
+
+            $userId = static::handleTokenId($accessToken, $response);
         }
 
         $this->tokenStorage->storeAccessToken(

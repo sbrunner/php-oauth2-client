@@ -51,10 +51,9 @@ try {
         new SessionTokenStorage(),
         // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
         // do this in production
-        new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
+        new CurlHttpClient(['allowHttp' => true], new ErrorLogger()),
+        new RS256(PublicKey::load(__DIR__.'/rsa.pub'))
     );
-
-    $client->setJwtDecoder(new RS256(PublicKey::load(__DIR__.'/rsa.pub')));
 
     // handle the callback from the OAuth server
     $client->handleAuthenticateCallback(

@@ -24,18 +24,26 @@
 
 namespace fkooman\OAuth\Client;
 
+use fkooman\Jwt\RS256;
+use fkooman\OAuth\Client\Exception\IdTokenException;
+use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
+use fkooman\OAuth\Client\Http\Response;
 
 class OpenIdClient extends OAuthClient
 {
+    /** @var \fkooman\Jwt\RS256 */
+    private $jwtDecoder;
+
     /**
      * @param TokenStorageInterface    $tokenStorage
      * @param Http\HttpClientInterface $httpClient
      */
-    public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
+    public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient, RS256 $jwtDecoder)
     {
         parent::__construct($tokenStorage, $httpClient);
+        $this->jwtDecoder = $jwtDecoder;
     }
 
     /**
@@ -81,5 +89,27 @@ class OpenIdClient extends OAuthClient
     public function handleAuthenticateCallback(Provider $provider, array $getData)
     {
         parent::handleCallback($provider, null, $getData);
+    }
+
+    /**
+     * @param AccessToken   $accessToken
+     * @param Http\Response $response
+     *
+     * @return string
+     */
+    public function handleTokenId(AccessToken $accessToken, Response $response)
+    {
+        if (null === $idTokenStr = $accessToken->getIdToken()) {
+            throw new TokenException('no "token_id"', $response);
+        }
+
+        try {
+            $idToken = IdToken::decode($this->jwtDecoder->decode($idTokenStr));
+            $this->session->set('_oidc_id_token', $idToken);
+
+            return $idToken->getSub();
+        } catch (IdTokenException $e) {
+            throw new TokenException($e->getMessage(), $response);
+        }
     }
 }
