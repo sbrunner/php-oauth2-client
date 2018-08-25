@@ -81,11 +81,11 @@ try {
     }
 
     // we know the user (already)
-    $userId = $_SESSION['_oauth2_id_token']['sub'];
+    $idToken = $_SESSION['_oauth2_id_token'];
 
     $response = $client->get(
         $provider,
-        $userId, // the userId to bind the access token to
+        $idToken->getSub(), // the "sub" to bind the access token to
         $requestScope,
         $resourceUri
     );

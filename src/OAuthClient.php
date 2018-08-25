@@ -27,6 +27,7 @@ namespace fkooman\OAuth\Client;
 use DateTime;
 use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
+use fkooman\OAuth\Client\Exception\IdTokenException;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
@@ -330,19 +331,23 @@ class OAuthClient
             $sessionData['scope']
         );
 
-        if (null !== $idTokenStr = $accessToken->getIdToken()) {
-            // OpenID Connect
-            if (null === $this->jwtDecoder) {
-                throw new OAuthException('no JWT decoder set');
+        try {
+            if (null !== $idTokenStr = $accessToken->getIdToken()) {
+                // OpenID Connect
+                if (null === $this->jwtDecoder) {
+                    throw new OAuthException('no JWT decoder set');
+                }
+                $idToken = IdToken::decode($this->jwtDecoder->decode($idTokenStr));
+                $this->session->set('_oauth2_id_token', $idToken);
+                $userId = $idToken->getSub();
             }
-
-            $idToken = $this->jwtDecoder->decode($idTokenStr);
-            // XXX error checking!
-            $userId = $idToken['sub'];
-            $this->session->set('_oauth2_id_token', $idToken);
+        } catch (IdTokenException $e) {
+            throw new TokenException($e->getMessage(), $response);
         }
 
-        // XXX make sure userId is no longer null!
+        if (null === $userId) {
+            throw new OAuthException('"user_id" must be set');
+        }
 
         $this->tokenStorage->storeAccessToken(
             $userId,
