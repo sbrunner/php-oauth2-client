@@ -37,13 +37,14 @@ use ParagonIE\ConstantTime\Base64;
 
 class OAuthClient
 {
-    /** @var SessionInterface */
-    protected $session;
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
     /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
     private $httpClient;
+
+    /** @var SessionInterface */
+    private $session;
 
     /** @var RandomInterface */
     private $random;
