@@ -61,7 +61,7 @@ try {
         PublicKey::load(__DIR__.'/rsa.pub')
     );
 
-    if (false === $userInfo = $client->getIdToken($provider)) {
+    if (false === $idToken = $client->getIdToken($provider)) {
         // we don't know the user, so we MUST request authorization/authentication
         \http_response_code(302);
         \header(
@@ -73,7 +73,7 @@ try {
         exit(0);
     }
 
-    echo \sprintf('<pre>%s</pre>', \var_export($userInfo, true));
+    echo \sprintf('<pre>%s</pre>', \var_export($idToken, true));
 } catch (TokenException $e) {
     // there was a problem using a refresh_token to obtain a new access_token
     // outside the accepted responses according to the OAuth specification,
