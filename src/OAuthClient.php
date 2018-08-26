@@ -25,7 +25,9 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
+use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
+use fkooman\OAuth\Client\Exception\IdTokenException;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
@@ -255,6 +257,28 @@ class OAuthClient
     }
 
     /**
+     * @param Provider $provider
+     *
+     * @return false|IdToken
+     */
+    public function getIdToken(Provider $provider)
+    {
+        if (!$this->session->has('_oauth2_id_token')) {
+            return false;
+        }
+
+        /** @var IdToken */
+        $idToken = $this->session->get('_oauth2_id_token');
+        if ($idToken->getIss() !== $provider->getIssuer()) {
+            // id_token did not come from the expected provider
+            return false;
+        }
+
+        // XXX should we invalidate/remove the idToken after giving it back once?
+        return $idToken;
+    }
+
+    /**
      * @param Provider    $provider
      * @param null|string $userId
      * @param string      $responseCode  the code passed to the "code" query parameter on the callback URL
@@ -315,14 +339,27 @@ class OAuthClient
             $sessionData['scope']
         );
 
-        if (null === $userId) {
-            // we do not have a user ID yet, we MUST be able to extract it from
-            // the "id_token" provided by the OIDC Provider
-            if (!\method_exists(\get_called_class(), 'handleTokenId')) {
-                throw new OAuthException('no method available to determine user from access token');
+        // check if we requested (and got) the "openid" scope
+        if (\in_array('openid', \explode(' ', $accessToken->getScope()), true)) {
+            // make sure the public key for verification is set
+            if (null === $publicKey = $provider->getPublicKey()) {
+                throw new OAuthException('no public key set for "id_token" verification');
             }
-
-            $userId = static::handleTokenId($provider, $accessToken, $response);
+            // make sure we got an id_token in the response
+            if (null === $idToken = $accessToken->getIdToken()) {
+                throw new TokenException('no "id_token" present', $response);
+            }
+            // decode the id_token using RSA with SHA256
+            $jwtDecoder = new RS256($publicKey);
+            $idToken = IdToken::decode($jwtDecoder->decode($idToken));
+            if ($idToken->getAud() !== $provider->getClientId()) {
+                throw new IdTokenException('"aud" has unexpected value');
+            }
+            if ($idToken->getIss() !== $provider->getIssuer()) {
+                throw new IdTokenException('"iss" has unexpected value');
+            }
+            $this->session->set('_oauth2_id_token', $idToken);
+            $userId = $idToken->getSub();
         }
 
         $this->tokenStorage->storeAccessToken(

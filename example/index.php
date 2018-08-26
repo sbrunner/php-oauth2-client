@@ -26,11 +26,10 @@ require_once \dirname(__DIR__).'/vendor/autoload.php';
 $baseDir = \dirname(__DIR__);
 
 use fkooman\Jwt\Keys\PublicKey;
-use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
-use fkooman\OAuth\Client\OpenIdClient;
+use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
@@ -45,36 +44,36 @@ try {
         \session_start();
     }
 
-    $client = new OpenIdClient(
+    $client = new OAuthClient(
         // for DEMO purposes we store the AccessToken in the user session
         // data...
         new SessionTokenStorage(),
         // for DEMO purposes we also allow connecting to HTTP URLs, do **NOT**
         // do this in production
-        new CurlHttpClient(['allowHttp' => true], new ErrorLogger()),
-        new RS256(PublicKey::load(__DIR__.'/rsa.pub'))
+        new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
     $provider = new Provider(
         'demo_client',                          // client_id
         'demo_secret',                          // client_secret
         'http://localhost:8080/authorize.php',  // authorization_uri
-        'http://localhost:8080/token.php'       // token_uri
+        'http://localhost:8080/token.php',      // token_uri
+        PublicKey::load(__DIR__.'/rsa.pub')
     );
 
-    if (false === $idToken = $client->getIdToken($provider, $requestScope)) {
+    if (false === $userInfo = $client->getIdToken($provider)) {
         // we don't know the user, so we MUST request authorization/authentication
         \http_response_code(302);
         \header(
             \sprintf(
                 'Location: %s',
-                $client->getAuthenticateUri($provider, $requestScope, $callbackUri)
+                $client->getAuthorizeUri($provider, null, $requestScope, $callbackUri)
             )
         );
         exit(0);
     }
 
-    echo \sprintf('<pre>%s</pre>', \var_export($idToken, true));
+    echo \sprintf('<pre>%s</pre>', \var_export($userInfo, true));
 } catch (TokenException $e) {
     // there was a problem using a refresh_token to obtain a new access_token
     // outside the accepted responses according to the OAuth specification,
