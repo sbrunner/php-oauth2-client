@@ -353,6 +353,7 @@ class OAuthClient
             // decode the id_token using RSA with SHA256
             $jwtDecoder = new RS256($publicKey);
             $idToken = IdToken::decode($jwtDecoder->decode($idToken));
+            // XXX idToken audience could also be array! 
             if ($idToken->getAud() !== $provider->getClientId()) {
                 throw new IdTokenException('"aud" has unexpected value');
             }
