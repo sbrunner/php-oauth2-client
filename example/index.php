@@ -57,9 +57,11 @@ try {
         'demo_client',                          // client_id
         'demo_secret',                          // client_secret
         'http://localhost:8080/authorize.php',  // authorization_uri
-        'http://localhost:8080/token.php',      // token_uri
-        PublicKey::load(__DIR__.'/rsa.pub')
+        'http://localhost:8080/token.php'       // token_uri
     );
+    // OpenID parameters
+    $provider->setPublicKey(PublicKey::load(__DIR__.'/rsa.pub'));
+    $provider->setIssuer('http://localhost:8080');
 
     if (false === $idToken = $client->getIdToken($provider)) {
         // we don't know the user, so we MUST request authorization/authentication

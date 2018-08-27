@@ -43,20 +43,21 @@ class Provider
     /** @var null|\fkooman\Jwt\Keys\PublicKey */
     private $publicKey;
 
+    /** @var null|string */
+    private $issuer;
+
     /**
-     * @param string                           $clientId
-     * @param string                           $clientSecret
-     * @param string                           $authorizationEndpoint
-     * @param string                           $tokenEndpoint
-     * @param null|\fkooman\Jwt\Keys\PublicKey $publicKey
+     * @param string $clientId
+     * @param string $clientSecret
+     * @param string $authorizationEndpoint
+     * @param string $tokenEndpoint
      */
-    public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint, PublicKey $publicKey = null)
+    public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint)
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->authorizationEndpoint = $authorizationEndpoint;
         $this->tokenEndpoint = $tokenEndpoint;
-        $this->publicKey = $publicKey;
     }
 
     /**
@@ -116,19 +117,34 @@ class Provider
     }
 
     /**
-     * @return string
+     * @return null|string
      */
     public function getIssuer()
     {
-        // return everything before the "path" of the URL
-        return \substr(
-            $this->authorizationEndpoint,
-            0,
-            \strpos(
-                $this->authorizationEndpoint,
-                '/',
-                8
-            )
-        );
+        return $this->issuer;
+    }
+
+    /**
+     * Set the RSA Public Key for RS256 JWT verification.
+     *
+     * @param \fkooman\Jwt\Keys\PublicKey $publicKey
+     *
+     * @return void
+     */
+    public function setPublicKey(PublicKey $publicKey)
+    {
+        $this->publicKey = $publicKey;
+    }
+
+    /**
+     * Set the expected JWT issuer ("iss").
+     *
+     * @param string $issuer
+     *
+     * @return void
+     */
+    public function setIssuer($issuer)
+    {
+        $this->issuer = $issuer;
     }
 }

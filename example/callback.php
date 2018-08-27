@@ -53,18 +53,18 @@ try {
         new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
-    // handle the callback from the OAuth server
-    $client->handleCallback(
-        new Provider(
-            'demo_client',                          // client_id
-            'demo_secret',                          // client_secret
-            'http://localhost:8080/authorize.php',  // authorization_uri
-            'http://localhost:8080/token.php',      // token_uri
-            PublicKey::load(__DIR__.'/rsa.pub')
-        ),
-        null,
-        $_GET
+    $provider = new Provider(
+        'demo_client',                          // client_id
+        'demo_secret',                          // client_secret
+        'http://localhost:8080/authorize.php',  // authorization_uri
+        'http://localhost:8080/token.php'       // token_uri
     );
+    // OpenID parameters
+    $provider->setPublicKey(PublicKey::load(__DIR__.'/rsa.pub'));
+    $provider->setIssuer('http://localhost:8080');
+
+    // handle the callback from the OAuth server
+    $client->handleCallback($provider, null, $_GET);
 
     // redirect the browser back to the index
     \http_response_code(302);
