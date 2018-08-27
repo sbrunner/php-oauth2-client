@@ -1,4 +1,5 @@
-This is a very simple to use OAuth 2.0 client. It has minimal dependencies.
+This is a simple to use OAuth 2.0 and OpenID Connect client. It has very 
+few dependencies.
 
 **NOTE**: if you are not bound to PHP 5.4, you are probably better off using 
 the OAuth 2.0 client of the League of Extraordinary Packages! It can be found 
@@ -6,15 +7,16 @@ the OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 
 # Features
 
-* Simplicity
-* Works with PHP >= 5.4
+* Simplicity;
+* Works with PHP >= 5.4;
 * Minimal dependencies;
-* Supports OAuth refresh tokens.
+* Supports OAuth refresh tokens;
 * Easy integration with your own application and/or framework;
 * Does not enforce a framework on you;
 * Only "authorization code" profile support, will not implement anything else;
 * Only conforming OAuth 2.0 servers will work, this library will not get out of 
   its way to deal with services that violate the OAuth 2.0 RFC;
+* Implements OpenID Connect relying party as well, validating the ID Token;
 * There will be no toggles to shoot yourself in the foot;
 * Uses `paragonie/constant_time_encoding` for constant time encoding;
 * Uses `paragonie/random_compat` polyfill for CSPRNG;
@@ -41,6 +43,8 @@ As always, make sure you understand what you are doing! Some resources:
 * [OAuth 2.0 Threat Model and Security Considerations](https://tools.ietf.org/html/rfc6819)
 * [securityheaders.io](https://securityheaders.io/)
 * [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
+* [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
+* [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 
 # Contact
 
