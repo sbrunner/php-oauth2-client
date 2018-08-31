@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client;
 
 use fkooman\OAuth\Client\Exception\IdTokenException;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class IdToken
 {
@@ -65,12 +66,17 @@ class IdToken
     }
 
     /**
-     * @param array $idTokenData
+     * @param string $jwtToken
      *
      * @return self
      */
-    public static function decode(array $idTokenData)
+    public static function decode($jwtToken)
     {
+        $jwtParts = \explode('.', $jwtToken);
+        if (3 !== \count($jwtParts)) {
+            throw new IdTokenException('invalid JWT token');
+        }
+        $idTokenData = Util::decodeJson(Base64UrlSafe::decode($jwtParts[1]));
         foreach (['iss', 'sub', 'aud', 'exp', 'iat', 'auth_time'] as $key) {
             if (!\array_key_exists($key, $idTokenData)) {
                 throw new IdTokenException(\sprintf('missing "%s"', $key));

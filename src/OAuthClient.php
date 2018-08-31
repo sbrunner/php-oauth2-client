@@ -25,7 +25,6 @@
 namespace fkooman\OAuth\Client;
 
 use DateTime;
-use fkooman\Jwt\RS256;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\IdTokenException;
 use fkooman\OAuth\Client\Exception\OAuthException;
@@ -342,18 +341,11 @@ class OAuthClient
 
         // check if we requested (and got) the "openid" scope
         if (\in_array('openid', \explode(' ', $accessToken->getScope()), true)) {
-            // make sure the public key for verification is set
-            if (null === $publicKey = $provider->getPublicKey()) {
-                throw new OAuthException('no public key set for "id_token" verification');
-            }
             // make sure we got an id_token in the response
             if (null === $idToken = $accessToken->getIdToken()) {
                 throw new TokenException('no "id_token" present', $response);
             }
-            // decode the id_token using RSA with SHA256
-            $jwtDecoder = new RS256($publicKey);
-            $idToken = IdToken::decode($jwtDecoder->decode($idToken));
-            // XXX idToken audience could also be array!
+            // XXX aud can be array, deal with this also?!also need to check the other field then
             if ($idToken->getAud() !== $provider->getClientId()) {
                 throw new IdTokenException('"aud" has unexpected value');
             }
@@ -363,6 +355,8 @@ class OAuthClient
             $this->session->set('_oauth2_id_token', $idToken);
             $userId = $idToken->getSub();
         }
+
+        // XXX userid issue
 
         $this->tokenStorage->storeAccessToken(
             $userId,

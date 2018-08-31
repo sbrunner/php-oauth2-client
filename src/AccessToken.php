@@ -50,10 +50,10 @@ class AccessToken
     /** @var null|string */
     private $refreshToken = null;
 
-    /** @var null|string */
-    private $scope = null;
+    /** @var string */
+    private $scope;
 
-    /** @var null|string */
+    /** @var null|IdToken */
     private $idToken = null;
 
     /**
@@ -61,7 +61,7 @@ class AccessToken
      */
     public function __construct(array $tokenData)
     {
-        $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type'];
+        $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type', 'scope'];
         foreach ($requiredKeys as $requiredKey) {
             if (false === \array_key_exists($requiredKey, $tokenData)) {
                 throw new AccessTokenException(\sprintf('missing key "%s"', $requiredKey));
@@ -73,6 +73,7 @@ class AccessToken
         $this->setIssuedAt($tokenData['issued_at']);
         $this->setAccessToken($tokenData['access_token']);
         $this->setTokenType($tokenData['token_type']);
+        $this->setScope($tokenData['scope']);
 
         // set optional keys
         if (\array_key_exists('expires_in', $tokenData)) {
@@ -81,11 +82,8 @@ class AccessToken
         if (\array_key_exists('refresh_token', $tokenData)) {
             $this->setRefreshToken($tokenData['refresh_token']);
         }
-        if (\array_key_exists('scope', $tokenData)) {
-            $this->setScope($tokenData['scope']);
-        }
         if (\array_key_exists('id_token', $tokenData)) {
-            $this->setIdToken($tokenData['id_token']);
+            $this->idToken = IdToken::decode($tokenData['id_token']);
         }
     }
 
@@ -201,7 +199,7 @@ class AccessToken
     }
 
     /**
-     * @return null|string
+     * @return string
      *
      * @see https://tools.ietf.org/html/rfc6749#section-3.3
      */
@@ -269,7 +267,7 @@ class AccessToken
     }
 
     /**
-     * @return null|string
+     * @return null|IdToken
      */
     public function getIdToken()
     {
@@ -371,32 +369,20 @@ class AccessToken
     }
 
     /**
-     * @param null|string $scope
+     * @param string $scope
      *
      * @return void
      */
     private function setScope($scope)
     {
-        if (null !== $scope) {
-            // scope       = scope-token *( SP scope-token )
-            // scope-token = 1*NQCHAR
-            // NQCHAR      = %x21 / %x23-5B / %x5D-7E
-            foreach (\explode(' ', $scope) as $scopeToken) {
-                if (1 !== \preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
-                    throw new AccessTokenException('invalid "scope"');
-                }
+        // scope       = scope-token *( SP scope-token )
+        // scope-token = 1*NQCHAR
+        // NQCHAR      = %x21 / %x23-5B / %x5D-7E
+        foreach (\explode(' ', $scope) as $scopeToken) {
+            if (1 !== \preg_match('/^[\x21\x23-\x5B\x5D-\x7E]+$/', $scopeToken)) {
+                throw new AccessTokenException('invalid "scope"');
             }
         }
         $this->scope = $scope;
-    }
-
-    /**
-     * @param null|string $idToken
-     *
-     * @return void
-     */
-    private function setIdToken($idToken)
-    {
-        $this->idToken = $idToken;
     }
 }

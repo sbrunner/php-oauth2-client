@@ -24,8 +24,6 @@
 
 namespace fkooman\OAuth\Client;
 
-use fkooman\Jwt\Keys\PublicKey;
-
 class Provider
 {
     /** @var string */
@@ -39,9 +37,6 @@ class Provider
 
     /** @var string */
     private $tokenEndpoint;
-
-    /** @var null|\fkooman\Jwt\Keys\PublicKey */
-    private $publicKey;
 
     /** @var null|string */
     private $issuer;
@@ -109,31 +104,11 @@ class Provider
     }
 
     /**
-     * @return null|\fkooman\Jwt\Keys\PublicKey
-     */
-    public function getPublicKey()
-    {
-        return $this->publicKey;
-    }
-
-    /**
      * @return null|string
      */
     public function getIssuer()
     {
         return $this->issuer;
-    }
-
-    /**
-     * Set the RSA Public Key for RS256 JWT verification.
-     *
-     * @param \fkooman\Jwt\Keys\PublicKey $publicKey
-     *
-     * @return void
-     */
-    public function setPublicKey(PublicKey $publicKey)
-    {
-        $this->publicKey = $publicKey;
     }
 
     /**

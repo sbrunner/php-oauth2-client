@@ -18,12 +18,6 @@
     "description": "Very simple OAuth 2.0 client",
     "license": "MIT",
     "name": "fkooman/oauth2-client",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://git.tuxed.net/fkooman/php-jwt"
-        }
-    ],
     "require": {
         "ext-curl": "*",
         "ext-date": "*",
@@ -33,7 +27,6 @@
         "ext-pdo": "*",
         "ext-session": "*",
         "ext-spl": "*",
-        "fkooman/jwt": "dev-master",
         "paragonie/constant_time_encoding": "^1|^2",
         "paragonie/random_compat": ">=1",
         "php": ">=5.4",

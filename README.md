@@ -44,7 +44,6 @@ As always, make sure you understand what you are doing! Some resources:
 * [securityheaders.io](https://securityheaders.io/)
 * [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 * [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html)
-* [JSON Web Token (JWT)](https://tools.ietf.org/html/rfc7519)
 
 # Contact
 

@@ -25,7 +25,6 @@
 require_once \dirname(__DIR__).'/vendor/autoload.php';
 $baseDir = \dirname(__DIR__);
 
-use fkooman\Jwt\Keys\PublicKey;
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
@@ -60,7 +59,6 @@ try {
         'http://localhost:8080/token.php'       // token_uri
     );
     // OpenID parameters
-    $provider->setPublicKey(PublicKey::load(__DIR__.'/rsa.pub'));
     $provider->setIssuer('http://localhost:8080');
 
     if (false === $idToken = $client->getIdToken($provider)) {
