@@ -1,5 +1,8 @@
 # Changes
 
+## 7.2.0 (...)
+- implement basic OpenID Connect support
+
 ## 7.1.3 (2018-06-02)
 - no need to use `strcasecmp` 
 

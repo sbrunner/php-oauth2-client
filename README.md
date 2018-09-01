@@ -11,12 +11,12 @@ the OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 * Works with PHP >= 5.4;
 * Minimal dependencies;
 * Supports OAuth refresh tokens;
+* Supports OpenID Connect (ID Tokens);
 * Easy integration with your own application and/or framework;
 * Does not enforce a framework on you;
 * Only "authorization code" profile support, will not implement anything else;
 * Only conforming OAuth 2.0 servers will work, this library will not get out of 
   its way to deal with services that violate the OAuth 2.0 RFC;
-* Implements OpenID Connect relying party as well, validating the ID Token;
 * There will be no toggles to shoot yourself in the foot;
 * Uses `paragonie/constant_time_encoding` for constant time encoding;
 * Uses `paragonie/random_compat` polyfill for CSPRNG;
