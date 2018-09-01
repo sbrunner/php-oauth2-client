@@ -39,7 +39,7 @@ class Provider
     private $tokenEndpoint;
 
     /** @var null|string */
-    private $issuer;
+    private $issuer = null;
 
     /**
      * @param string $clientId

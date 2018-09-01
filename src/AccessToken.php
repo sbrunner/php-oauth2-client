@@ -83,7 +83,7 @@ class AccessToken
             $this->setRefreshToken($tokenData['refresh_token']);
         }
         if (\array_key_exists('id_token', $tokenData)) {
-            $this->idToken = IdToken::decode($tokenData['id_token']);
+            $this->idToken = new IdToken($tokenData['id_token']);
         }
     }
 

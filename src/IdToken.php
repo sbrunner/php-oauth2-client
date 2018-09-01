@@ -25,90 +25,33 @@
 namespace fkooman\OAuth\Client;
 
 use fkooman\OAuth\Client\Exception\IdTokenException;
-use ParagonIE\ConstantTime\Base64UrlSafe;
+use RuntimeException;
 
 class IdToken
 {
-    /** @var string */
-    private $iss;
-
-    /** @var string */
-    private $sub;
-
-    /** @var string|array<string> */
-    private $aud;
-
-    /** @var int */
-    private $exp;
-
-    /** @var int */
-    private $iat;
-
-    /** @var int */
-    private $authTime;
+    /** @var object */
+    private $jsonObj;
 
     /**
-     * @param string               $iss
-     * @param string               $sub
-     * @param string|array<string> $aud
-     * @param int                  $exp
-     * @param int                  $iat
-     * @param int                  $authTime
+     * @param string $jwtStr
      */
-    public function __construct($iss, $sub, $aud, $exp, $iat, $authTime)
+    public function __construct($jwtStr)
     {
-        $this->iss = $iss;
-        $this->sub = $sub;
-        $this->aud = $aud;
-        $this->exp = $exp;
-        $this->iat = $iat;
-        $this->authTime = $authTime;
-    }
-
-    /**
-     * @param string $jwtToken
-     *
-     * @return self
-     */
-    public static function decode($jwtToken)
-    {
-        $jwtParts = \explode('.', $jwtToken);
+        $jwtParts = \explode('.', $jwtStr);
         if (3 !== \count($jwtParts)) {
             throw new IdTokenException('invalid JWT token');
         }
-        $idTokenData = Util::decodeJson(Base64UrlSafe::decode($jwtParts[1]));
-        foreach (['iss', 'sub', 'aud', 'exp', 'iat', 'auth_time'] as $key) {
-            if (!\array_key_exists($key, $idTokenData)) {
-                throw new IdTokenException(\sprintf('missing "%s"', $key));
+
+        $jsonObj = \json_decode($jwtParts[1]);
+        if (null === $jsonObj) {
+            if (JSON_ERROR_NONE !== \json_last_error()) {
+                throw new RuntimeException('JSON: decode error');
             }
         }
-        if (!\is_string($idTokenData['iss'])) {
-            throw new IdTokenException('"iss" must be string');
+        if (!\is_object($jsonObj)) {
+            throw new RuntimeException('JSON: not a JSON object');
         }
-        if (!\is_string($idTokenData['sub'])) {
-            throw new IdTokenException('"sub" must be string');
-        }
-        if (!\is_string($idTokenData['aud']) && !\is_array($idTokenData['sub'])) {
-            throw new IdTokenException('"aud" must be string or array<string>');
-        }
-        if (!\is_int($idTokenData['exp'])) {
-            throw new IdTokenException('"exp" must be int');
-        }
-        if (!\is_int($idTokenData['iat'])) {
-            throw new IdTokenException('"iat" must be int');
-        }
-        if (!\is_int($idTokenData['auth_time'])) {
-            throw new IdTokenException('"auth_time" must be int');
-        }
-
-        return new self(
-            $idTokenData['iss'],
-            $idTokenData['sub'],
-            $idTokenData['aud'],
-            $idTokenData['exp'],
-            $idTokenData['iat'],
-            $idTokenData['auth_time']
-        );
+        $this->jsonObj = $jsonObj;
     }
 
     /**
@@ -116,7 +59,7 @@ class IdToken
      */
     public function getIss()
     {
-        return $this->iss;
+        return $this->requireStringProperty('iss');
     }
 
     /**
@@ -124,15 +67,15 @@ class IdToken
      */
     public function getSub()
     {
-        return $this->sub;
+        return $this->requireStringProperty('sub');
     }
 
     /**
-     * @return string|array<string>
+     * @return string
      */
     public function getAud()
     {
-        return $this->aud;
+        return $this->requireStringProperty('aud');
     }
 
     /**
@@ -140,7 +83,7 @@ class IdToken
      */
     public function getExp()
     {
-        return $this->exp;
+        return $this->requireIntProperty('exp');
     }
 
     /**
@@ -148,74 +91,48 @@ class IdToken
      */
     public function getIat()
     {
-        return $this->iat;
+        return $this->requireIntProperty('iat');
     }
 
     /**
+     * @param string $propertyName
+     *
+     * @return string
+     */
+    private function requireStringProperty($propertyName)
+    {
+        $this->requireProperty($propertyName);
+        if (!\is_string($this->jsonObj->$propertyName)) {
+            throw new IdTokenException(\sprintf('property "%s" not a string', $propertyName));
+        }
+
+        return $this->jsonObj->$propertyName;
+    }
+
+    /**
+     * @param string $propertyName
+     *
      * @return int
      */
-    public function getAuthTime()
+    private function requireIntProperty($propertyName)
     {
-        return $this->authTime;
+        $this->requireProperty($propertyName);
+        if (!\is_int($this->jsonObj->$propertyName)) {
+            throw new IdTokenException(\sprintf('property "%s" not an int', $propertyName));
+        }
+
+        return $this->jsonObj->$propertyName;
     }
 
     /**
-     * @param string $iss
+     * @param string $propertyName
      *
      * @return void
      */
-    private function setIss($iss)
+    private function requireProperty($propertyName)
     {
-        $this->iss = $iss;
-    }
-
-    /**
-     * @param string $sub
-     *
-     * @return void
-     */
-    private function setSub($sub)
-    {
-        $this->sub = $sub;
-    }
-
-    /**
-     * @param string|array<string> $aud
-     *
-     * @return void
-     */
-    private function setAud($aud)
-    {
-        $this->aud = $aud;
-    }
-
-    /**
-     * @param int $exp
-     *
-     * @return void
-     */
-    private function setExp($exp)
-    {
-        $this->exp = $exp;
-    }
-
-    /**
-     * @param int $iat
-     *
-     * @return void
-     */
-    private function setIat($iat)
-    {
-        $this->iat = $iat;
-    }
-
-    /**
-     * @param int $authTime
-     *
-     * @return void
-     */
-    private function setAuthTime($authTime)
-    {
-        $this->authTime = $authTime;
+        if (!\property_exists($this->jsonObj, $propertyName)) {
+            throw new IdTokenException(\sprintf('missing property "%s"', $propertyName));
+        }
     }
 }

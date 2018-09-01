@@ -36,6 +36,8 @@ use ParagonIE\ConstantTime\Base64;
 
 class OAuthClient
 {
+    const OPENID_SCOPE = 'openid';
+
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
@@ -268,13 +270,12 @@ class OAuthClient
         }
 
         /** @var IdToken */
-        $idToken = $this->session->get('_oauth2_id_token');
+        $idToken = $this->session->take('_oauth2_id_token');
         if ($idToken->getIss() !== $provider->getIssuer()) {
             // id_token did not come from the expected provider
             return false;
         }
 
-        // XXX should we invalidate/remove the idToken after giving it back once?
         return $idToken;
     }
 
@@ -340,12 +341,11 @@ class OAuthClient
         );
 
         // check if we requested (and got) the "openid" scope
-        if (\in_array('openid', \explode(' ', $accessToken->getScope()), true)) {
+        if (\in_array(self::OPENID_SCOPE, \explode(' ', $accessToken->getScope()), true)) {
             // make sure we got an id_token in the response
             if (null === $idToken = $accessToken->getIdToken()) {
                 throw new TokenException('no "id_token" present', $response);
             }
-            // XXX aud can be array, deal with this also?!also need to check the other field then
             if ($idToken->getAud() !== $provider->getClientId()) {
                 throw new IdTokenException('"aud" has unexpected value');
             }
@@ -356,7 +356,10 @@ class OAuthClient
             $userId = $idToken->getSub();
         }
 
-        // XXX userid issue
+        if (null === $userId) {
+            // if we are not in the OpenID flow, the user ID *MUST* be set
+            throw new OAuthException('no user ID specified');
+        }
 
         $this->tokenStorage->storeAccessToken(
             $userId,
