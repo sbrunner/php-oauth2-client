@@ -112,7 +112,7 @@ class Provider
     }
 
     /**
-     * Set the expected JWT issuer ("iss").
+     * Set the expected ID Token issuer ("iss").
      *
      * @param string $issuer
      *
