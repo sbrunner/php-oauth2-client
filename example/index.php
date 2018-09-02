@@ -32,10 +32,15 @@ use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
-$requestScope = 'openid';
+$requestScope = 'foo bar';
+$resourceUri = 'http://localhost:8080/api.php';
 
 // absolute link to callback.php in this directory
 $callbackUri = 'http://localhost:8081/callback.php';
+
+// the user ID to bind to, typically the currently logged in user on the
+// _CLIENT_ service...
+$userId = 'foo';
 
 try {
     // we assume your application has proper (SECURE!) session handling
@@ -58,22 +63,36 @@ try {
         'http://localhost:8080/authorize.php',  // authorization_uri
         'http://localhost:8080/token.php'       // token_uri
     );
-    // OpenID parameters
-    $provider->setIssuer('http://localhost:8080');
 
-    if (false === $idToken = $client->getIdToken($provider)) {
-        // we don't know the user, so we MUST request authorization/authentication
+    $response = $client->get(
+        $provider,
+        $userId, // the userId to bind the access token to
+        $requestScope,
+        $resourceUri
+    );
+
+    if (false === $response) {
+        // "false" is returned for a number of reasons:
+        // * no access_token yet for this user ID / scope
+        // * access_token expired (and no refresh_token available)
+        // * access_token was not accepted (revoked?)
+        // * refresh_token was rejected (revoked?)
+        //
+        // we need to re-request authorization at the OAuth server, redirect
+        // the browser to the authorization endpoint (with a 302)
         \http_response_code(302);
         \header(
             \sprintf(
                 'Location: %s',
-                $client->getAuthorizeUri($provider, null, $requestScope, $callbackUri)
+                $client->getAuthorizeUri($provider, $userId, $requestScope, $callbackUri)
             )
         );
         exit(0);
     }
 
-    echo \sprintf('<pre>%s</pre>', \var_export($idToken, true));
+    // getting the resource succeeded!
+    // print the Response object
+    echo \sprintf('<pre>%s</pre>', \var_export($response, true));
 } catch (TokenException $e) {
     // there was a problem using a refresh_token to obtain a new access_token
     // outside the accepted responses according to the OAuth specification,

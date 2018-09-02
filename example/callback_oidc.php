@@ -37,10 +37,6 @@ use fkooman\OAuth\Client\SessionTokenStorage;
 // after handling the callback, we redirect back to this URL...
 $indexUri = 'http://localhost:8081/index.php';
 
-// the user ID to bind to, typically the currently logged in user on the
-// _CLIENT_ service...
-$userId = 'foo';
-
 try {
     // we assume your application has proper (SECURE!) session handling
     if (PHP_SESSION_ACTIVE !== \session_status()) {
@@ -56,17 +52,17 @@ try {
         new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
-    // handle the callback from the OAuth server
-    $client->handleCallback(
-        new Provider(
-            'demo_client',                          // client_id
-            'demo_secret',                          // client_secret
-            'http://localhost:8080/authorize.php',  // authorization_uri
-            'http://localhost:8080/token.php'       // token_uri
-        ),
-        $userId, // the userId to bind the access token to
-        $_GET
+    $provider = new Provider(
+        'demo_client',                          // client_id
+        'demo_secret',                          // client_secret
+        'http://localhost:8080/authorize.php',  // authorization_uri
+        'http://localhost:8080/token.php'       // token_uri
     );
+    // OpenID parameters
+    $provider->setIssuer('http://localhost:8080');
+
+    // handle the callback from the OAuth server
+    $client->handleCallback($provider, null, $_GET);
 
     // redirect the browser back to the index
     \http_response_code(302);

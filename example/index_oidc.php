@@ -26,20 +26,16 @@ require_once \dirname(__DIR__).'/vendor/autoload.php';
 $baseDir = \dirname(__DIR__);
 
 use fkooman\OAuth\Client\ErrorLogger;
-use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\Provider;
 use fkooman\OAuth\Client\SessionTokenStorage;
 
-// absolute link to index.php in this directory
-// after handling the callback, we redirect back to this URL...
-$indexUri = 'http://localhost:8081/index.php';
+$requestScope = 'openid';
 
-// the user ID to bind to, typically the currently logged in user on the
-// _CLIENT_ service...
-$userId = 'foo';
+// absolute link to callback.php in this directory
+$callbackUri = 'http://localhost:8081/callback.php';
 
 try {
     // we assume your application has proper (SECURE!) session handling
@@ -56,35 +52,35 @@ try {
         new CurlHttpClient(['allowHttp' => true], new ErrorLogger())
     );
 
-    // handle the callback from the OAuth server
-    $client->handleCallback(
-        new Provider(
-            'demo_client',                          // client_id
-            'demo_secret',                          // client_secret
-            'http://localhost:8080/authorize.php',  // authorization_uri
-            'http://localhost:8080/token.php'       // token_uri
-        ),
-        $userId, // the userId to bind the access token to
-        $_GET
+    $provider = new Provider(
+        'demo_client',                          // client_id
+        'demo_secret',                          // client_secret
+        'http://localhost:8080/authorize.php',  // authorization_uri
+        'http://localhost:8080/token.php'       // token_uri
     );
+    // OpenID parameters
+    $provider->setIssuer('http://localhost:8080');
 
-    // redirect the browser back to the index
-    \http_response_code(302);
-    \header(\sprintf('Location: %s', $indexUri));
-} catch (AuthorizeException $e) {
-    // in case the "Authorization Server" refuses our request, e.g. the user
-    // denied the authorization, we may ask the user again in case they want
-    // to reconsider giving authorization...
-    echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
-    if (null !== $e->getDescription()) {
-        echo \sprintf('(%s)', $e->getDescription());
+    if (false === $idToken = $client->getIdToken($provider)) {
+        // we don't know the user, so we MUST request authorization/authentication
+        \http_response_code(302);
+        \header(
+            \sprintf(
+                'Location: %s',
+                $client->getAuthorizeUri($provider, null, $requestScope, $callbackUri)
+            )
+        );
+        exit(0);
     }
+
+    echo \sprintf('<pre>%s</pre>', \var_export($idToken, true));
 } catch (TokenException $e) {
-    // there was a problem obtaining an access_token, show response to ease
-    // debugging... (this does NOT happen in normal circumstances)
+    // there was a problem using a refresh_token to obtain a new access_token
+    // outside the accepted responses according to the OAuth specification,
+    // show response to ease debugging... (this does NOT happen in normal
+    // circumstances)
     echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
     echo \var_export($e->getResponse(), true);
 } catch (Exception $e) {
-    // for all other errors, there is nothing we can do...
     echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
 }
