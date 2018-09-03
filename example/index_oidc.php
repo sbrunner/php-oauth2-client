@@ -35,7 +35,7 @@ use fkooman\OAuth\Client\SessionTokenStorage;
 $requestScope = 'openid';
 
 // absolute link to callback.php in this directory
-$callbackUri = 'http://localhost:8081/callback.php';
+$callbackUri = 'http://localhost:8081/callback_oidc.php';
 
 try {
     // we assume your application has proper (SECURE!) session handling

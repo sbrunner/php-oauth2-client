@@ -35,7 +35,7 @@ use fkooman\OAuth\Client\SessionTokenStorage;
 
 // absolute link to index.php in this directory
 // after handling the callback, we redirect back to this URL...
-$indexUri = 'http://localhost:8081/index.php';
+$indexUri = 'http://localhost:8081/index_oidc.php';
 
 try {
     // we assume your application has proper (SECURE!) session handling
