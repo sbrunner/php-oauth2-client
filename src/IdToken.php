@@ -42,8 +42,8 @@ class IdToken
             throw new IdTokenException('invalid JWT token');
         }
 
-        // we do NOT need to verify the JWT signature as the ID Token is 
-        // obtained through the "Authorization Code Flow", see e.g. 
+        // we do NOT need to verify the JWT signature as the ID Token is
+        // obtained through the "Authorization Code Flow", see e.g.
         // https://openid.net/specs/openid-connect-basic-1_0.html
         $jsonObj = \json_decode($jwtParts[1]);
         if (null === $jsonObj) {

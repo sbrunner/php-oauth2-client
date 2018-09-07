@@ -346,9 +346,11 @@ class OAuthClient
             if (null === $idToken = $accessToken->getIdToken()) {
                 throw new TokenException('no "id_token" present', $response);
             }
+            // verify we are the audience
             if ($idToken->getAud() !== $provider->getClientId()) {
                 throw new IdTokenException('"aud" has unexpected value');
             }
+            // verify the issuer has the expected value
             if ($idToken->getIss() !== $provider->getIssuer()) {
                 throw new IdTokenException('"iss" has unexpected value');
             }

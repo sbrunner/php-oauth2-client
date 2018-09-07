@@ -23,7 +23,6 @@
  */
 
 require_once \dirname(__DIR__).'/vendor/autoload.php';
-$baseDir = \dirname(__DIR__);
 
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
