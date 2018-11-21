@@ -63,7 +63,7 @@ class PdoTokenStorage implements TokenStorageInterface
     /**
      * @param string $userId
      *
-     * @return array
+     * @return array<AccessToken>
      */
     public function getAccessTokenList($userId)
     {
