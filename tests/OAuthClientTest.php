@@ -230,6 +230,7 @@ class OAuthClientTest extends TestCase
                     'state' => 'state12345abcde',
                 ]
             );
+            $this->fail();
         } catch (AccessTokenException $e) {
             $this->assertSame('"expires_in" must be int', $e->getMessage());
         }
@@ -257,6 +258,7 @@ class OAuthClientTest extends TestCase
                     'code' => 'foo',
                 ]
             );
+            $this->fail();
         } catch (OAuthException $e) {
             $this->assertSame('missing "state" query parameter from server response', $e->getMessage());
         }
@@ -284,6 +286,7 @@ class OAuthClientTest extends TestCase
                     'error' => 'access_denied',
                 ]
             );
+            $this->fail();
         } catch (AuthorizeException $e) {
             $this->assertSame('access_denied', $e->getMessage());
         }
