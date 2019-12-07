@@ -52,8 +52,7 @@ class TestTokenStorage implements TokenStorageInterface
     }
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      */
     public function storeAccessToken($userId, AccessToken $accessToken)
     {
@@ -61,8 +60,7 @@ class TestTokenStorage implements TokenStorageInterface
     }
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      */
     public function deleteAccessToken($userId, AccessToken $accessToken)
     {

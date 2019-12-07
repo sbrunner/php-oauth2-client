@@ -26,6 +26,9 @@ namespace fkooman\OAuth\Client\Tests;
 
 use DateTime;
 use fkooman\OAuth\Client\AccessToken;
+use fkooman\OAuth\Client\Exception\AccessTokenException;
+use fkooman\OAuth\Client\Exception\AuthorizeException;
+use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\PdoTokenStorage;
 use fkooman\OAuth\Client\Provider;
@@ -175,113 +178,114 @@ class OAuthClientTest extends TestCase
         $this->assertSame('AT:code12345', \reset($accessTokenList)->getToken());
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
-     * @expectedExceptionMessage invalid session (state)
-     */
     public function testCallbackUnexpectedState()
     {
-        $this->session->set(
-            '_oauth2_session',
-            [
-                'user_id' => 'foo',
-                'provider_id' => 'http://localhost/authorize|foo',
-                'client_id' => 'foo',
-                'redirect_uri' => 'https://example.org/callback',
-                'scope' => 'my_scope',
-                'state' => 'state12345abcde',
-                'response_type' => 'code',
-            ]
-        );
-        $this->client->handleCallback(
-            $this->provider,
-            'foo',
-            [
-                'code' => 'AC:abc',
-                'state' => 'non-matching-state',
-            ]
-        );
+        try {
+            $this->session->set(
+                '_oauth2_session',
+                [
+                    'user_id' => 'foo',
+                    'provider_id' => 'http://localhost/authorize|foo',
+                    'client_id' => 'foo',
+                    'redirect_uri' => 'https://example.org/callback',
+                    'scope' => 'my_scope',
+                    'state' => 'state12345abcde',
+                    'response_type' => 'code',
+                ]
+            );
+            $this->client->handleCallback(
+                $this->provider,
+                'foo',
+                [
+                    'code' => 'AC:abc',
+                    'state' => 'non-matching-state',
+                ]
+            );
+            $this->fail();
+        } catch (OAuthException $e) {
+            $this->assertSame('invalid session (state)', $e->getMessage());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Client\Exception\AccessTokenException
-     * @expectedExceptionMessage "expires_in" must be int
-     */
     public function testCallbackMalformedAccessTokenResponse()
     {
-        $this->session->set(
-            '_oauth2_session',
-            [
-                'user_id' => 'foo',
-                'provider_id' => 'http://localhost/authorize|foo',
-                'client_id' => 'foo',
-                'redirect_uri' => 'https://example.org/callback',
-                'scope' => 'my_scope',
-                'state' => 'state12345abcde',
-                'response_type' => 'code',
-            ]
-        );
-        $this->client->handleCallback(
-            $this->provider,
-            'foo',
-            [
-                'code' => 'AC:broken',
-                'state' => 'state12345abcde',
-            ]
-        );
+        try {
+            $this->session->set(
+                '_oauth2_session',
+                [
+                    'user_id' => 'foo',
+                    'provider_id' => 'http://localhost/authorize|foo',
+                    'client_id' => 'foo',
+                    'redirect_uri' => 'https://example.org/callback',
+                    'scope' => 'my_scope',
+                    'state' => 'state12345abcde',
+                    'response_type' => 'code',
+                ]
+            );
+            $this->client->handleCallback(
+                $this->provider,
+                'foo',
+                [
+                    'code' => 'AC:broken',
+                    'state' => 'state12345abcde',
+                ]
+            );
+        } catch (AccessTokenException $e) {
+            $this->assertSame('"expires_in" must be int', $e->getMessage());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Client\Exception\OAuthException
-     * @expectedExceptionMessage missing "state" query parameter from server response
-     */
     public function testCallbackMissingState()
     {
-        $this->session->set(
-            '_oauth2_session',
-            [
-                'user_id' => 'foo',
-                'provider_id' => 'http://localhost/authorize|foo',
-                'client_id' => 'foo',
-                'redirect_uri' => 'https://example.org/callback',
-                'scope' => 'my_scope',
-                'state' => 'state12345abcde',
-                'response_type' => 'code',
-            ]
-        );
-        $this->client->handleCallback(
-            $this->provider,
-            'foo',
-            [
-                'code' => 'foo',
-            ]
-        );
+        try {
+            $this->session->set(
+                '_oauth2_session',
+                [
+                    'user_id' => 'foo',
+                    'provider_id' => 'http://localhost/authorize|foo',
+                    'client_id' => 'foo',
+                    'redirect_uri' => 'https://example.org/callback',
+                    'scope' => 'my_scope',
+                    'state' => 'state12345abcde',
+                    'response_type' => 'code',
+                ]
+            );
+            $this->client->handleCallback(
+                $this->provider,
+                'foo',
+                [
+                    'code' => 'foo',
+                ]
+            );
+        } catch (OAuthException $e) {
+            $this->assertSame('missing "state" query parameter from server response', $e->getMessage());
+        }
     }
 
-    /**
-     * @expectedException \fkooman\OAuth\Client\Exception\AuthorizeException
-     * @expectedExceptionMessage access_denied
-     */
     public function testCallbackError()
     {
-        $this->session->set(
-            '_oauth2_session',
-            [
-                'user_id' => 'foo',
-                'provider_id' => 'http://localhost/authorize|foo',
-                'client_id' => 'foo',
-                'redirect_uri' => 'https://example.org/callback',
-                'scope' => 'my_scope',
-                'state' => 'state12345abcde',
-                'response_type' => 'code',
-            ]
-        );
-        $this->client->handleCallback(
-            $this->provider,
-            'foo',
-            [
-                'error' => 'access_denied',
-            ]
-        );
+        try {
+            $this->session->set(
+                '_oauth2_session',
+                [
+                    'user_id' => 'foo',
+                    'provider_id' => 'http://localhost/authorize|foo',
+                    'client_id' => 'foo',
+                    'redirect_uri' => 'https://example.org/callback',
+                    'scope' => 'my_scope',
+                    'state' => 'state12345abcde',
+                    'response_type' => 'code',
+                ]
+            );
+            $this->client->handleCallback(
+                $this->provider,
+                'foo',
+                [
+                    'error' => 'access_denied',
+                ]
+            );
+        } catch (AuthorizeException $e) {
+            $this->assertSame('access_denied', $e->getMessage());
+        }
     }
 }
