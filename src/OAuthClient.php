@@ -30,7 +30,6 @@ use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
-use fkooman\OAuth\Client\Http\Response;
 use ParagonIE\ConstantTime\Base64;
 
 class OAuthClient
@@ -51,7 +50,6 @@ class OAuthClient
     private $dateTime;
 
     /**
-     * @param TokenStorageInterface    $tokenStorage
      * @param Http\HttpClientInterface $httpClient
      */
     public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
@@ -64,8 +62,6 @@ class OAuthClient
     }
 
     /**
-     * @param SessionInterface $session
-     *
      * @return void
      */
     public function setSession(SessionInterface $session)
@@ -74,8 +70,6 @@ class OAuthClient
     }
 
     /**
-     * @param RandomInterface $random
-     *
      * @return void
      */
     public function setRandom(RandomInterface $random)
@@ -84,8 +78,6 @@ class OAuthClient
     }
 
     /**
-     * @param \DateTime $dateTime
-     *
      * @return void
      */
     public function setDateTime(DateTime $dateTime)
@@ -96,11 +88,9 @@ class OAuthClient
     /**
      * Perform a GET request, convenience wrapper for ::send().
      *
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $requestScope
-     * @param string   $requestUri
-     * @param array    $requestHeaders
+     * @param string $userId
+     * @param string $requestScope
+     * @param string $requestUri
      *
      * @return false|Http\Response
      */
@@ -112,12 +102,9 @@ class OAuthClient
     /**
      * Perform a POST request, convenience wrapper for ::send().
      *
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $requestScope
-     * @param string   $requestUri
-     * @param array    $postBody
-     * @param array    $requestHeaders
+     * @param string $userId
+     * @param string $requestScope
+     * @param string $requestUri
      *
      * @return false|Http\Response
      */
@@ -129,7 +116,6 @@ class OAuthClient
     /**
      * Perform a HTTP request.
      *
-     * @param Provider     $provider
      * @param string       $userId
      * @param string       $requestScope
      * @param Http\Request $request
@@ -180,11 +166,10 @@ class OAuthClient
      * Obtain an authorization request URL to start the authorization process
      * at the OAuth provider.
      *
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $scope       the space separated scope tokens
-     * @param string   $redirectUri the URL registered at the OAuth provider, to
-     *                              be redirected back to
+     * @param string $userId
+     * @param string $scope       the space separated scope tokens
+     * @param string $redirectUri the URL registered at the OAuth provider, to
+     *                            be redirected back to
      *
      * @return string the authorization request URL
      *
@@ -222,9 +207,7 @@ class OAuthClient
     }
 
     /**
-     * @param Provider $provider
-     * @param string   $userId
-     * @param array    $getData
+     * @param string $userId
      *
      * @return void
      */
@@ -234,32 +217,24 @@ class OAuthClient
             // remove the session
             $this->session->take('_oauth2_session');
 
-            throw new AuthorizeException(
-                $getData['error'],
-                \array_key_exists('error_description', $getData) ? $getData['error_description'] : null
-            );
+            throw new AuthorizeException($getData['error'], \array_key_exists('error_description', $getData) ? $getData['error_description'] : null);
         }
 
         if (false === \array_key_exists('code', $getData)) {
-            throw new OAuthException(
-                'missing "code" query parameter from server response'
-            );
+            throw new OAuthException('missing "code" query parameter from server response');
         }
 
         if (false === \array_key_exists('state', $getData)) {
-            throw new OAuthException(
-                'missing "state" query parameter from server response'
-            );
+            throw new OAuthException('missing "state" query parameter from server response');
         }
 
         $this->doHandleCallback($provider, $userId, $getData['code'], $getData['state']);
     }
 
     /**
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $responseCode  the code passed to the "code" query parameter on the callback URL
-     * @param string   $responseState the state passed to the "state" query parameter on the callback URL
+     * @param string $userId
+     * @param string $responseCode  the code passed to the "code" query parameter on the callback URL
+     * @param string $responseState the state passed to the "state" query parameter on the callback URL
      *
      * @return void
      */
@@ -321,9 +296,7 @@ class OAuthClient
     }
 
     /**
-     * @param Provider    $provider
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return false|AccessToken
      */
@@ -382,9 +355,8 @@ class OAuthClient
      * Find an AccessToken in the list that matches this scope, bound to
      * providerId and userId.
      *
-     * @param Provider $provider
-     * @param string   $userId
-     * @param string   $scope
+     * @param string $userId
+     * @param string $scope
      *
      * @return false|AccessToken
      */

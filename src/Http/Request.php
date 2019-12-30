@@ -41,7 +41,6 @@ class Request
     /**
      * @param string      $requestMethod
      * @param string      $requestUri
-     * @param array       $requestHeaders
      * @param string|null $requestBody
      */
     public function __construct($requestMethod, $requestUri, array $requestHeaders = [], $requestBody = null)
@@ -68,18 +67,19 @@ class Request
             $requestHeaders[] = \sprintf('%s: %s', $k, $v);
         }
 
+        $requestBody = null === $this->requestBody ? '' : $this->requestBody;
+
         return \sprintf(
             '[requestMethod=%s, requestUri=%s, requestHeaders=[%s], requestBody=%s]',
             $this->requestMethod,
             $this->requestUri,
             \implode(', ', $requestHeaders),
-            $this->requestBody
+            $requestBody
         );
     }
 
     /**
      * @param string $requestUri
-     * @param array  $requestHeaders
      *
      * @return Request
      */
@@ -90,8 +90,6 @@ class Request
 
     /**
      * @param string $requestUri
-     * @param array  $postData
-     * @param array  $requestHeaders
      *
      * @return Request
      */

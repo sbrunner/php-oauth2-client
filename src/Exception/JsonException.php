@@ -22,25 +22,10 @@
  * SOFTWARE.
  */
 
-namespace fkooman\OAuth\Client;
+namespace fkooman\OAuth\Client\Exception;
 
-use Psr\Log\AbstractLogger;
+use RuntimeException;
 
-/**
- * Very simple psr/log implementation writing log using error_log().
- */
-class ErrorLogger extends AbstractLogger
+class JsonException extends RuntimeException
 {
-    /**
-     * Logs with an arbitrary level.
-     *
-     * @param mixed  $level
-     * @param string $message
-     *
-     * @return void
-     */
-    public function log($level, $message, array $context = [])
-    {
-        \error_log($message);
-    }
 }

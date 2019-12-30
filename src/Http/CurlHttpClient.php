@@ -43,10 +43,6 @@ class CurlHttpClient implements HttpClientInterface
     /** @var \Psr\Log\LoggerInterface */
     private $logger;
 
-    /**
-     * @param array                         $configData
-     * @param null|\Psr\Log\LoggerInterface $logger
-     */
     public function __construct(array $configData = [], LoggerInterface $logger = null)
     {
         if (\array_key_exists('allowHttp', $configData)) {
@@ -65,8 +61,6 @@ class CurlHttpClient implements HttpClientInterface
     }
 
     /**
-     * @param Request $request
-     *
      * @return Response
      */
     public function send(Request $request)
@@ -83,7 +77,7 @@ class CurlHttpClient implements HttpClientInterface
         $response = $this->exec($curlOptions, $request->getHeaders());
         if (!$response->isOkay()) {
             $this->logger->warning(
-                \sprintf('REQUEST=%s, RESPONSE=%s', $request, $response)
+                \sprintf('REQUEST=%s, RESPONSE=%s', (string) $request, (string) $response)
             );
         }
 
@@ -117,9 +111,6 @@ class CurlHttpClient implements HttpClientInterface
     }
 
     /**
-     * @param array $curlOptions
-     * @param array $requestHeaders
-     *
      * @return Response
      */
     private function exec(array $curlOptions, array $requestHeaders)
@@ -159,13 +150,7 @@ class CurlHttpClient implements HttpClientInterface
             // set, but false|string when CURLOPT_RETURNTRANSFER _IS_ set, but
             // Psalm is not clever enough to distinguish this, so if the
             // response is NOT a string it MUST be false
-            throw new CurlException(
-                \sprintf(
-                    '[%d] %s',
-                    \curl_errno($this->curlChannel),
-                    \curl_error($this->curlChannel)
-                )
-            );
+            throw new CurlException(\sprintf('[%d] %s', \curl_errno($this->curlChannel), \curl_error($this->curlChannel)));
         }
 
         return new Response(

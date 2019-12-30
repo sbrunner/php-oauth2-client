@@ -34,16 +34,14 @@ interface TokenStorageInterface
     public function getAccessTokenList($userId);
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return void
      */
     public function storeAccessToken($userId, AccessToken $accessToken);
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return void
      */

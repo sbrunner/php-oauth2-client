@@ -44,8 +44,7 @@ class SessionTokenStorage implements TokenStorageInterface
     }
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return void
      */
@@ -56,8 +55,7 @@ class SessionTokenStorage implements TokenStorageInterface
     }
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return void
      */

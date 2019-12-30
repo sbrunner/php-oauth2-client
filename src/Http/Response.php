@@ -25,6 +25,7 @@
 namespace fkooman\OAuth\Client\Http;
 
 use fkooman\OAuth\Client\Http\Exception\ResponseException;
+use fkooman\OAuth\Client\Json;
 
 class Response
 {
@@ -123,13 +124,8 @@ class Response
         if (false === \strpos($this->getHeader('Content-Type'), 'application/json')) {
             throw new ResponseException(\sprintf('response MUST have JSON content type'));
         }
-        $decodedJson = \json_decode($this->responseBody, true);
-        if (null === $decodedJson && JSON_ERROR_NONE !== \json_last_error()) {
-            $errorMsg = \function_exists('json_last_error_msg') ? \json_last_error_msg() : \json_last_error();
-            throw new ResponseException(\sprintf('unable to decode JSON: %s', $errorMsg));
-        }
 
-        return $decodedJson;
+        return Json::decode($this->responseBody);
     }
 
     /**

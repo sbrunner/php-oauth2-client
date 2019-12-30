@@ -28,7 +28,6 @@ use DateInterval;
 use DateTime;
 use Exception;
 use fkooman\OAuth\Client\Exception\AccessTokenException;
-use RuntimeException;
 
 class AccessToken
 {
@@ -44,18 +43,15 @@ class AccessToken
     /** @var string */
     private $tokenType;
 
-    /** @var null|int */
+    /** @var int|null */
     private $expiresIn = null;
 
-    /** @var null|string */
+    /** @var string|null */
     private $refreshToken = null;
 
-    /** @var null|string */
+    /** @var string|null */
     private $scope = null;
 
-    /**
-     * @param array $tokenData
-     */
     public function __construct(array $tokenData)
     {
         $requiredKeys = ['provider_id', 'issued_at', 'access_token', 'token_type'];
@@ -84,10 +80,7 @@ class AccessToken
     }
 
     /**
-     * @param Provider  $provider
-     * @param \DateTime $dateTime
-     * @param array     $tokenData
-     * @param string    $scope
+     * @param string $scope
      *
      * @return AccessToken
      */
@@ -109,9 +102,6 @@ class AccessToken
     }
 
     /**
-     * @param Provider    $provider
-     * @param \DateTime   $dateTime
-     * @param array       $tokenData
      * @param AccessToken $accessToken to steal the old scope and refresh_token from!
      *
      * @return AccessToken
@@ -175,7 +165,7 @@ class AccessToken
     }
 
     /**
-     * @return null|int
+     * @return int|null
      *
      * @see https://tools.ietf.org/html/rfc6749#section-5.1
      */
@@ -185,7 +175,7 @@ class AccessToken
     }
 
     /**
-     * @return null|string the refresh token
+     * @return string|null the refresh token
      *
      * @see https://tools.ietf.org/html/rfc6749#section-1.5
      */
@@ -195,7 +185,7 @@ class AccessToken
     }
 
     /**
-     * @return null|string
+     * @return string|null
      *
      * @see https://tools.ietf.org/html/rfc6749#section-3.3
      */
@@ -205,20 +195,18 @@ class AccessToken
     }
 
     /**
-     * @param \DateTime $dateTime
-     *
      * @return bool
      */
     public function isExpired(DateTime $dateTime)
     {
-        if (null === $this->getExpiresIn()) {
+        if (null === $expiresIn = $this->getExpiresIn()) {
             // if no expiry was indicated, assume it is valid
             return false;
         }
 
         // check to see if issuedAt + expiresIn > provided DateTime
         $expiresAt = clone $this->issuedAt;
-        $expiresAt->add(new DateInterval(\sprintf('PT%dS', $this->getExpiresIn())));
+        $expiresAt->add(new DateInterval(\sprintf('PT%dS', $expiresIn)));
 
         return $dateTime >= $expiresAt;
     }
@@ -226,17 +214,11 @@ class AccessToken
     /**
      * @param string $jsonString
      *
-     * @return AccessToken
+     * @return self
      */
     public static function fromJson($jsonString)
     {
-        $tokenData = \json_decode($jsonString, true);
-        if (null === $tokenData && JSON_ERROR_NONE !== \json_last_error()) {
-            $errorMsg = \function_exists('json_last_error_msg') ? \json_last_error_msg() : \json_last_error();
-            throw new AccessTokenException(\sprintf('unable to decode JSON from storage: %s', $errorMsg));
-        }
-
-        return new self($tokenData);
+        return new self(Json::decode($jsonString));
     }
 
     /**
@@ -254,12 +236,7 @@ class AccessToken
                 'scope' => $this->getScope(),
         ];
 
-        $jsonString = \json_encode($jsonData);
-        if (false === $jsonString) {
-            throw new RuntimeException('unable to encode JSON');
-        }
-
-        return $jsonString;
+        return Json::encode($jsonData);
     }
 
     /**
@@ -287,9 +264,7 @@ class AccessToken
         try {
             $this->issuedAt = new DateTime($issuedAt);
         } catch (Exception $e) {
-            throw new AccessTokenException(
-                \sprintf('invalid "expires_at": %s', $e->getMessage())
-            );
+            throw new AccessTokenException(\sprintf('invalid "expires_at": %s', $e->getMessage()));
         }
     }
 
@@ -322,7 +297,7 @@ class AccessToken
     }
 
     /**
-     * @param null|mixed $expiresIn
+     * @param mixed|null $expiresIn
      *
      * @return void
      */
@@ -340,7 +315,7 @@ class AccessToken
     }
 
     /**
-     * @param null|string $refreshToken
+     * @param string|null $refreshToken
      *
      * @return void
      */
@@ -357,7 +332,7 @@ class AccessToken
     }
 
     /**
-     * @param null|string $scope
+     * @param string|null $scope
      *
      * @return void
      */

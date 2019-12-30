@@ -24,23 +24,38 @@
 
 namespace fkooman\OAuth\Client;
 
-use Psr\Log\AbstractLogger;
+use fkooman\OAuth\Client\Exception\JsonException;
 
-/**
- * Very simple psr/log implementation writing log using error_log().
- */
-class ErrorLogger extends AbstractLogger
+class Json
 {
     /**
-     * Logs with an arbitrary level.
+     * @param mixed $jsonData
      *
-     * @param mixed  $level
-     * @param string $message
-     *
-     * @return void
+     * @return string
      */
-    public function log($level, $message, array $context = [])
+    public static function encode($jsonData)
     {
-        \error_log($message);
+        $jsonString = \json_encode($jsonData);
+        // 5.5.0 	The return value on failure was changed from null string to FALSE.
+        if (false === $jsonString || 'null' === $jsonString) {
+            throw new JsonException(\sprintf('unable to encode JSON, error code "%d"', \json_last_error()));
+        }
+
+        return $jsonString;
+    }
+
+    /**
+     * @param string $jsonString
+     *
+     * @return mixed
+     */
+    public static function decode($jsonString)
+    {
+        $jsonData = \json_decode($jsonString, true);
+        if (null === $jsonData && JSON_ERROR_NONE !== \json_last_error()) {
+            throw new JsonException(\sprintf('unable to decode JSON, error code "%d"', \json_last_error()));
+        }
+
+        return $jsonData;
     }
 }

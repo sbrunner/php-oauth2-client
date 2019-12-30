@@ -89,8 +89,7 @@ class PdoTokenStorage implements TokenStorageInterface
     }
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return void
      */
@@ -118,8 +117,7 @@ class PdoTokenStorage implements TokenStorageInterface
     }
 
     /**
-     * @param string      $userId
-     * @param AccessToken $accessToken
+     * @param string $userId
      *
      * @return void
      */
