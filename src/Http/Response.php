@@ -91,7 +91,7 @@ class Response
      */
     public function hasHeader($key)
     {
-        foreach ($this->responseHeaders as $k => $v) {
+        foreach (\array_keys($this->responseHeaders) as $k) {
             if (\strtoupper($key) === \strtoupper($k)) {
                 return true;
             }
@@ -122,7 +122,7 @@ class Response
     public function json()
     {
         if (false === \strpos($this->getHeader('Content-Type'), 'application/json')) {
-            throw new ResponseException(\sprintf('response MUST have JSON content type'));
+            throw new ResponseException('response MUST have JSON content type');
         }
 
         return Json::decode($this->responseBody);
