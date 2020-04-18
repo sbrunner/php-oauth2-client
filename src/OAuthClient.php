@@ -151,7 +151,7 @@ class OAuthClient
      */
     public function getAuthorizeUri(Provider $provider, $userId, $scope, $redirectUri)
     {
-        $codeVerifier = $this->generateCodeVerifier();
+        $codeVerifier = Base64UrlSafe::encodeUnpadded($this->random->raw());
         $queryParameters = [
             'client_id' => $provider->getClientId(),
             'redirect_uri' => $redirectUri,
@@ -159,7 +159,7 @@ class OAuthClient
             'state' => Base64UrlSafe::encodeUnpadded($this->random->raw()),
             'response_type' => 'code',
             'code_challenge_method' => 'S256',
-            'code_challenge' => self::hashCodeVerifier($codeVerifier),
+            'code_challenge' => Base64UrlSafe::encodeUnpadded(\hash('sha256', $codeVerifier, true)),
         ];
 
         $authorizeUri = \sprintf(
@@ -372,23 +372,5 @@ class OAuthClient
                 )
             ),
         ];
-    }
-
-    /**
-     * @param string $codeVerifier
-     *
-     * @return string
-     */
-    private static function hashCodeVerifier($codeVerifier)
-    {
-        return Base64UrlSafe::encodeUnpadded(\hash('sha256', $codeVerifier, true));
-    }
-
-    /**
-     * @return string
-     */
-    private function generateCodeVerifier()
-    {
-        return Base64UrlSafe::encodeUnpadded($this->random->raw());
     }
 }
