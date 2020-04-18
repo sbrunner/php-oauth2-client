@@ -31,6 +31,7 @@ use fkooman\OAuth\Client\Exception\TokenException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
 use fkooman\OAuth\Client\Http\Request;
 use ParagonIE\ConstantTime\Base64;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthClient
 {
@@ -178,12 +179,15 @@ class OAuthClient
      */
     public function getAuthorizeUri(Provider $provider, $userId, $scope, $redirectUri)
     {
+        $codeVerifier = $this->generateCodeVerifier();
         $queryParameters = [
             'client_id' => $provider->getClientId(),
             'redirect_uri' => $redirectUri,
             'scope' => $scope,
             'state' => $this->random->getHex(16),
             'response_type' => 'code',
+            'code_challenge_method' => 'S256',
+            'code_challenge' => self::hashCodeVerifier($codeVerifier),
         ];
 
         $authorizeUri = \sprintf(
@@ -199,6 +203,7 @@ class OAuthClient
                 [
                     'user_id' => $userId,
                     'provider_id' => $provider->getProviderId(),
+                    'code_verifier' => $codeVerifier,
                 ]
             )
         );
@@ -265,6 +270,7 @@ class OAuthClient
             'grant_type' => 'authorization_code',
             'code' => $responseCode,
             'redirect_uri' => $sessionData['redirect_uri'],
+            'code_verifier' => $sessionData['code_verifier'],
         ];
 
         $response = $this->httpClient->send(
@@ -394,5 +400,23 @@ class OAuthClient
                 )
             ),
         ];
+    }
+
+    /**
+     * @param string $codeVerifier
+     *
+     * @return string
+     */
+    private static function hashCodeVerifier($codeVerifier)
+    {
+        return Base64UrlSafe::encodeUnpadded(\hash('sha256', $codeVerifier, true));
+    }
+
+    /**
+     * @return string
+     */
+    private function generateCodeVerifier()
+    {
+        return Base64UrlSafe::encodeUnpadded($this->random->getRaw(32));
     }
 }

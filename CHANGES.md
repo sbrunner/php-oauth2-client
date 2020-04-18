@@ -1,5 +1,8 @@
 # Changes
 
+## 7.1.4 (...)
+- always use PKCE
+
 ## 7.1.3 (2018-06-02)
 - no need to use `strcasecmp` 
 

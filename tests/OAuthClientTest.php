@@ -32,6 +32,7 @@ use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\PdoTokenStorage;
 use fkooman\OAuth\Client\Provider;
+use ParagonIE\ConstantTime\Base64UrlSafe;
 use PDO;
 use PHPUnit\Framework\TestCase;
 
@@ -92,7 +93,7 @@ class OAuthClientTest extends TestCase
     public function testHasNoAccessToken()
     {
         $this->assertFalse($this->client->get($this->provider, 'foo', 'my_scope', 'https://example.org/resource'));
-        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_0&response_type=code', $this->client->getAuthorizeUri($this->provider, 'foo', 'my_scope', 'https://example.org/callback'));
+        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_1&response_type=code&code_challenge_method=S256&code_challenge=elRpCEYh8XiYBhjcG1EBHe5qHscwyYvQC-xtVeca5jM', $this->client->getAuthorizeUri($this->provider, 'foo', 'my_scope', 'https://example.org/callback'));
     }
 
     public function testHasValidAccessToken()
@@ -135,6 +136,7 @@ class OAuthClientTest extends TestCase
                 'scope' => 'my_scope',
                 'state' => 'state12345abcde',
                 'response_type' => 'code',
+                'code_verifier' => Base64UrlSafe::encodeUnpadded('11111111111111111111111111111111'),
             ]
         );
         $this->client->handleCallback(
@@ -163,6 +165,7 @@ class OAuthClientTest extends TestCase
                 'scope' => 'my_scope',
                 'state' => 'state12345abcde',
                 'response_type' => 'code',
+                'code_verifier' => Base64UrlSafe::encodeUnpadded('11111111111111111111111111111111'),
             ]
         );
         $this->client->handleCallback(
@@ -220,6 +223,7 @@ class OAuthClientTest extends TestCase
                     'scope' => 'my_scope',
                     'state' => 'state12345abcde',
                     'response_type' => 'code',
+                    'code_verifier' => Base64UrlSafe::encodeUnpadded('11111111111111111111111111111111'),
                 ]
             );
             $this->client->handleCallback(
