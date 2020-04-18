@@ -32,18 +32,12 @@ class TestRandom implements RandomInterface
     private $counter = 0;
 
     /**
-     * {@inheritdoc}
+     * Return 256 bits "raw" random string.
+     *
+     * @return string
      */
-    public function getHex($length)
+    public function raw()
     {
-        return \sprintf('random_%d', $this->counter++);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getRaw($length)
-    {
-        return \sprintf('random_%d', $this->counter++);
+        return \str_repeat($this->counter++, 32);
     }
 }

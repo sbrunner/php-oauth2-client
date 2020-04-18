@@ -93,7 +93,7 @@ class OAuthClientTest extends TestCase
     public function testHasNoAccessToken()
     {
         $this->assertFalse($this->client->get($this->provider, 'foo', 'my_scope', 'https://example.org/resource'));
-        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=random_1&response_type=code&code_challenge_method=S256&code_challenge=elRpCEYh8XiYBhjcG1EBHe5qHscwyYvQC-xtVeca5jM', $this->client->getAuthorizeUri($this->provider, 'foo', 'my_scope', 'https://example.org/callback'));
+        $this->assertSame('http://localhost/authorize?client_id=foo&redirect_uri=https%3A%2F%2Fexample.org%2Fcallback&scope=my_scope&state=MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMTE&response_type=code&code_challenge_method=S256&code_challenge=vAVDkeNwBvbO4EFVww9T4aZoHQjYGvBzIDSG3_F4wAU', $this->client->getAuthorizeUri($this->provider, 'foo', 'my_scope', 'https://example.org/callback'));
     }
 
     public function testHasValidAccessToken()
