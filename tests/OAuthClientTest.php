@@ -29,7 +29,6 @@ use fkooman\OAuth\Client\AccessToken;
 use fkooman\OAuth\Client\Exception\AccessTokenException;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
 use fkooman\OAuth\Client\Exception\OAuthException;
-use fkooman\OAuth\Client\OAuthClient;
 use fkooman\OAuth\Client\PdoTokenStorage;
 use fkooman\OAuth\Client\Provider;
 use ParagonIE\ConstantTime\Base64UrlSafe;
@@ -81,9 +80,10 @@ class OAuthClientTest extends TestCase
             )
         );
 
-        $this->client = new OAuthClient(
+        $this->client = new TestOAuthClient(
             $this->tokenStorage,
-            new TestHttpClient()
+            new TestHttpClient(),
+            $this->session
         );
         $this->client->setSession($this->session);
         $this->client->setRandom(new TestRandom());

@@ -35,24 +35,20 @@ use ParagonIE\ConstantTime\Base64UrlSafe;
 
 class OAuthClient
 {
+    /** @var SessionInterface */
+    protected $session;
+
+    /** @var RandomInterface */
+    protected $random;
+
+    /** @var \DateTime */
+    protected $dateTime;
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
     /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
     private $httpClient;
 
-    /** @var SessionInterface */
-    private $session;
-
-    /** @var RandomInterface */
-    private $random;
-
-    /** @var \DateTime */
-    private $dateTime;
-
-    /**
-     * @param Http\HttpClientInterface $httpClient
-     */
     public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
     {
         $this->tokenStorage = $tokenStorage;
@@ -60,30 +56,6 @@ class OAuthClient
         $this->session = new Session();
         $this->random = new Random();
         $this->dateTime = new DateTime();
-    }
-
-    /**
-     * @return void
-     */
-    public function setSession(SessionInterface $session)
-    {
-        $this->session = $session;
-    }
-
-    /**
-     * @return void
-     */
-    public function setRandom(RandomInterface $random)
-    {
-        $this->random = $random;
-    }
-
-    /**
-     * @return void
-     */
-    public function setDateTime(DateTime $dateTime)
-    {
-        $this->dateTime = $dateTime;
     }
 
     /**
