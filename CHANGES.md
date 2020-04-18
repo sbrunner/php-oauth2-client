@@ -2,6 +2,8 @@
 
 ## 7.1.4 (...)
 - always use PKCE
+- use 256 bits random data for "state"
+- simplify `Random` interface
 
 ## 7.1.3 (2018-06-02)
 - no need to use `strcasecmp` 

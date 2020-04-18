@@ -184,7 +184,7 @@ class OAuthClient
             'client_id' => $provider->getClientId(),
             'redirect_uri' => $redirectUri,
             'scope' => $scope,
-            'state' => $this->random->getHex(16),
+            'state' => Base64UrlSafe::encodeUnpadded($this->random->raw()),
             'response_type' => 'code',
             'code_challenge_method' => 'S256',
             'code_challenge' => self::hashCodeVerifier($codeVerifier),
@@ -417,6 +417,6 @@ class OAuthClient
      */
     private function generateCodeVerifier()
     {
-        return Base64UrlSafe::encodeUnpadded($this->random->getRaw(32));
+        return Base64UrlSafe::encodeUnpadded($this->random->raw());
     }
 }
