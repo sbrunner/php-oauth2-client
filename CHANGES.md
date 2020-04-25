@@ -1,11 +1,11 @@
 # Changes
 
-## 7.2.0 (...)
+## 7.2.0 (2020-04-25)
 - always use PKCE
 - use 256 bits random data for "state"
 - simplify `RandomInterface` and implementation
 - use separate JSON class
-- remove some "setters" from `OAuthClient` class as they were only needed for
+- remove some "setters" from `OAuthClient` class as they are only needed for
   testing
 
 ## 7.1.3 (2018-06-02)
