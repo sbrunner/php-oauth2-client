@@ -23,8 +23,7 @@
  */
 
 $baseDir = \dirname(__DIR__);
-/** @psalm-suppress UnresolvableInclude */
-require_once \sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \dirname(__DIR__).'/vendor/autoload.php';
 
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\AuthorizeException;
@@ -77,8 +76,8 @@ try {
     // denied the authorization, we may ask the user again in case they want
     // to reconsider giving authorization...
     echo \sprintf('%s: %s', \get_class($e), $e->getMessage());
-    if (null !== $e->getDescription()) {
-        echo \sprintf('(%s)', $e->getDescription());
+    if (null !== $errorDescription = $e->getDescription()) {
+        echo \sprintf('(%s)', $errorDescription);
     }
 } catch (TokenException $e) {
     // there was a problem obtaining an access_token, show response to ease

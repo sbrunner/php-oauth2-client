@@ -23,8 +23,7 @@
  */
 
 $baseDir = \dirname(__DIR__);
-/** @psalm-suppress UnresolvableInclude */
-require_once \sprintf('%s/vendor/autoload.php', $baseDir);
+require_once \dirname(__DIR__).'/vendor/autoload.php';
 
 use fkooman\OAuth\Client\ErrorLogger;
 use fkooman\OAuth\Client\Exception\TokenException;
