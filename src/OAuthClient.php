@@ -43,10 +43,11 @@ class OAuthClient
 
     /** @var \DateTime */
     protected $dateTime;
+
     /** @var TokenStorageInterface */
     private $tokenStorage;
 
-    /** @var \fkooman\OAuth\Client\Http\HttpClientInterface */
+    /** @var Http\HttpClientInterface */
     private $httpClient;
 
     public function __construct(TokenStorageInterface $tokenStorage, HttpClientInterface $httpClient)
