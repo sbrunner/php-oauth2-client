@@ -1,8 +1,8 @@
-#global git e97fd6d5868a1ca9af715ae83d1991b4f880745f
+%global git 3c0b9780ffab0d93b14075333fd042fc183f3ce7
 
 Name:           php-fkooman-oauth2-client
-Version:        7.2.0
-Release:        1%{?dist}
+Version:        7.2.1
+Release:        0.1%{?dist}
 Summary:        Opinionated OAuth 2.0 client
 
 License:        MIT
@@ -140,5 +140,8 @@ AUTOLOAD
 %{_datadir}/php/fkooman/OAuth/Client
 
 %changelog
+* Mon Apr 27 2020 François Kooman <fkooman@tuxed.net> - 7.2.1-0.1
+- update to 7.2.1
+
 * Sat Apr 25 2020 François Kooman <fkooman@tuxed.net> - 7.2.0-1
 - update to 7.2.0
