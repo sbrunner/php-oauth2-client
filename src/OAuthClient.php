@@ -105,15 +105,6 @@ class OAuthClient
 
         if ($accessToken->isExpired($this->dateTime)) {
             // access_token is expired, try to refresh it
-            if (null === $accessToken->getRefreshToken()) {
-                // we do not have a refresh_token, delete this access token, it
-                // is useless now...
-                $this->tokenStorage->deleteAccessToken($userId, $accessToken);
-
-                return false;
-            }
-
-            // try to refresh the AccessToken
             $accessToken = $this->refreshAccessToken($provider, $userId, $accessToken);
             if (false === $accessToken) {
                 // didn't work
@@ -281,12 +272,23 @@ class OAuthClient
      */
     private function refreshAccessToken(Provider $provider, $userId, AccessToken $accessToken)
     {
+        if (null === $refreshToken = $accessToken->getRefreshToken()) {
+            // we do not have a refresh_token, delete this access token, it
+            // is useless now...
+            $this->tokenStorage->deleteAccessToken($userId, $accessToken);
+
+            return false;
+        }
+
         // prepare access_token request
         $tokenRequestData = [
             'grant_type' => 'refresh_token',
-            'refresh_token' => $accessToken->getRefreshToken(),
-            'scope' => $accessToken->getScope(),
+            'refresh_token' => $refreshToken,
         ];
+
+        if (null !== $scope = $accessToken->getScope()) {
+            $tokenRequestData['scope'] = $scope;
+        }
 
         $response = $this->httpClient->send(
             Request::post(
