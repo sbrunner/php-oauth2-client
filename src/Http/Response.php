@@ -117,11 +117,19 @@ class Response
     }
 
     /**
+     * @return bool
+     */
+    public function isJson()
+    {
+        return false !== \strpos($this->getHeader('Content-Type'), 'application/json');
+    }
+
+    /**
      * @return mixed
      */
     public function json()
     {
-        if (false === \strpos($this->getHeader('Content-Type'), 'application/json')) {
+        if (!$this->isJson()) {
             throw new ResponseException('response MUST have JSON content type');
         }
 
