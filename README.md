@@ -27,6 +27,28 @@ See
 [this](https://paragonie.com/blog/2015/04/fast-track-safe-and-secure-php-sessions) 
 resource for more information.
 
+# Use
+
+Currently php-oauth2-client is not hosted on 
+[Packagist](https://packagist.org/). It may be added in the future. In your 
+`composer.json`:
+
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://git.tuxed.net/fkooman/php-oauth2-client"
+        },
+        ...
+    ],
+
+    "require": {
+        "fkooman/oauth2-client": "^7",
+        ...
+    },
+
+You can also download the signed source code archive 
+[here](https://src.tuxed.net/php-oauth2-client/).
+
 # API
 
 The API is very simple to use. See the `example/` folder for a working example!
