@@ -111,7 +111,7 @@ class Request
                 $requestHeaders,
                 ['Content-Type' => 'application/x-www-form-urlencoded']
             ),
-            \http_build_query($postData, '&')
+            \http_build_query($postData, '', '&')
         );
     }
 
