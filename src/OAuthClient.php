@@ -158,7 +158,7 @@ class OAuthClient
             '%s%s%s',
             $provider->getAuthorizationEndpoint(),
             false === \strpos($provider->getAuthorizationEndpoint(), '?') ? '?' : '&',
-            \http_build_query($queryParameters, '&')
+            \http_build_query($queryParameters, '', '&')
         );
         $this->session->set(
             '_oauth2_session',
